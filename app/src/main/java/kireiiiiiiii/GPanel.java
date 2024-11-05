@@ -101,7 +101,7 @@ import javax.swing.SwingUtilities;
  * <hr>
  * 
  * @author Matěj Šťastný aka
- *         <a href="https://github.com/kireiiiiiiii">@kireiiiiiiii</a>"
+ *         <a href="https://github.com/kireiiiiiiii">@kireiiiiiiii</a>
  * @since 7/23/2024
  */
 public class GPanel extends JPanel implements MouseListener, MouseMotionListener, KeyListener {
