@@ -239,11 +239,11 @@ public class App implements InteractableHandeler {
         private void update() {
             ArrayList<int[]> positions = client.updatePlayerPositions(pos[0], pos[1]);
             ArrayList<Renderable> players = new ArrayList<Renderable>();
+            players.add(new Player(pos, Color.BLUE, 2));
             for (int[] position : positions) {
-                players.add(new Player(position, Color.RED));
+                players.add(new Player(position, Color.RED, 1));
             }
             gpanel.setWidgets(players);
-            gpanel.add(new Player(pos, Color.BLUE));
         }
 
         public void setFps(int value) {

@@ -346,7 +346,10 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     }
 
     public void setWidgets(ArrayList<Renderable> widgets) {
-        this.widgets = widgets;
+        this.widgets = new ArrayList<Renderable>();
+        for (Renderable r : widgets) {
+            this.add(r);
+        }
     }
 
     /**

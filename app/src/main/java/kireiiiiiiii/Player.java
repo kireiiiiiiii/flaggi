@@ -37,10 +37,12 @@ public class Player implements Renderable {
     private int[] pos = new int[2];
     private boolean visible = true;
     private Color color;
+    private int zindex;
 
-    public Player(int[] pos, Color color) {
+    public Player(int[] pos, Color color, int zindex) {
         this.pos = pos;
         this.color = color;
+        this.zindex = zindex;
     }
 
     @Override
@@ -51,7 +53,7 @@ public class Player implements Renderable {
 
     @Override
     public int getZIndex() {
-        return 10;
+        return this.zindex;
     }
 
     @Override
