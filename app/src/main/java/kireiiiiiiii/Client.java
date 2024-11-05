@@ -1,6 +1,6 @@
 /*
  * Author: Matěj Šťastný
- * Date created: 4/11/2024
+ * Date created: 11/4/2024
  *
  *
  *
@@ -62,7 +62,7 @@ public class Client {
         try {
             udpSocket = new DatagramSocket();
         } catch (SocketException e) {
-            e.printStackTrace(); // TODO LOG
+            Logger.addLog("Client Socket Exception caught", e, true);
         }
     }
 
@@ -91,16 +91,15 @@ public class Client {
                 clientId = in.readInt();
                 udpPort = in.readInt();
 
-                System.out.println("Received Client ID: " + clientId); // TODO log
-                System.out.println("UDP port for updates: " + udpPort); // TODO log
+                Logger.addLog("Received client ID '" + clientId + "' from server.", true);
+                Logger.addLog("Recieved UDP port '" + udpPort + "' for updates from server.", true);
 
             } catch (IOException e) {
-                e.printStackTrace(); // TODO LOG
+                Logger.addLog("IOException caught while sending data to user through TCP", e, true);
             }
 
         } catch (UnknownHostException e) {
-            System.out.println("Server adress " + this.serverAddress.getHostAddress() + " coudn't be found.");
-            e.printStackTrace(); // TODO LOG
+            Logger.addLog("Server adress '" + this.serverAddress.getHostAddress() + "' coudn't be found.", e, true);
         }
     }
 
@@ -120,22 +119,22 @@ public class Client {
             byte[] buffer = message.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, serverAddress, udpPort);
 
-            // System.out.println("Sending position to server: '" + message + "'"); //todo
+            // System.out.println("Sending position to server: '" + message + "'");
             udpSocket.send(packet);
 
             // Buffer to receive position updates
             byte[] receiveBuffer = new byte[1024];
             DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
 
-            // System.out.println("Waiting for server response..."); // TODO LOG
+            // System.out.println("Waiting for server response...");
             udpSocket.receive(receivePacket);
 
             String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
-            // System.out.println("Received data from server: " + data); // TODO LOG
+            // System.out.println("Received data from server: " + data);
             playerPositions = parsePositions(data);
 
         } catch (IOException e) {
-            e.printStackTrace(); // TODO LOG
+            Logger.addLog("IOException caught while sending/recieving position data to/from the server", e, true);
         }
 
         return playerPositions;

@@ -1,6 +1,6 @@
 /*
  * Author: Matěj Šťastný
- * Date created: 4/11/2024
+ * Date created: 11/4/2024
  *
  *
  *
@@ -63,6 +63,7 @@ public class App implements InteractableHandeler {
     ////////////////
 
     public static void main(String[] args) {
+        Logger.addLog("App started", false);
         SwingUtilities.invokeLater(App::new);
     }
 
@@ -70,6 +71,7 @@ public class App implements InteractableHandeler {
 
         if (!isServerRunning(TCP_PORT)) {
             System.out.println("Cannot reach server.");
+            Logger.addLog("Coudn't reach the server - server is running. Exiting...", true);
             System.exit(1);
         }
 
@@ -80,14 +82,16 @@ public class App implements InteractableHandeler {
 
         System.out.print("\nEnter your name: ");
         String username = console.nextLine();
+        Logger.addLog("User entered name: " + username, true);
 
         client = new Client(username);
 
         this.gpanel = new GPanel(this, FPS, 500, 500, false, "Java LAN game");
-        // this.gpanel.startRendering();
+        Logger.addLog("UI window created", true);
 
         GameLoop gameLoop = new GameLoop(FPS);
         gameLoop.start();
+        Logger.addLog("Game loop started", true);
         console.close();
     }
 
