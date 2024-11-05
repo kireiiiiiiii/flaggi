@@ -1,4 +1,4 @@
-<img source="./public/repo-header.png" />
+![Repository header](./public/banner.png)
 
 # TTT
 
