@@ -240,10 +240,10 @@ public class App implements InteractableHandeler {
             ArrayList<int[]> positions = client.updatePlayerPositions(pos[0], pos[1]);
             ArrayList<Renderable> players = new ArrayList<Renderable>();
             for (int[] position : positions) {
-                gpanel.add(new Player(position, Color.RED));
+                players.add(new Player(position, Color.RED));
             }
             gpanel.setWidgets(players);
-            gpanel.add(new Player(pos, Color.BLUE)); // Add the local player
+            gpanel.add(new Player(pos, Color.BLUE));
         }
 
         public void setFps(int value) {
