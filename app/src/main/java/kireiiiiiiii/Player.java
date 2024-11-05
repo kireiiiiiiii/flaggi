@@ -1,11 +1,11 @@
-package org.example;
+package kireiiiiiiii;
 
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
-import org.example.GPanel.Renderable;
+import kireiiiiiiii.GPanel.Renderable;
 
 public class Player implements Renderable {
 

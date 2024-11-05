@@ -24,7 +24,7 @@
  *
  */
 
-package org.example;
+package kireiiiiiiii;
 
 import java.awt.Dimension;
 import java.awt.Graphics;

@@ -1,4 +1,4 @@
-package org.example;
+package kireiiiiiiii;
 
 import java.io.*;
 import java.net.*;
