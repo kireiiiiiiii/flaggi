@@ -155,11 +155,11 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     }
 
     /////////////////
-    // Renderer cotrol methods
+    // Renderer control methods
     ////////////////
 
     /**
-     * Starts the rendering loop in it's own thread. If already rendering will do
+     * Starts the rendering loop in its own thread. If already rendering will do
      * nothing.
      * 
      */
@@ -193,16 +193,17 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         int[] size = { getWidth(), getHeight() };
         // ------------------------------------------------
 
-        for (int i = 0; i < this.widgets.size(); i++) {
-            Renderable renderable = this.widgets.get(i);
-            if (renderable.isVisible()) {
-                renderable.render(g, size, this.appFrame.getFocusCycleRootAncestor());
+        synchronized (this.widgets) { // Synchronized block for safe access to widgets
+            for (Renderable renderable : this.widgets) {
+                if (renderable.isVisible()) {
+                    renderable.render(g, size, this.appFrame.getFocusCycleRootAncestor());
+                }
             }
         }
     }
 
     /*
-     * Size methods return the measurments of the owning {@JFrame} object.
+     * Size methods return the measurements of the owning {@JFrame} object.
      * Methods return zero, if owner wasn't initialized (is {@code null}).
      */
 
@@ -296,13 +297,15 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * @return list of {@code T} objects.
      */
     public <T> ArrayList<T> getWidgetsByClass(Class<T> targetClass) {
-        ArrayList<T> list = new ArrayList<>();
-        for (Renderable r : this.widgets) {
-            if (targetClass.isInstance(r)) {
-                list.add(targetClass.cast(r));
+        synchronized (this.widgets) { // Synchronized block for safe access to widgets
+            ArrayList<T> list = new ArrayList<>();
+            for (Renderable r : this.widgets) {
+                if (targetClass.isInstance(r)) {
+                    list.add(targetClass.cast(r));
+                }
             }
+            return list;
         }
-        return list;
     }
 
     /**
@@ -313,13 +316,15 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      *         {@code Interactable} interface.
      */
     public ArrayList<Renderable> getInteractables() {
-        ArrayList<Renderable> interactables = new ArrayList<Renderable>();
-        for (Renderable r : this.widgets) {
-            if (r instanceof Interactable) {
-                interactables.add(r);
+        synchronized (this.widgets) { // Synchronized block for safe access to widgets
+            ArrayList<Renderable> interactables = new ArrayList<>();
+            for (Renderable r : this.widgets) {
+                if (r instanceof Interactable) {
+                    interactables.add(r);
+                }
             }
+            return interactables;
         }
-        return interactables;
     }
 
     /////////////////
@@ -333,16 +338,17 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * @param renderable
      */
     public void add(Renderable renderable) {
-        int value = renderable.getZIndex();
-        int i = 0;
+        synchronized (this.widgets) { // Synchronized block for safe modification of widgets
+            int value = renderable.getZIndex();
+            int i = 0;
 
-        // Find the correct position to insert the value
-        while (i < this.widgets.size() && value > this.widgets.get(i).getZIndex()) {
-            i++;
+            // Find the correct position to insert the value
+            while (i < this.widgets.size() && value > this.widgets.get(i).getZIndex()) {
+                i++;
+            }
+
+            this.widgets.add(i, renderable); // Insert the value at the found position
         }
-
-        // Insert the value at the found position
-        this.widgets.add(i, renderable);
     }
 
     public void setWidgets(ArrayList<Renderable> widgets) {
