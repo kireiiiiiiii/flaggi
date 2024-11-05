@@ -1,33 +1,89 @@
+/*
+ * Author: Matěj Šťastný
+ * Date created: 4/11/2024
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Server class for the LAN Game application.
+ * 
+ */
 public class Server {
+
+    /////////////////
+    // Constants
+    ////////////////
 
     public static final int TCP_PORT = 54321;
     public static final int UDP_PORT = 54322;
 
+    /////////////////
+    // Variables
+    ////////////////
+
     private static final List<Client> clients = new ArrayList<>();
     private static int clientNum = 0;
 
+    /////////////////
+    // Main
+    ////////////////
+
     public static void main(String[] args) {
-        System.out.println("lol");
         try {
-            ServerSocket serverSocket = new ServerSocket(TCP_PORT);
-            startServer(serverSocket);
+            startServer();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static void startServer(ServerSocket serverSocket) {
+    /////////////////
+    // Events
+    ////////////////
+
+    /**
+     * Starts the server by firts creating a socket, then the TCP port and then the
+     * UDP port.
+     * 
+     * @throws IOException
+     */
+    public static void startServer() throws IOException {
+        ServerSocket serverSocket = new ServerSocket(TCP_PORT);
         new Thread(() -> startTCPListener(serverSocket)).start();
         System.out.println("Server started on port '" + TCP_PORT + "'. Waiting for clients...");
         new Thread(Server::startUDPListener).start();
     }
 
+    /**
+     * Starts the TCP listener that listens for new clients, and asigns them their
+     * IDs and gives them the UDP port to send data to.
+     * 
+     * @param serverSocket - TCP port
+     */
     private static void startTCPListener(ServerSocket serverSocket) {
         while (true) {
             try (
@@ -43,11 +99,12 @@ public class Server {
                 synchronized (clients) {
                     clients.add(new Client(clientId, clientName, clientAddress));
                 }
-                System.out.println("Assigned Client ID " + clientId + " to " + clientName);
+                System.out.println("Assigned ID '" + clientId + "'' to client '" + clientName + "'.");
 
                 out.writeInt(clientId);
                 out.writeInt(UDP_PORT);
                 out.flush();
+                System.out.println("Send port and ID to client'" + clientName + "'.");
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -55,57 +112,77 @@ public class Server {
         }
     }
 
+    /**
+     * Starts the UDP listener for the clients to send their position data to.
+     * 
+     */
     private static void startUDPListener() {
+        boolean log = false;
         try (DatagramSocket udpSocket = new DatagramSocket(UDP_PORT)) {
+
             byte[] buffer = new byte[1024];
-            System.out.println("UDP listener started on port " + UDP_PORT);
+            if (log) {
+                System.out.println("UDP listener started on port " + UDP_PORT);
+            }
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 udpSocket.receive(packet);
 
                 String message = new String(packet.getData(), 0, packet.getLength());
-                System.out.println("Received packet from client: " + message); // Log received data
+                if (log) {
+                    System.out.println("Received packet from client: " + message);
+                }
 
-                System.out.println("Before split");
                 String[] parts = message.split(",");
-                System.out.println("After split");
                 if (parts.length >= 3) {
                     int clientId = Integer.parseInt(parts[0]);
                     float x = Float.parseFloat(parts[1]);
                     float y = Float.parseFloat(parts[2]);
 
-                    System.out.println("Before sync");
                     Client client;
                     synchronized (clients) {
                         client = getClient(clientId);
                     }
-                    System.out.println("After sync");
 
                     if (client != null) {
                         client.setPosition(x, y);
-                        System.out.println("Position updated for Client " + client.getDisplayName());
+                        if (log) {
+                            System.out.println("Position updated for client " + client.getDisplayName());
+                        }
 
                         String allPositions = getAllClientPositions();
                         byte[] responseBuffer = allPositions.getBytes();
                         DatagramPacket responsePacket = new DatagramPacket(
-                                responseBuffer, responseBuffer.length, client.getInetAddress(), packet.getPort()); // packet.getPort()
+                                responseBuffer, responseBuffer.length, client.getInetAddress(), packet.getPort());
 
-                        System.out.println("Sending positions to client: " + allPositions); // Log sent data
+                        if (log) {
+                            System.out.println("Sending positions to client: " + allPositions);
+                        }
+
                         udpSocket.send(responsePacket);
+
                     } else {
-                        System.out.println("Client null");
+                        if (log) {
+                            System.out.println("Client null");
+                        }
                     }
                 } else {
-                    System.out.println("Message not 3 parts");
+                    if (log) {
+                        System.out.println("Message not 3 parts");
+                    }
                 }
 
-                Arrays.fill(buffer, (byte) 0); // Clear buffer
+                Arrays.fill(buffer, (byte) 0);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    /////////////////
+    // Helper methods
+    ////////////////
 
     private static Client getClient(int id) {
         synchronized (clients) {
@@ -118,6 +195,11 @@ public class Server {
         return null;
     }
 
+    /**
+     * Gets all positions of all connected clients.
+     * 
+     * @return - a {@code String} of all client positions.
+     */
     private static String getAllClientPositions() {
         StringBuilder positions = new StringBuilder();
         synchronized (clients) {
@@ -129,6 +211,10 @@ public class Server {
         }
         return positions.toString();
     }
+
+    /////////////////
+    // Client struct
+    ////////////////
 
     private static class Client {
         private final int id;

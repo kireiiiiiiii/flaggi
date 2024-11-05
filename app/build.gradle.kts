@@ -1,8 +1,10 @@
-/////////////////
+import java.io.FileOutputStream
+
+///////////////
 // VARIABLES ///
 ///////////////////
 
-var main_class = "org.example.App"
+var main_class = "kireiiiiiiii.App"
 
 ///////////////////
 // BUILD SCRIPT ///

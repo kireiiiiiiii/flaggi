@@ -1,3 +1,28 @@
+/*
+ * Author: Matěj Šťastný
+ * Date created: 4/11/2024
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 package kireiiiiiiii;
 
 import java.awt.Color;

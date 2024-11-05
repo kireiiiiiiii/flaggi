@@ -36,11 +36,19 @@ import java.util.Scanner;
 import javax.swing.SwingUtilities;
 
 import kireiiiiiiii.GPanel.InteractableHandeler;
+import kireiiiiiiii.GPanel.Renderable;
 
 /**
  * Main class for the LAN Game application.
  */
 public class App implements InteractableHandeler {
+
+    /////////////////
+    // Constants
+    ////////////////
+
+    public static final int TCP_PORT = 54321;
+    private static final int FPS = 60;
 
     /////////////////
     // Variables
@@ -60,29 +68,26 @@ public class App implements InteractableHandeler {
 
     public App() {
 
-        try (ServerSocket serverSocket = new ServerSocket(Client.TCP_PORT)) {
-            // serverSocket.close();
-            System.out.println("Server not running");
+        if (!isServerRunning(TCP_PORT)) {
+            System.out.println("Cannot reach server.");
             System.exit(1);
-        } catch (IOException e) {
         }
-
-        Scanner console = new Scanner(System.in);
-        printHeader();
-        System.out.print("\nEnter your name: ");
-        String username = console.nextLine();
-
-        System.out.println("Before servers");
-        client = new Client(username); // Use username for client
 
         this.pos[0] = 250;
         this.pos[1] = 250;
-        this.gpanel = new GPanel(this, 60, 500, 500, false, "LAN test");
-        this.gpanel.startRendering();
-        this.gpanel.add(new Player(pos, Color.GREEN));
+        Scanner console = new Scanner(System.in);
+        printHeader();
 
-        GameLoop gl = new GameLoop(60);
-        gl.start();
+        System.out.print("\nEnter your name: ");
+        String username = console.nextLine();
+
+        client = new Client(username);
+
+        this.gpanel = new GPanel(this, FPS, 500, 500, false, "Java LAN game");
+        // this.gpanel.startRendering();
+
+        GameLoop gameLoop = new GameLoop(FPS);
+        gameLoop.start();
         console.close();
     }
 
@@ -90,7 +95,7 @@ public class App implements InteractableHandeler {
     // Events
     ////////////////
 
-    public void updatePos(int x, int y) {
+    public void updateLocalPosition(int x, int y) {
         pos[0] = x;
         pos[1] = y;
     }
@@ -132,33 +137,37 @@ public class App implements InteractableHandeler {
     }
 
     @Override
+    public void keyReleased(KeyEvent e) {
+    }
+
+    @Override
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP: // Up Arrow Key
-            case KeyEvent.VK_W: // W key
-                this.pos[1] -= 10; // Move up (increase Y)
+            case KeyEvent.VK_UP:
+            case KeyEvent.VK_W:
+                this.pos[1] -= 10;
                 break;
-            case KeyEvent.VK_DOWN: // Down Arrow Key
-            case KeyEvent.VK_S: // S key
-                this.pos[1] += 10; // Move down (decrease Y)
+            case KeyEvent.VK_DOWN:
+            case KeyEvent.VK_S:
+                this.pos[1] += 10;
                 break;
-            case KeyEvent.VK_LEFT: // Left Arrow Key
-            case KeyEvent.VK_A: // A key
-                this.pos[0] -= 10; // Move left (decrease X)
+            case KeyEvent.VK_LEFT:
+            case KeyEvent.VK_A:
+                this.pos[0] -= 10;
                 break;
-            case KeyEvent.VK_RIGHT: // Right Arrow Key
-            case KeyEvent.VK_D: // D key
-                this.pos[0] += 10; // Move right (increase X)
+            case KeyEvent.VK_RIGHT:
+            case KeyEvent.VK_D:
+                this.pos[0] += 10;
                 break;
             default:
                 break;
         }
     }
 
-    @Override
-    public void keyReleased(KeyEvent e) {
-    }
-
+    /**
+     * Prints the header of this game
+     * 
+     */
     private void printHeader() {
         System.out.println("\n" +
                 "     ____.  _________   _________    .____       _____    _______   \n" +
@@ -169,20 +178,26 @@ public class App implements InteractableHandeler {
                 "                 \\/              \\/          \\/       \\/         \\/ \n");
     }
 
-    private static boolean getYesNoInput(String message, Scanner console) {
-        while (true) {
-            System.out.print(message + " (y/n): ");
-            String input = console.nextLine().trim().toLowerCase();
-            if (input.equals("y")) {
-                return true;
-            } else if (input.equals("n")) {
-                return false;
-            } else {
-                System.out.println("Invalid input. Please enter 'y' or 'n'.");
-            }
+    /**
+     * Finds out whether is something running on a specific port by trying to create
+     * a new socket.
+     * 
+     * @param port - target port
+     * @return boolean value
+     */
+    private static boolean isServerRunning(int port) {
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            return false;
+        } catch (IOException e) {
+            return true;
         }
     }
 
+    /**
+     * Game loop for the application.
+     * 
+     */
+    @SuppressWarnings("unused")
     private class GameLoop implements Runnable {
         private boolean running = false;
         private int targetFPS;
@@ -203,7 +218,7 @@ public class App implements InteractableHandeler {
         @Override
         public void run() {
             while (running) {
-                long optimalTime = 1_000_000_000 / targetFPS; // In nanoseconds
+                long optimalTime = 1_000_000_000 / targetFPS;
                 long startTime = System.nanoTime();
 
                 update(); // Update game state
@@ -222,13 +237,12 @@ public class App implements InteractableHandeler {
         }
 
         private void update() {
-            System.out.println("before");
-            ArrayList<int[]> positions = client.sendPos(pos[0], pos[1]);
-            System.out.println(pos[0] + pos[1]); // ! TODO DELETE
-            gpanel.removeAll();
+            ArrayList<int[]> positions = client.updatePlayerPositions(pos[0], pos[1]);
+            ArrayList<Renderable> players = new ArrayList<Renderable>();
             for (int[] position : positions) {
                 gpanel.add(new Player(position, Color.RED));
             }
+            gpanel.setWidgets(players);
             gpanel.add(new Player(pos, Color.BLUE)); // Add the local player
         }
 
