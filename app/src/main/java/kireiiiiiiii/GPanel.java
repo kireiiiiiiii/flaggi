@@ -193,7 +193,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         int[] size = { getWidth(), getHeight() };
         // ------------------------------------------------
 
-        synchronized (this.widgets) { // Synchronized block for safe access to widgets
+        synchronized (this.widgets) {
             for (Renderable renderable : this.widgets) {
                 if (renderable.isVisible()) {
                     renderable.render(g, size, this.appFrame.getFocusCycleRootAncestor());
@@ -297,7 +297,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * @return list of {@code T} objects.
      */
     public <T> ArrayList<T> getWidgetsByClass(Class<T> targetClass) {
-        synchronized (this.widgets) { // Synchronized block for safe access to widgets
+        synchronized (this.widgets) {
             ArrayList<T> list = new ArrayList<>();
             for (Renderable r : this.widgets) {
                 if (targetClass.isInstance(r)) {
@@ -316,7 +316,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      *         {@code Interactable} interface.
      */
     public ArrayList<Renderable> getInteractables() {
-        synchronized (this.widgets) { // Synchronized block for safe access to widgets
+        synchronized (this.widgets) {
             ArrayList<Renderable> interactables = new ArrayList<>();
             for (Renderable r : this.widgets) {
                 if (r instanceof Interactable) {
@@ -338,7 +338,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * @param renderable
      */
     public void add(Renderable renderable) {
-        synchronized (this.widgets) { // Synchronized block for safe modification of widgets
+        synchronized (this.widgets) {
             int value = renderable.getZIndex();
             int i = 0;
 
@@ -347,7 +347,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
                 i++;
             }
 
-            this.widgets.add(i, renderable); // Insert the value at the found position
+            this.widgets.add(i, renderable);
         }
     }
 
