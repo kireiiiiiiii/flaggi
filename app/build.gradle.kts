@@ -1,8 +1,6 @@
-import java.io.FileOutputStream
-
-///////////////
+////////////////
 // VARIABLES ///
-///////////////////
+////////////////
 
 var main_class = "kireiiiiiiii.App"
 
@@ -46,4 +44,5 @@ tasks.named<Test>("test") {
 tasks.shadowJar {
     mergeServiceFiles()
     archiveClassifier.set("")
+    archiveFileName.set("TTT.jar")
 }
