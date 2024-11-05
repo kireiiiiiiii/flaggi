@@ -351,10 +351,17 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         }
     }
 
+    /**
+     * Clears the widgets list, and sets it to the one given as parameter.
+     * 
+     * @param widgets - target widget list.
+     */
     public void setWidgets(ArrayList<Renderable> widgets) {
-        this.widgets = new ArrayList<Renderable>();
-        for (Renderable r : widgets) {
-            this.add(r);
+        synchronized (this.widgets) {
+            this.widgets.clear();
+            for (Renderable r : widgets) {
+                this.add(r);
+            }
         }
     }
 
