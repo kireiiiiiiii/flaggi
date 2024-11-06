@@ -8,3 +8,4 @@ _Tournament Tournament Tournament_ submision from [Samuel](https://github.com/Sn
 
 -   [The prompt and specifications given](./public/TTT-game-rules.pdf)
 -   [Mindmap mapping the project](./public/TTT.xmind)
+-   [Font uses in the banners](https://fonts.google.com/specimen/Ultra)
