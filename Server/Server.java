@@ -26,7 +26,6 @@
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -135,10 +134,13 @@ public class Server {
                 }
 
                 String[] parts = message.split(",");
-                if (parts.length >= 3) {
+                if (parts.length >= 4) {
+
+                    // Get data from the client message
                     int clientId = Integer.parseInt(parts[0]);
-                    float x = Float.parseFloat(parts[1]);
-                    float y = Float.parseFloat(parts[2]);
+                    int x = Integer.parseInt(parts[1]);
+                    int y = Integer.parseInt(parts[2]);
+                    String name = parts[3];
 
                     Client client;
                     synchronized (clients) {
@@ -148,16 +150,16 @@ public class Server {
                     if (client != null) {
                         client.setPosition(x, y);
                         if (log) {
-                            System.out.println("Position updated for client " + client.getDisplayName());
+                            System.out.println("Position updated for client " + name);
                         }
 
-                        String allPositions = getAllClientPositions();
-                        byte[] responseBuffer = allPositions.getBytes();
+                        String playerData = getAllClientsData();
+                        byte[] responseBuffer = playerData.getBytes();
                         DatagramPacket responsePacket = new DatagramPacket(
                                 responseBuffer, responseBuffer.length, client.getInetAddress(), packet.getPort());
 
                         if (log) {
-                            System.out.println("Sending positions to client: " + allPositions);
+                            System.out.println("Sending positions to client: " + playerData);
                         }
 
                         udpSocket.send(responsePacket);
@@ -169,11 +171,11 @@ public class Server {
                     }
                 } else {
                     if (log) {
-                        System.out.println("Message not 3 parts");
+                        System.out.println("Message not 4 parts");
                     }
                 }
 
-                Arrays.fill(buffer, (byte) 0);
+                buffer = new byte[1024];
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -200,13 +202,14 @@ public class Server {
      * 
      * @return - a {@code String} of all client positions.
      */
-    private static String getAllClientPositions() {
+    private static String getAllClientsData() {
         StringBuilder positions = new StringBuilder();
         synchronized (clients) {
             for (Client client : clients) {
                 positions.append(client.getId()).append(",")
                         .append(client.getX()).append(",")
-                        .append(client.getY()).append(";");
+                        .append(client.getY()).append(",")
+                        .append(client.getDisplayName()).append(";");
             }
         }
         return positions.toString();
@@ -220,8 +223,8 @@ public class Server {
         private final int id;
         private final String displayName;
         private final InetAddress inetAddress;
-        private float x;
-        private float y;
+        private int x;
+        private int y;
 
         public Client(int id, String displayName, InetAddress inetAddress) {
             this.id = id;
@@ -241,15 +244,15 @@ public class Server {
             return inetAddress;
         }
 
-        public float getX() {
+        public int getX() {
             return x;
         }
 
-        public float getY() {
+        public int getY() {
             return y;
         }
 
-        public void setPosition(float x, float y) {
+        public void setPosition(int x, int y) {
             this.x = x;
             this.y = y;
         }

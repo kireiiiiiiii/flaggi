@@ -35,6 +35,7 @@ import java.util.Scanner;
 
 import javax.swing.SwingUtilities;
 
+import kireiiiiiiii.Client.ClientStruct;
 import kireiiiiiiii.GPanel.InteractableHandeler;
 import kireiiiiiiii.GPanel.Renderable;
 import kireiiiiiiii.constants.ZIndex;
@@ -59,6 +60,7 @@ public class App implements InteractableHandeler {
 
     private Client client;
     private final int[] pos = { 250, 250 }; // Initialize player position
+    private String username;
     private GPanel gpanel;
 
     /////////////////
@@ -84,7 +86,7 @@ public class App implements InteractableHandeler {
         printHeader();
 
         System.out.print("\nEnter your name: ");
-        String username = console.nextLine();
+        this.username = console.nextLine();
         Logger.addLog("User entered name: " + username, true);
 
         client = new Client(username);
@@ -258,14 +260,24 @@ public class App implements InteractableHandeler {
             }
         }
 
+        /**
+         * Update method that will pull player data from the server, and display it to
+         * the user.
+         * 
+         */
         private void update() {
-            ArrayList<int[]> positions = client.updatePlayerPositions(pos[0], pos[1]);
+            ArrayList<ClientStruct> positions = client
+                    .updatePlayerPositions(new ClientStruct(pos[0], pos[1], username));
             ArrayList<Renderable> players = new ArrayList<Renderable>();
+
             gpanel.removeWidgetsOfClass(Player.class);
-            players.add(new Player(pos, Color.BLUE, ZIndex.PLAYER));
-            for (int[] position : positions) {
-                players.add(new Player(position, Color.RED, ZIndex.OTHER_PLAYERS));
+            players.add(new Player(pos, Color.BLUE, ZIndex.PLAYER, ""));
+
+            for (ClientStruct client : positions) {
+                int[] clientPosition = { client.getX(), client.getY() };
+                players.add(new Player(clientPosition, Color.RED, ZIndex.OTHER_PLAYERS, client.getName()));
             }
+
             gpanel.add(players);
         }
 

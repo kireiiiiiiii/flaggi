@@ -92,14 +92,14 @@ public class Client {
                 udpPort = in.readInt();
 
                 Logger.addLog("Received client ID '" + clientId + "' from server.", true);
-                Logger.addLog("Recieved UDP port '" + udpPort + "' for updates from server.", true);
+                Logger.addLog("Received UDP port '" + udpPort + "' for updates from server.", true);
 
             } catch (IOException e) {
-                Logger.addLog("IOException caught while sending data to user through TCP", e, true);
+                Logger.addLog("IOException caught while sending data to server", e, true);
             }
 
         } catch (UnknownHostException e) {
-            Logger.addLog("Server adress '" + this.serverAddress.getHostAddress() + "' coudn't be found.", e, true);
+            Logger.addLog("Server address '" + this.serverAddress.getHostAddress() + "' couldn't be found.", e, true);
         }
     }
 
@@ -107,34 +107,30 @@ public class Client {
      * Updates the position of this player on the server and gets all the positions
      * of other players from the server. This method is called every frame.
      * 
-     * @param playerX - this players X position.
-     * @param playerY - this players Y position.
+     * @param clientStruct - {@code ClientStruct} object containing the new position
+     *                     of this player.
      * @return {@code ArrayList} of positions of other players.
      */
-    public ArrayList<int[]> updatePlayerPositions(int playerX, int playerY) {
-        ArrayList<int[]> playerPositions = new ArrayList<>();
+    public ArrayList<ClientStruct> updatePlayerPositions(ClientStruct clientStruct) {
+        ArrayList<ClientStruct> playerPositions = new ArrayList<>();
 
         try {
-            String message = clientId + "," + playerX + "," + playerY;
+            String message = clientId + "," + clientStruct.getX() + "," + clientStruct.getY() + ","
+                    + clientStruct.getName();
             byte[] buffer = message.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, serverAddress, udpPort);
-
-            // System.out.println("Sending position to server: '" + message + "'");
             udpSocket.send(packet);
 
-            // Buffer to receive position updates
             byte[] receiveBuffer = new byte[1024];
             DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
 
-            // System.out.println("Waiting for server response...");
             udpSocket.receive(receivePacket);
 
             String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
-            // System.out.println("Received data from server: " + data);
             playerPositions = parsePositions(data);
 
         } catch (IOException e) {
-            Logger.addLog("IOException caught while sending/recieving position data to/from the server", e, true);
+            Logger.addLog("IOException caught while sending/receiving position data to/from the server", e, true);
         }
 
         return playerPositions;
@@ -149,17 +145,20 @@ public class Client {
      * {@code ArrayList} of position arrays.
      * 
      * @param data - {@code String} of the data.
-     * @return - {@code ArrayList} of x,y positions.
+     * @return - {@code ArrayList} of {@code ClientStructs}.
      */
-    private static ArrayList<int[]> parsePositions(String data) {
-        ArrayList<int[]> positions = new ArrayList<>();
+    private static ArrayList<ClientStruct> parsePositions(String data) {
+        ArrayList<ClientStruct> positions = new ArrayList<>();
         String[] playerData = data.split(";");
         for (String entry : playerData) {
             String[] parts = entry.split(",");
-            if (parts.length == 3) {
-                int posX = (int) Math.round(Double.parseDouble(parts[1]));
-                int posY = (int) Math.round(Double.parseDouble(parts[2]));
-                positions.add(new int[] { posX, posY });
+            if (parts.length == 4) {
+                int posX = Integer.parseInt(parts[1]);
+                int posY = Integer.parseInt(parts[2]);
+                String displayName = parts[3];
+                positions.add(new ClientStruct(posX, posY, displayName));
+            } else {
+                Logger.addLog("Recieved server message doesn't have 4 parts", true);
             }
         }
         return positions;
@@ -195,6 +194,45 @@ public class Client {
             e.printStackTrace();
         }
         return null; // No IPv4 address found
+    }
+
+    /////////////////
+    /// Client struct
+    ////////////////
+
+    /**
+     * Client variable structure.
+     * 
+     */
+    public static class ClientStruct {
+
+        private int x;
+        private int y;
+        private String displayName;
+
+        public ClientStruct(int x, int y, String displayName) {
+            this.x = x;
+            this.y = y;
+            this.displayName = displayName;
+        }
+
+        public int getX() {
+            return this.x;
+        }
+
+        public int getY() {
+            return this.y;
+        }
+
+        public String getName() {
+            return this.displayName;
+        }
+
+        @Override
+        public String toString() {
+            return this.x + "," + this.y + "," + this.displayName;
+        }
+
     }
 
 }
