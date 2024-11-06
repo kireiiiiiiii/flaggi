@@ -37,6 +37,9 @@ import javax.swing.SwingUtilities;
 
 import kireiiiiiiii.GPanel.InteractableHandeler;
 import kireiiiiiiii.GPanel.Renderable;
+import kireiiiiiiii.constants.ZIndex;
+import kireiiiiiiii.ui.Background;
+import kireiiiiiiii.ui.Player;
 
 /**
  * Main class for the LAN Game application.
@@ -87,6 +90,7 @@ public class App implements InteractableHandeler {
         client = new Client(username);
 
         this.gpanel = new GPanel(this, FPS, 500, 500, false, "Java LAN game");
+        initializeWidgets();
         Logger.addLog("UI window created", true);
 
         GameLoop gameLoop = new GameLoop(FPS);
@@ -99,9 +103,23 @@ public class App implements InteractableHandeler {
     // Events
     ////////////////
 
+    /**
+     * Updates the local position of this player.
+     * 
+     * @param x - new X value.
+     * @param y - new Y value.
+     */
     public void updateLocalPosition(int x, int y) {
         pos[0] = x;
         pos[1] = y;
+    }
+
+    /**
+     * Initializes all new widgets and adds them to the gpanel.
+     * 
+     */
+    public void initializeWidgets() {
+        gpanel.add(new Background());
     }
 
     /////////////////
@@ -243,11 +261,12 @@ public class App implements InteractableHandeler {
         private void update() {
             ArrayList<int[]> positions = client.updatePlayerPositions(pos[0], pos[1]);
             ArrayList<Renderable> players = new ArrayList<Renderable>();
-            players.add(new Player(pos, Color.BLUE, 2));
+            gpanel.removeWidgetsOfClass(Player.class);
+            players.add(new Player(pos, Color.BLUE, ZIndex.PLAYER));
             for (int[] position : positions) {
-                players.add(new Player(position, Color.RED, 1));
+                players.add(new Player(position, Color.RED, ZIndex.OTHER_PLAYERS));
             }
-            gpanel.setWidgets(players);
+            gpanel.add(players);
         }
 
         public void setFps(int value) {

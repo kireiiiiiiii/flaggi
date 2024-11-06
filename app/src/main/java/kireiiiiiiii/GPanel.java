@@ -38,6 +38,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.KeyEvent;
 import java.awt.Container;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JFrame;
@@ -73,7 +74,8 @@ import javax.swing.SwingUtilities;
  * <h3>UI Elements</h3>
  * This class supports adding
  * renderable objects that are drawn in a layered order based on their
- * {@code z-index}. The object must implement the interface {@code Renderable}.
+ * {@code z-index}. The higher the index, the more on top they are. The object
+ * must implement the interface {@code Renderable}.
  * This is how the objects are added:
  * 
  * <pre>
@@ -362,6 +364,28 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
             for (Renderable r : widgets) {
                 this.add(r);
             }
+        }
+    }
+
+    /**
+     * Removes all widgets of the specified class.
+     * 
+     * @param <T>
+     * @param targetClass - the class of widgets to remove.
+     * @return the number of widgets removed.
+     */
+    public <T> int removeWidgetsOfClass(Class<T> targetClass) {
+        synchronized (this.widgets) {
+            int removedCount = 0;
+            Iterator<Renderable> iterator = this.widgets.iterator();
+            while (iterator.hasNext()) {
+                Renderable r = iterator.next();
+                if (targetClass.isInstance(r)) {
+                    iterator.remove();
+                    removedCount++;
+                }
+            }
+            return removedCount;
         }
     }
 

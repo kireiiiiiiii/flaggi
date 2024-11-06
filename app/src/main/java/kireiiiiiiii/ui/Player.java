@@ -23,7 +23,7 @@
  *
  */
 
-package kireiiiiiiii;
+package kireiiiiiiii.ui;
 
 import java.awt.Color;
 import java.awt.Container;
