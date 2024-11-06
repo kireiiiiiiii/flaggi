@@ -2,16 +2,16 @@
 // VARIABLES ///
 ////////////////
 
-var main_class = "kireiiiiiiii.App"
+val mainClassName = "kireiiiiiiii.App"
 
 ///////////////////
 // BUILD SCRIPT ///
 ///////////////////
 
 plugins {
-    id ("application")
-    id ("java")
-    id ("com.github.johnrengelman.shadow") version "8.1.1"
+    id("application")
+    id("java")
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 } 
 
 repositories {
@@ -29,12 +29,14 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion.set(JavaLanguageVersion.of(8)) // Target Java 8
     }
+    sourceCompatibility = JavaVersion.VERSION_1_8 // Ensures compatibility
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 application {
-    mainClass = main_class
+    mainClass.set(mainClassName)
 }
 
 tasks.named<Test>("test") {

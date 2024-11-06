@@ -30,7 +30,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Taskbar;
+// import java.awt.Taskbar;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -407,8 +407,8 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * @param path - path of the icon
      */
     public void setIcon(Image icon) {
-        Taskbar taskbar = Taskbar.getTaskbar();
-        taskbar.setIconImage(icon);
+        // Taskbar taskbar = Taskbar.getTaskbar();
+        // taskbar.setIconImage(icon);
     }
 
     /////////////////
