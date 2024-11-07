@@ -59,7 +59,7 @@ public class Client {
     public Client(String clientName) {
         // this.serverAddress = getIPv4Address();
         try {
-            this.serverAddress = InetAddress.getByName("ip"); // TODO change
+            this.serverAddress = InetAddress.getByName("10.85.120.177");
         } catch (UnknownHostException e) {
             e.printStackTrace();
             System.exit(1);
