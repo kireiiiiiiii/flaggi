@@ -57,7 +57,13 @@ public class Client {
      * @param clientName - {@code String} of the client display name.
      */
     public Client(String clientName) {
-        this.serverAddress = getIPv4Address();
+        // this.serverAddress = getIPv4Address();
+        try {
+            this.serverAddress = InetAddress.getByName("ip"); // TODO change
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
         makeConnection(clientName);
         try {
             udpSocket = new DatagramSocket();
