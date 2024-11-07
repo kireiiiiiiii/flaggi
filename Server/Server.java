@@ -72,6 +72,7 @@ public class Server {
      */
     public static void startServer() throws IOException {
         ServerSocket serverSocket = new ServerSocket(TCP_PORT);
+        System.out.println("Server socket created on: '" + serverSocket.getInetAddress().getHostAddress() + "'");
         new Thread(() -> startTCPListener(serverSocket)).start();
         System.out.println("Server started on port '" + TCP_PORT + "'. Waiting for clients...");
         new Thread(Server::startUDPListener).start();
