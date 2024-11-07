@@ -76,30 +76,24 @@ public class Client {
      * @param clientName - {@code String} of the client display name.
      */
     private void makeConnection(String clientName) {
-        try {
-            serverAddress = InetAddress.getByName(this.serverAddress.getHostAddress());
-            try (
-                    Socket socket = new Socket(serverAddress, TCP_PORT);
-                    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                    ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+        try (
+                Socket socket = new Socket(serverAddress, TCP_PORT);
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
-                // Send the client display name to the server
-                out.writeUTF(clientName);
-                out.flush();
+            // Send the client display name to the server
+            out.writeUTF(clientName);
+            out.flush();
 
-                // Receive the assigned client ID and UDP port from the server
-                clientId = in.readInt();
-                udpPort = in.readInt();
+            // Receive the assigned client ID and UDP port from the server
+            clientId = in.readInt();
+            udpPort = in.readInt();
 
-                Logger.addLog("Received client ID '" + clientId + "' from server.", true);
-                Logger.addLog("Received UDP port '" + udpPort + "' for updates from server.", true);
+            Logger.addLog("Received client ID '" + clientId + "' from server.", true);
+            Logger.addLog("Received UDP port '" + udpPort + "' for updates from server.", true);
 
-            } catch (IOException e) {
-                Logger.addLog("IOException caught while sending data to server", e, true);
-            }
-
-        } catch (UnknownHostException e) {
-            Logger.addLog("Server address '" + this.serverAddress.getHostAddress() + "' couldn't be found.", e, true);
+        } catch (IOException e) {
+            Logger.addLog("IOException caught while sending data to server", e, true);
         }
     }
 
