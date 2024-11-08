@@ -77,7 +77,7 @@ public class Client {
         try {
             udpSocket = new DatagramSocket();
         } catch (SocketException e) {
-            Logger.addLog("Client Socket Exception caught", e, true);
+            Logger.addLog("Client Socket Exception caught", e);
         }
     }
 
@@ -102,13 +102,13 @@ public class Client {
 
             // ------ Receive the assigned client ID and UDP port from the server
             clientId = in.readInt();
-            Logger.addLog("Received client ID '" + clientId + "' from server.", true);
+            Logger.addLog("Received client ID '" + clientId + "' from server.");
 
             udpPort = in.readInt();
-            Logger.addLog("Received UDP port '" + udpPort + "' for updates from server.", true);
+            Logger.addLog("Received UDP port '" + udpPort + "' for updates from server.");
 
         } catch (IOException e) {
-            Logger.addLog("IOException caught while sending data to server", e, true);
+            Logger.addLog("IOException caught while sending data to server", e);
         }
     }
 
@@ -140,7 +140,7 @@ public class Client {
             playerPositions = parsePositions(data);
 
         } catch (IOException e) {
-            Logger.addLog("IOException caught while sending/receiving position data to/from the server", e, true);
+            Logger.addLog("IOException caught while sending/receiving position data to/from the server", e);
         }
 
         return playerPositions;
@@ -171,10 +171,10 @@ public class Client {
                 return "pong".equals(response);
             }
         } catch (SocketTimeoutException e) {
-            Logger.addLog("Server running check timed out.", e, true);
+            Logger.addLog("Server running check timed out.", e);
             return false;
         } catch (IOException e) {
-            Logger.addLog("Server running check failed.", e, true);
+            Logger.addLog("Server running check failed.", e);
             return false;
         }
     }
@@ -233,7 +233,7 @@ public class Client {
                 String displayName = parts[3];
                 positions.add(new ClientStruct(posX, posY, displayName));
             } else {
-                Logger.addLog("Recieved server message doesn't have 4 parts", true);
+                Logger.addLog("Recieved server message doesn't have 4 parts");
             }
         }
         return positions;

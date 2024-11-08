@@ -80,7 +80,8 @@ public class App implements InteractableHandeler {
      * @param args
      */
     public static void main(String[] args) {
-        Logger.addLog("App started", false);
+        Logger.clearLog();
+        Logger.addLog("App started");
         SwingUtilities.invokeLater(App::new);
     }
 
@@ -97,21 +98,20 @@ public class App implements InteractableHandeler {
             try {
                 serverAddress = InetAddress.getByName(ip);
             } catch (UnknownHostException e) {
-                Logger.addLog("Unknown host exception when trying to get IP from a file.", e, true);
+                Logger.addLog("Unknown host exception when trying to get IP from a file.", e);
                 serverAddress = Client.getIPv4Address();
-                Logger.addLog("No " + IP_FILE + ". Detected ip. Using local IP adress", true);
+                Logger.addLog("No " + IP_FILE + ". Detected ip. Using local IP adress");
             }
-            Logger.addLog("Found " + IP_FILE + ". Detected ip: " + ip, true);
+            Logger.addLog("Found " + IP_FILE + ". Detected ip: " + ip);
         } else {
             serverAddress = Client.getIPv4Address();
-            Logger.addLog("No " + IP_FILE + ". Detected ip. Using local IP adress", true);
+            Logger.addLog("No " + IP_FILE + ". Detected ip. Using local IP adress");
         }
 
         // ------ Check if server is running
         if (!Client.isServerRunning(serverAddress, TCP_PORT)) {
             System.out.println("Cannot reach server.");
-            Logger.addLog("Coudn't reach the server - server is running. Exiting...",
-                    true);
+            Logger.addLog("Coudn't reach the server - server is running. Exiting...");
             System.exit(1);
         }
 
@@ -124,18 +124,18 @@ public class App implements InteractableHandeler {
         // ------ Get username
         System.out.print("\nEnter your name: ");
         this.username = console.nextLine();
-        Logger.addLog("User entered name: " + username, true);
+        Logger.addLog("User entered name: " + username);
 
         // ------ Initialize client & UI
         this.client = new Client(username, serverAddress);
         this.gpanel = new GPanel(this, FPS, 500, 500, false, "Tournament Tournament Tournament");
         initializeWidgets();
-        Logger.addLog("UI window created", true);
+        Logger.addLog("UI window created");
 
         // ------ Start game loop
         GameLoop gameLoop = new GameLoop(FPS);
         gameLoop.start();
-        Logger.addLog("Game loop started", true);
+        Logger.addLog("Game loop started");
 
         // ------ Bottom of main
         console.close();
