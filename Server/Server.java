@@ -88,20 +88,24 @@ public class Server {
     private static void startTCPListener(ServerSocket serverSocket) {
         while (true) {
             try (Socket clientSocket = serverSocket.accept()) {
-                // Set a short timeout to differentiate between test connections and real
-                // clients
-                clientSocket.setSoTimeout(500); // 500 milliseconds timeout
+                clientSocket.setSoTimeout(500); // Short timeout to handle test connections quickly
 
                 try (ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
                         ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream())) {
 
-                    // Try reading the client name
-                    String clientName = in.readUTF();
+                    String initialMessage = in.readUTF();
 
-                    // Reset timeout for normal operation once we detect a real client
+                    if ("ping".equals(initialMessage)) {
+                        out.writeUTF("pong");
+                        out.flush();
+                        System.out.println("Handled server running check, sent 'pong'.");
+                        continue;
+                    }
+
                     clientSocket.setSoTimeout(0);
 
                     int clientId = clientNum++;
+                    String clientName = initialMessage;
                     InetAddress clientAddress = clientSocket.getInetAddress();
 
                     synchronized (clients) {
@@ -115,13 +119,10 @@ public class Server {
                     System.out.println("Sent port and ID to client '" + clientName + "'.");
 
                 } catch (EOFException | SocketTimeoutException e) {
-                    // Connection was likely a quick check if it timed out or closed without data
                     System.out.println("Received connection test, closing socket.");
                 } catch (IOException e) {
-                    System.err.println("Failed to handle client connection (or connection check was done by client): "
-                            + e.getMessage());
+                    System.err.println("Error handling client connection: " + e.getMessage());
                 }
-
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -31,9 +31,12 @@ import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -237,7 +240,7 @@ public class App implements InteractableHandeler {
 
     /**
      * Checks if there is a server running on a specific IP address and port by
-     * trying to establish a connection.
+     * trying to establish a connection and exchanging a test message.
      * 
      * @param serverAddress - target IP address or hostname as a String
      * @param port          - target port
@@ -246,10 +249,22 @@ public class App implements InteractableHandeler {
      */
     private static boolean isServerRunning(InetAddress serverAddress, int port) {
         try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(serverAddress, port), 2000); // 2-second timeout
-            // Immediately close after connection to avoid interfering with server
-            // operations
-            return true;
+            socket.connect(new InetSocketAddress(serverAddress, port), 2000); // 2-second timeout for connection
+
+            socket.setSoTimeout(5000);
+
+            try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                    ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+
+                out.writeUTF("ping");
+                out.flush();
+
+                String response = in.readUTF();
+                return "pong".equals(response);
+            }
+        } catch (SocketTimeoutException e) {
+            Logger.addLog("Server running check timed out.", e, true);
+            return false;
         } catch (IOException e) {
             Logger.addLog("Server running check failed.", e, true);
             return false;
