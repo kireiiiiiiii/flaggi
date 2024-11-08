@@ -61,13 +61,11 @@ public class Client {
         this.clientName = clientName;
         this.serverAddress = serverAddress;
         makeConnection(this.clientName);
-        System.out.println("bofore");
         try {
             udpSocket = new DatagramSocket();
         } catch (SocketException e) {
             Logger.addLog("Client Socket Exception caught", e, true);
         }
-        System.out.println("after");
     }
 
     /////////////////
