@@ -28,8 +28,14 @@ package kireiiiiiiii;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -56,6 +62,7 @@ public class App implements InteractableHandeler {
 
     public static final int TCP_PORT = 54321;
     private static final int FPS = 60;
+    private static final String IP_FILE = "ip.txt";
 
     /////////////////
     // Variables
@@ -77,12 +84,32 @@ public class App implements InteractableHandeler {
 
     public App() {
 
-        if (!isServerRunning(TCP_PORT)) {
+        // ------ Get IP
+        String ip = getFirstLine(IP_FILE);
+        InetAddress serverAddress;
+        if (ip != null) {
+            try {
+                serverAddress = InetAddress.getByName(ip);
+            } catch (UnknownHostException e) {
+                Logger.addLog("Unknown host exception when trying to get IP from a file.", e, true);
+                serverAddress = Client.getIPv4Address();
+                Logger.addLog("No " + IP_FILE + ". Detected ip. Using local IP adress", true);
+            }
+            Logger.addLog("Found " + IP_FILE + ". Detected ip: " + ip, true);
+        } else {
+            serverAddress = Client.getIPv4Address();
+            Logger.addLog("No " + IP_FILE + ". Detected ip. Using local IP adress", true);
+        }
+
+        // ------ Check if server is running
+        if (!isServerRunning(serverAddress, TCP_PORT)) {
             System.out.println("Cannot reach server.");
-            Logger.addLog("Coudn't reach the server - server is running. Exiting...", true);
+            Logger.addLog("Coudn't reach the server - server is running. Exiting...",
+                    true);
             System.exit(1);
         }
 
+        // ------ Initialize game
         this.pos[0] = 250;
         this.pos[1] = 250;
         Scanner console = new Scanner(System.in);
@@ -92,7 +119,7 @@ public class App implements InteractableHandeler {
         this.username = console.nextLine();
         Logger.addLog("User entered name: " + username, true);
 
-        client = new Client(username);
+        client = new Client(username, serverAddress);
 
         this.gpanel = new GPanel(this, FPS, 500, 500, false, "Java LAN game");
         initializeWidgets();
@@ -206,17 +233,37 @@ public class App implements InteractableHandeler {
     }
 
     /**
-     * Finds out whether is something running on a specific port by trying to create
-     * a new socket.
+     * Checks if there is a server running on a specific IP address and port by
+     * trying to establish a connection.
      * 
-     * @param port - target port
-     * @return boolean value
+     * @param serverAddress - target IP address or hostname as a String
+     * @param port          - target port
+     * @return boolean value, true if something is running on the specified IP and
+     *         port
      */
-    private static boolean isServerRunning(int port) {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            return false;
-        } catch (IOException e) {
+    private static boolean isServerRunning(InetAddress serverAddress, int port) {
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(serverAddress, port), 2000); // 2-second timeout
+            // Immediately close after connection to avoid interfering with server
+            // operations
             return true;
+        } catch (IOException e) {
+            Logger.addLog("Server running check failed.", e, true);
+            return false;
+        }
+    }
+
+    /**
+     * Gets the first line of a {@code .txt} file.
+     * 
+     * @param filePath - {@code String} of the file path.
+     * @return - a {@code String} of the first line of the file.
+     */
+    public static String getFirstLine(String filePath) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            return reader.readLine();
+        } catch (IOException e) {
+            return null;
         }
     }
 

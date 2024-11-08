@@ -80,32 +80,47 @@ public class Server {
     }
 
     /**
-     * Starts the TCP listener that listens for new clients, and asigns them their
-     * IDs and gives them the UDP port to send data to.
+     * Starts the TCP listener that listens for new clients, assigns them their
+     * IDs, and gives them the UDP port to send data to.
      * 
      * @param serverSocket - TCP port
      */
     private static void startTCPListener(ServerSocket serverSocket) {
         while (true) {
-            try (
-                    Socket clientSocket = serverSocket.accept();
-                    ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-                    ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream())) {
+            try (Socket clientSocket = serverSocket.accept()) {
+                // Set a short timeout to differentiate between test connections and real
+                // clients
+                clientSocket.setSoTimeout(500); // 500 milliseconds timeout
 
-                String clientName = in.readUTF();
-                int clientId = clientNum++;
+                try (ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                        ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream())) {
 
-                InetAddress clientAddress = clientSocket.getInetAddress();
+                    // Try reading the client name
+                    String clientName = in.readUTF();
 
-                synchronized (clients) {
-                    clients.add(new Client(clientId, clientName, clientAddress));
+                    // Reset timeout for normal operation once we detect a real client
+                    clientSocket.setSoTimeout(0);
+
+                    int clientId = clientNum++;
+                    InetAddress clientAddress = clientSocket.getInetAddress();
+
+                    synchronized (clients) {
+                        clients.add(new Client(clientId, clientName, clientAddress));
+                    }
+                    System.out.println("Assigned ID '" + clientId + "' to client '" + clientName + "'.");
+
+                    out.writeInt(clientId);
+                    out.writeInt(UDP_PORT);
+                    out.flush();
+                    System.out.println("Sent port and ID to client '" + clientName + "'.");
+
+                } catch (EOFException | SocketTimeoutException e) {
+                    // Connection was likely a quick check if it timed out or closed without data
+                    System.out.println("Received connection test, closing socket.");
+                } catch (IOException e) {
+                    System.err.println("Failed to handle client connection (or connection check was done by client): "
+                            + e.getMessage());
                 }
-                System.out.println("Assigned ID '" + clientId + "'' to client '" + clientName + "'.");
-
-                out.writeInt(clientId);
-                out.writeInt(UDP_PORT);
-                out.flush();
-                System.out.println("Send port and ID to client'" + clientName + "'.");
 
             } catch (IOException e) {
                 e.printStackTrace();
