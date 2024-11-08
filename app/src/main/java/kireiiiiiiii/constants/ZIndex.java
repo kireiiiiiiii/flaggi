@@ -4,6 +4,7 @@ public class ZIndex {
 
     // GLOBAL
     public static final int BACKGROUND = 1;
+    public static final int CONNECTION = 2;
 
     // MENU
     public static final int MENU_ELEMENTS = 5;

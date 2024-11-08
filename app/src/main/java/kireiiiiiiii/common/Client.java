@@ -137,7 +137,7 @@ public class Client {
             udpSocket.receive(receivePacket);
 
             String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
-            playerPositions = parsePositions(data);
+            playerPositions = parsePositions(data, this.clientId);
 
         } catch (IOException e) {
             Logger.addLog("IOException caught while sending/receiving position data to/from the server", e);
@@ -222,16 +222,21 @@ public class Client {
      * @param data - {@code String} of the data.
      * @return - {@code ArrayList} of {@code ClientStructs}.
      */
-    private static ArrayList<ClientStruct> parsePositions(String data) {
+    private static ArrayList<ClientStruct> parsePositions(String data, int excludeID) {
         ArrayList<ClientStruct> positions = new ArrayList<>();
         String[] playerData = data.split(";");
         for (String entry : playerData) {
             String[] parts = entry.split(",");
             if (parts.length == 4) {
+                int clientID = Integer.parseInt(parts[0]);
                 int posX = Integer.parseInt(parts[1]);
                 int posY = Integer.parseInt(parts[2]);
                 String displayName = parts[3];
-                positions.add(new ClientStruct(posX, posY, displayName));
+
+                // Exclude the local player
+                if (clientID != excludeID) {
+                    positions.add(new ClientStruct(posX, posY, displayName));
+                }
             } else {
                 Logger.addLog("Recieved server message doesn't have 4 parts");
             }
