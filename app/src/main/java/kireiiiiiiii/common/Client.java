@@ -28,6 +28,7 @@ package kireiiiiiiii.common;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Enumeration;
 
 public class Client {
 
@@ -36,6 +37,7 @@ public class Client {
     ////////////////
 
     public static final int TCP_PORT = 54321;
+    private static final String IP_FILE = "ip.txt";
 
     /////////////////
     // Variables
@@ -56,9 +58,15 @@ public class Client {
      * @param clientName - {@code String} of the client display name.
      */
     public Client(String clientName) {
-        // this.serverAddress = getIPv4Address();
         try {
-            this.serverAddress = InetAddress.getByName("10.85.120.177");
+            String ip = getFirstLine(IP_FILE);
+            if (ip != null) {
+                this.serverAddress = InetAddress.getByName(ip);
+                Logger.addLog("Found " + IP_FILE + ". Detected ip: " + ip, true);
+            } else {
+                this.serverAddress = getIPv4Address();
+                Logger.addLog("No " + IP_FILE + ". Detected ip. Using local IP adress", true);
+            }
         } catch (UnknownHostException e) {
             e.printStackTrace();
             System.exit(1);
@@ -161,6 +169,52 @@ public class Client {
             }
         }
         return positions;
+    }
+
+    /**
+     * Gets the first line of a {@code .txt} file.
+     * 
+     * @param filePath - {@code String} of the file path.
+     * @return - a {@code String} of the first line of the file.
+     */
+    public static String getFirstLine(String filePath) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            return reader.readLine();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Helper method to get the IPv4 adress of the client, to contact the server.
+     * 
+     * @return - a {@code InterAdress} of the client IPv4.
+     */
+    private static InetAddress getIPv4Address() {
+        try {
+            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+            while (networkInterfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = networkInterfaces.nextElement();
+
+                // Skip loopback and inactive interfaces
+                if (networkInterface.isLoopback() || !networkInterface.isUp()) {
+                    continue;
+                }
+
+                Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
+                while (inetAddresses.hasMoreElements()) {
+                    InetAddress inetAddress = inetAddresses.nextElement();
+
+                    // Check for an IPv4 address
+                    if (inetAddress instanceof java.net.Inet4Address) {
+                        return inetAddress; // Return the InetAddress instance
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return null; // No IPv4 address found
     }
 
     /////////////////
