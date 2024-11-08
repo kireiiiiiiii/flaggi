@@ -31,12 +31,7 @@ import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -71,19 +66,28 @@ public class App implements InteractableHandeler {
     ////////////////
 
     private Client client;
-    private final int[] pos = { 250, 250 }; // Initialize player position
     private String username;
     private GPanel gpanel;
+    private int[] pos;
 
     /////////////////
     // Main & Constructor
     ////////////////
 
+    /**
+     * Main method.
+     * 
+     * @param args
+     */
     public static void main(String[] args) {
         Logger.addLog("App started", false);
         SwingUtilities.invokeLater(App::new);
     }
 
+    /**
+     * Constructor for the application.
+     * 
+     */
     public App() {
 
         // ------ Get IP
@@ -104,7 +108,7 @@ public class App implements InteractableHandeler {
         }
 
         // ------ Check if server is running
-        if (!isServerRunning(serverAddress, TCP_PORT)) {
+        if (!Client.isServerRunning(serverAddress, TCP_PORT)) {
             System.out.println("Cannot reach server.");
             Logger.addLog("Coudn't reach the server - server is running. Exiting...",
                     true);
@@ -117,19 +121,23 @@ public class App implements InteractableHandeler {
         Scanner console = new Scanner(System.in);
         printHeader();
 
+        // ------ Get username
         System.out.print("\nEnter your name: ");
         this.username = console.nextLine();
         Logger.addLog("User entered name: " + username, true);
 
-        client = new Client(username, serverAddress);
-
-        this.gpanel = new GPanel(this, FPS, 500, 500, false, "Java LAN game");
+        // ------ Initialize client & UI
+        this.client = new Client(username, serverAddress);
+        this.gpanel = new GPanel(this, FPS, 500, 500, false, "Tournament Tournament Tournament");
         initializeWidgets();
         Logger.addLog("UI window created", true);
 
+        // ------ Start game loop
         GameLoop gameLoop = new GameLoop(FPS);
         gameLoop.start();
         Logger.addLog("Game loop started", true);
+
+        // ------ Bottom of main
         console.close();
     }
 
@@ -239,39 +247,6 @@ public class App implements InteractableHandeler {
     }
 
     /**
-     * Checks if there is a server running on a specific IP address and port by
-     * trying to establish a connection and exchanging a test message.
-     * 
-     * @param serverAddress - target IP address or hostname as a String
-     * @param port          - target port
-     * @return boolean value, true if something is running on the specified IP and
-     *         port
-     */
-    private static boolean isServerRunning(InetAddress serverAddress, int port) {
-        try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(serverAddress, port), 2000); // 2-second timeout for connection
-
-            socket.setSoTimeout(5000);
-
-            try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                    ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
-
-                out.writeUTF("ping");
-                out.flush();
-
-                String response = in.readUTF();
-                return "pong".equals(response);
-            }
-        } catch (SocketTimeoutException e) {
-            Logger.addLog("Server running check timed out.", e, true);
-            return false;
-        } catch (IOException e) {
-            Logger.addLog("Server running check failed.", e, true);
-            return false;
-        }
-    }
-
-    /**
      * Gets the first line of a {@code .txt} file.
      * 
      * @param filePath - {@code String} of the file path.
@@ -295,18 +270,32 @@ public class App implements InteractableHandeler {
      */
     @SuppressWarnings("unused")
     private class GameLoop implements Runnable {
+
         private boolean running = false;
         private int targetFPS;
 
+        /**
+         * Gameloop constructor. WILL NOT START THE GAME LOOP AUTOMATICALLY!!
+         * 
+         * @param fps
+         */
         public GameLoop(int fps) {
             setFps(fps);
         }
 
+        /**
+         * Starts the rendering loop.
+         * 
+         */
         public void start() {
             running = true;
             new Thread(this, "Game loop Thread").start();
         }
 
+        /**
+         * Stops the rendering loop.
+         * 
+         */
         public void stop() {
             running = false;
         }
@@ -317,7 +306,7 @@ public class App implements InteractableHandeler {
                 long optimalTime = 1_000_000_000 / targetFPS;
                 long startTime = System.nanoTime();
 
-                update(); // Update game state
+                update();
 
                 long elapsedTime = System.nanoTime() - startTime;
                 long sleepTime = optimalTime - elapsedTime;
@@ -326,7 +315,7 @@ public class App implements InteractableHandeler {
                     try {
                         Thread.sleep(sleepTime / 1_000_000, (int) (sleepTime % 1_000_000));
                     } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt(); // Restore interrupted status
+                        Thread.currentThread().interrupt();
                     }
                 }
             }
@@ -353,6 +342,11 @@ public class App implements InteractableHandeler {
             gpanel.add(players);
         }
 
+        /**
+         * Set a new FPS value.
+         * 
+         * @param value - new FPS value.
+         */
         public void setFps(int value) {
             targetFPS = value;
         }

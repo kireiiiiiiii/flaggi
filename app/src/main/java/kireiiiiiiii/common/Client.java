@@ -31,9 +31,11 @@ import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
@@ -65,8 +67,12 @@ public class Client {
      * @param clientName - {@code String} of the client display name.
      */
     public Client(String clientName, InetAddress serverAddress) {
+
+        // ------ Set variables
         this.clientName = clientName;
         this.serverAddress = serverAddress;
+
+        // ------ Make the connection
         makeConnection(this.clientName);
         try {
             udpSocket = new DatagramSocket();
@@ -76,7 +82,7 @@ public class Client {
     }
 
     /////////////////
-    // Events
+    // Public methods
     ////////////////
 
     /**
@@ -90,15 +96,15 @@ public class Client {
                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
-            // Send the client display name to the server
+            // ------ Send the client name to the server
             out.writeUTF(clientName);
             out.flush();
 
-            // Receive the assigned client ID and UDP port from the server
+            // ------ Receive the assigned client ID and UDP port from the server
             clientId = in.readInt();
-            udpPort = in.readInt();
-
             Logger.addLog("Received client ID '" + clientId + "' from server.", true);
+
+            udpPort = in.readInt();
             Logger.addLog("Received UDP port '" + udpPort + "' for updates from server.", true);
 
         } catch (IOException e) {
@@ -115,6 +121,7 @@ public class Client {
      * @return {@code ArrayList} of positions of other players.
      */
     public ArrayList<ClientStruct> updatePlayerPositions(ClientStruct clientStruct) {
+
         ArrayList<ClientStruct> playerPositions = new ArrayList<>();
 
         try {
@@ -139,32 +146,37 @@ public class Client {
         return playerPositions;
     }
 
-    /////////////////
-    // Helper methods
-    ////////////////
-
     /**
-     * Parses the string of player positions and converts them to an
-     * {@code ArrayList} of position arrays.
+     * Checks if there is a server running on a specific IP address and port by
+     * trying to establish a connection and exchanging a test message.
      * 
-     * @param data - {@code String} of the data.
-     * @return - {@code ArrayList} of {@code ClientStructs}.
+     * @param serverAddress - target IP address or hostname as a String
+     * @param port          - target port
+     * @return boolean value, true if something is running on the specified IP and
+     *         port
      */
-    private static ArrayList<ClientStruct> parsePositions(String data) {
-        ArrayList<ClientStruct> positions = new ArrayList<>();
-        String[] playerData = data.split(";");
-        for (String entry : playerData) {
-            String[] parts = entry.split(",");
-            if (parts.length == 4) {
-                int posX = Integer.parseInt(parts[1]);
-                int posY = Integer.parseInt(parts[2]);
-                String displayName = parts[3];
-                positions.add(new ClientStruct(posX, posY, displayName));
-            } else {
-                Logger.addLog("Recieved server message doesn't have 4 parts", true);
+    public static boolean isServerRunning(InetAddress serverAddress, int port) {
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(serverAddress, port), 2000); // 2-second timeout for connection
+
+            socket.setSoTimeout(5000);
+
+            try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                    ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+
+                out.writeUTF("ping");
+                out.flush();
+
+                String response = in.readUTF();
+                return "pong".equals(response);
             }
+        } catch (SocketTimeoutException e) {
+            Logger.addLog("Server running check timed out.", e, true);
+            return false;
+        } catch (IOException e) {
+            Logger.addLog("Server running check failed.", e, true);
+            return false;
         }
-        return positions;
     }
 
     /**
@@ -197,6 +209,34 @@ public class Client {
             e.printStackTrace();
         }
         return null; // No IPv4 address found
+    }
+
+    /////////////////
+    // Helper methods
+    ////////////////
+
+    /**
+     * Parses the string of player positions and converts them to an
+     * {@code ArrayList} of position arrays.
+     * 
+     * @param data - {@code String} of the data.
+     * @return - {@code ArrayList} of {@code ClientStructs}.
+     */
+    private static ArrayList<ClientStruct> parsePositions(String data) {
+        ArrayList<ClientStruct> positions = new ArrayList<>();
+        String[] playerData = data.split(";");
+        for (String entry : playerData) {
+            String[] parts = entry.split(",");
+            if (parts.length == 4) {
+                int posX = Integer.parseInt(parts[1]);
+                int posY = Integer.parseInt(parts[2]);
+                String displayName = parts[3];
+                positions.add(new ClientStruct(posX, posY, displayName));
+            } else {
+                Logger.addLog("Recieved server message doesn't have 4 parts", true);
+            }
+        }
+        return positions;
     }
 
     /////////////////
