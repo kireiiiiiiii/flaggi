@@ -23,7 +23,7 @@
  *
  */
 
-package kireiiiiiiii;
+package kireiiiiiiii.common;
 
 import java.io.*;
 import java.net.*;

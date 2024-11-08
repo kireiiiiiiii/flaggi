@@ -35,9 +35,12 @@ import java.util.Scanner;
 
 import javax.swing.SwingUtilities;
 
-import kireiiiiiiii.Client.ClientStruct;
-import kireiiiiiiii.GPanel.InteractableHandeler;
-import kireiiiiiiii.GPanel.Renderable;
+import kireiiiiiiii.common.Client;
+import kireiiiiiiii.common.GPanel;
+import kireiiiiiiii.common.Logger;
+import kireiiiiiiii.common.Client.ClientStruct;
+import kireiiiiiiii.common.GPanel.InteractableHandeler;
+import kireiiiiiiii.common.GPanel.Renderable;
 import kireiiiiiiii.constants.ZIndex;
 import kireiiiiiiii.ui.Background;
 import kireiiiiiiii.ui.Player;

@@ -31,8 +31,8 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
-import kireiiiiiiii.FontUtil;
-import kireiiiiiiii.GPanel.Renderable;
+import kireiiiiiiii.common.GPanel.Renderable;
+import kireiiiiiiii.util.FontUtil;
 
 public class Player implements Renderable {
 

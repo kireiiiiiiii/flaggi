@@ -24,7 +24,7 @@
  *
  */
 
-package kireiiiiiiii;
+package kireiiiiiiii.common;
 
 import java.awt.Dimension;
 import java.awt.Graphics;

@@ -5,7 +5,7 @@ import java.awt.Container;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
-import kireiiiiiiii.GPanel.Renderable;
+import kireiiiiiiii.common.GPanel.Renderable;
 import kireiiiiiiii.constants.WidgetTags;
 import kireiiiiiiii.constants.ZIndex;
 

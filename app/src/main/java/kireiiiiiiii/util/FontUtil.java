@@ -24,7 +24,7 @@
  *
  */
 
-package kireiiiiiiii;
+package kireiiiiiiii.util;
 
 import java.awt.FontMetrics;
 
