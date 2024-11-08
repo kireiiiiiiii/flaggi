@@ -46,6 +46,7 @@ public class Client {
     private int clientId;
     private InetAddress serverAddress;
     private DatagramSocket udpSocket;
+    private String clientName;
 
     /////////////////
     // Constructor
@@ -57,13 +58,16 @@ public class Client {
      * @param clientName - {@code String} of the client display name.
      */
     public Client(String clientName, InetAddress serverAddress) {
+        this.clientName = clientName;
         this.serverAddress = serverAddress;
-        makeConnection(clientName);
+        makeConnection(this.clientName);
+        System.out.println("bofore");
         try {
             udpSocket = new DatagramSocket();
         } catch (SocketException e) {
             Logger.addLog("Client Socket Exception caught", e, true);
         }
+        System.out.println("after");
     }
 
     /////////////////

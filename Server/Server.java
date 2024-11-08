@@ -130,7 +130,7 @@ public class Server {
 
     /**
      * Starts the UDP listener for the clients to send their position data to.
-     * 
+     * Now also responds to heartbeat messages from clients to confirm connectivity.
      */
     private static void startUDPListener() {
         boolean log = false;
@@ -150,10 +150,22 @@ public class Server {
                     System.out.println("Received packet from client: " + message);
                 }
 
+                if (message.equals("HEARTBEAT")) {
+                    String ackMessage = "ACK";
+                    byte[] ackBuffer = ackMessage.getBytes();
+                    DatagramPacket ackPacket = new DatagramPacket(
+                            ackBuffer, ackBuffer.length, packet.getAddress(), packet.getPort());
+                    udpSocket.send(ackPacket);
+
+                    if (log) {
+                        System.out.println("Sent heartbeat acknowledgment to client.");
+                    }
+                    continue;
+                }
+
+                // Process position updates if the message is not a heartbeat
                 String[] parts = message.split(",");
                 if (parts.length >= 4) {
-
-                    // Get data from the client message
                     int clientId = Integer.parseInt(parts[0]);
                     int x = Integer.parseInt(parts[1]);
                     int y = Integer.parseInt(parts[2]);

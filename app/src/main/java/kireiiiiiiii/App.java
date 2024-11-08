@@ -33,7 +33,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -218,6 +217,10 @@ public class App implements InteractableHandeler {
         }
     }
 
+    /////////////////
+    // Helper methods
+    ////////////////
+
     /**
      * Prints the header of this game
      * 
@@ -266,6 +269,10 @@ public class App implements InteractableHandeler {
             return null;
         }
     }
+
+    /////////////////
+    // Game loop class
+    ////////////////
 
     /**
      * Game loop for the application.
