@@ -28,7 +28,6 @@ package kireiiiiiiii.common;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Enumeration;
 
 public class Client {
 
@@ -162,38 +161,6 @@ public class Client {
             }
         }
         return positions;
-    }
-
-    /**
-     * Helper method to get the IPv4 adress of the client, to contact the server.
-     * 
-     * @return - a {@code InterAdress} of the client IPv4.
-     */
-    private static InetAddress getIPv4Address() {
-        try {
-            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
-            while (networkInterfaces.hasMoreElements()) {
-                NetworkInterface networkInterface = networkInterfaces.nextElement();
-
-                // Skip loopback and inactive interfaces
-                if (networkInterface.isLoopback() || !networkInterface.isUp()) {
-                    continue;
-                }
-
-                Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
-                while (inetAddresses.hasMoreElements()) {
-                    InetAddress inetAddress = inetAddresses.nextElement();
-
-                    // Check for an IPv4 address
-                    if (inetAddress instanceof java.net.Inet4Address) {
-                        return inetAddress; // Return the InetAddress instance
-                    }
-                }
-            }
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
-        return null; // No IPv4 address found
     }
 
     /////////////////
