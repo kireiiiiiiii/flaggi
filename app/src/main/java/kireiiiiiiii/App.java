@@ -336,7 +336,7 @@ public class App implements InteractableHandeler {
             ArrayList<Renderable> players = new ArrayList<Renderable>();
 
             gpanel.removeWidgetsOfClass(Player.class);
-            players.add(new Player(pos, Color.BLUE, ZIndex.PLAYER, ""));
+            players.add(new Player(pos, Color.BLUE, ZIndex.PLAYER, username));
 
             for (ClientStruct client : positions) {
                 int[] clientPosition = { client.getX(), client.getY() };
