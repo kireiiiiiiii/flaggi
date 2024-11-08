@@ -46,6 +46,7 @@ import kireiiiiiiii.common.GPanel.InteractableHandeler;
 import kireiiiiiiii.common.GPanel.Renderable;
 import kireiiiiiiii.constants.ZIndex;
 import kireiiiiiiii.ui.Background;
+import kireiiiiiiii.ui.ConnectionWidget;
 import kireiiiiiiii.ui.Player;
 
 /**
@@ -328,6 +329,8 @@ public class App implements InteractableHandeler {
          * 
          */
         private void update() {
+            gpanel.removeWidgetsOfClass(ConnectionWidget.class);
+
             ArrayList<ClientStruct> positions = client
                     .updatePlayerPositions(new ClientStruct(pos[0], pos[1], username));
             ArrayList<Renderable> players = new ArrayList<Renderable>();
@@ -341,6 +344,7 @@ public class App implements InteractableHandeler {
             }
 
             gpanel.add(players);
+            gpanel.add(new ConnectionWidget());
         }
 
         /**
