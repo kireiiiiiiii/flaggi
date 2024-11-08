@@ -25,6 +25,8 @@
 
 import java.io.*;
 import java.net.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -53,11 +55,16 @@ public class Server {
     // Main
     ////////////////
 
+    /**
+     * Main method.
+     * 
+     * @param args
+     */
     public static void main(String[] args) {
         try {
             startServer();
         } catch (IOException e) {
-            e.printStackTrace();
+            log(RED, "Error starting server: " + e.getMessage());
         }
     }
 
@@ -73,10 +80,11 @@ public class Server {
      */
     public static void startServer() throws IOException {
         ServerSocket serverSocket = new ServerSocket(TCP_PORT);
-        System.out.println("Server socket created on IP: '" + getIPv4Address().getHostAddress() + "'");
+        log(YELLOW, "Server socket created on IP: '" + getIPv4Address().getHostAddress() + "'");
         new Thread(() -> startTCPListener(serverSocket)).start();
-        System.out.println("Server started on port '" + TCP_PORT + "'. Waiting for clients...");
+        log(YELLOW, "Server started on port '" + TCP_PORT + "'. Waiting for clients...");
         new Thread(Server::startUDPListener).start();
+        log(YELLOW, "UDP started on port '" + UDP_PORT + "'. Waiting for data...");
     }
 
     /**
@@ -98,7 +106,7 @@ public class Server {
                     if ("ping".equals(initialMessage)) {
                         out.writeUTF("pong");
                         out.flush();
-                        System.out.println("Handled server running check, sent 'pong'.");
+                        log(BLACK, "Handled 'is server running' check from client, responded 'pong'");
                         continue;
                     }
 
@@ -111,17 +119,17 @@ public class Server {
                     synchronized (clients) {
                         clients.add(new Client(clientId, clientName, clientAddress));
                     }
-                    System.out.println("Assigned ID '" + clientId + "' to client '" + clientName + "'.");
+                    log(GREEN, "Assigned ID '" + clientId + "' to client '" + clientName + "'");
 
                     out.writeInt(clientId);
                     out.writeInt(UDP_PORT);
                     out.flush();
-                    System.out.println("Sent port and ID to client '" + clientName + "'.");
+                    log(PURPLE, "Sent port and ID to client '" + clientName + "'");
 
                 } catch (EOFException | SocketTimeoutException e) {
-                    System.out.println("Received connection test, closing socket.");
+                    log(RED, e.getMessage());
                 } catch (IOException e) {
-                    System.err.println("Error handling client connection: " + e.getMessage());
+                    log(RED, "Error handling client connection: " + e.getMessage());
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -134,43 +142,30 @@ public class Server {
      * Now also responds to heartbeat messages from clients to confirm connectivity.
      */
     private static void startUDPListener() {
-        boolean log = false;
         try (DatagramSocket udpSocket = new DatagramSocket(UDP_PORT)) {
 
             byte[] buffer = new byte[1024];
-            if (log) {
-                System.out.println("UDP listener started on port " + UDP_PORT);
-            }
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 udpSocket.receive(packet);
 
                 String message = new String(packet.getData(), 0, packet.getLength());
-                if (log) {
-                    System.out.println("Received packet from client: " + message);
-                }
-
                 if (message.equals("HEARTBEAT")) {
                     String ackMessage = "ACK";
                     byte[] ackBuffer = ackMessage.getBytes();
                     DatagramPacket ackPacket = new DatagramPacket(
                             ackBuffer, ackBuffer.length, packet.getAddress(), packet.getPort());
                     udpSocket.send(ackPacket);
-
-                    if (log) {
-                        System.out.println("Sent heartbeat acknowledgment to client.");
-                    }
                     continue;
                 }
 
-                // Process position updates if the message is not a heartbeat
                 String[] parts = message.split(",");
                 if (parts.length >= 4) {
                     int clientId = Integer.parseInt(parts[0]);
                     int x = Integer.parseInt(parts[1]);
                     int y = Integer.parseInt(parts[2]);
-                    String name = parts[3];
+                    // String name = parts[3];
 
                     Client client;
                     synchronized (clients) {
@@ -179,36 +174,25 @@ public class Server {
 
                     if (client != null) {
                         client.setPosition(x, y);
-                        if (log) {
-                            System.out.println("Position updated for client " + name);
-                        }
 
                         String playerData = getAllClientsData();
                         byte[] responseBuffer = playerData.getBytes();
                         DatagramPacket responsePacket = new DatagramPacket(
                                 responseBuffer, responseBuffer.length, client.getInetAddress(), packet.getPort());
 
-                        if (log) {
-                            System.out.println("Sending positions to client: " + playerData);
-                        }
-
                         udpSocket.send(responsePacket);
 
                     } else {
-                        if (log) {
-                            System.out.println("Client null");
-                        }
+                        log(RED, "Client null");
                     }
                 } else {
-                    if (log) {
-                        System.out.println("Message not 4 parts");
-                    }
+                    log(RED, "Recieved server message doesn't have 4 parts");
                 }
 
                 buffer = new byte[1024];
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log(RED, "Error in UDP listener: " + e.getMessage());
         }
     }
 
@@ -216,6 +200,12 @@ public class Server {
     // Helper methods
     ////////////////
 
+    /**
+     * Accesor for the client using the client ID.
+     * 
+     * @param id - client ID
+     * @return a {@code Client} object reference. If not found, returns null.
+     */
     private static Client getClient(int id) {
         synchronized (clients) {
             for (Client c : clients) {
@@ -256,7 +246,6 @@ public class Server {
             while (networkInterfaces.hasMoreElements()) {
                 NetworkInterface networkInterface = networkInterfaces.nextElement();
 
-                // Skip loopback and inactive interfaces
                 if (networkInterface.isLoopback() || !networkInterface.isUp()) {
                     continue;
                 }
@@ -264,23 +253,49 @@ public class Server {
                 Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
                 while (inetAddresses.hasMoreElements()) {
                     InetAddress inetAddress = inetAddresses.nextElement();
-
-                    // Check for an IPv4 address
                     if (inetAddress instanceof java.net.Inet4Address) {
-                        return inetAddress; // Return the InetAddress instance
+                        return inetAddress;
                     }
                 }
             }
         } catch (SocketException e) {
             e.printStackTrace();
         }
-        return null; // No IPv4 address found
+        return null;
+    }
+
+    /**
+     * Term colors.
+     * 
+     */
+    public static final String BLACK = "\033[0;30m"; // ping
+    public static final String RED = "\033[0;31m"; // err
+    public static final String GREEN = "\033[0;32m"; // assigned
+    public static final String YELLOW = "\033[0;33m"; // init server
+    public static final String BLUE = "\033[0;34m"; // recieve
+    public static final String PURPLE = "\033[0;35m"; // send
+    public static final String CYAN = "\033[0;36m";
+    public static final String WHITE = "\033[0;37m";
+
+    /**
+     * Logs messages into the console.
+     * 
+     * @param color   - color of the log. Empty {@code String} if no color needed.
+     * @param message - message to log.
+     */
+    private static void log(String color, String message) {
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        System.out.println(LocalDateTime.now().format(timeFormatter) + " " + color + message + "\u001B[0m");
     }
 
     /////////////////
     // Client struct
     ////////////////
 
+    /**
+     * Structure for a client object.
+     * 
+     */
     private static class Client {
         private final int id;
         private final String displayName;
