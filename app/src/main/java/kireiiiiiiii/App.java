@@ -116,6 +116,7 @@ public class App implements InteractableHandeler {
         }
 
         // ------ Initialize game
+        this.pos = new int[2];
         this.pos[0] = 250;
         this.pos[1] = 250;
         Scanner console = new Scanner(System.in);
