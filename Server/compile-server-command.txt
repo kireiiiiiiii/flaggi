@@ -1,1 +1,0 @@
-jar cfm Server.jar MANIFEST.MF Server\$Client.class Server.class
