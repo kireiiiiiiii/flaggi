@@ -44,6 +44,7 @@ import kireiiiiiiii.common.Logger;
 import kireiiiiiiii.common.Client.ClientStruct;
 import kireiiiiiiii.common.GPanel.InteractableHandeler;
 import kireiiiiiiii.common.GPanel.Renderable;
+import kireiiiiiiii.constants.WidgetTags;
 import kireiiiiiiii.constants.ZIndex;
 import kireiiiiiiii.ui.Background;
 import kireiiiiiiii.ui.ConnectionWidget;
@@ -170,6 +171,8 @@ public class App implements InteractableHandeler {
      */
     public void initializeWidgets() {
         gpanel.add(new Background());
+        gpanel.add(
+                new Player(new int[] { this.initPos[0], this.initPos[1] }, Color.BLUE, ZIndex.PLAYER, username, false));
     }
 
     /////////////////
@@ -234,6 +237,8 @@ public class App implements InteractableHandeler {
             default:
                 break;
         }
+
+        // Update viewport
         this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
     }
 
@@ -342,12 +347,12 @@ public class App implements InteractableHandeler {
                     .updatePlayerPositions(new ClientStruct(pos[0], pos[1], username));
             ArrayList<Renderable> players = new ArrayList<Renderable>();
 
-            gpanel.removeWidgetsOfClass(Player.class);
-            players.add(new Player(new int[] { pos[0], pos[1] }, Color.BLUE, ZIndex.PLAYER, username));
+            // gpanel.removeWidgetsOfClass(Player.class);
+            gpanel.removeWidgetsWithTags(WidgetTags.ENEMY_PLAYER);
 
             for (ClientStruct client : positions) {
                 int[] clientPosition = { client.getX(), client.getY() };
-                players.add(new Player(clientPosition, Color.RED, ZIndex.OTHER_PLAYERS, client.getName()));
+                players.add(new Player(clientPosition, Color.RED, ZIndex.OTHER_PLAYERS, client.getName(), true));
             }
 
             gpanel.add(players);

@@ -402,6 +402,21 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         }
     }
 
+    public void removeWidgetsWithTags(String tag) {
+        synchronized (this.widgets) {
+            Iterator<Renderable> iterator = this.widgets.iterator();
+            while (iterator.hasNext()) {
+                Renderable r = iterator.next();
+                for (String currTag : r.getTags()) {
+                    if (currTag.equals(tag)) {
+                        iterator.remove();
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Adds all the widgets in a list using the {@code add()} method for all of
      * them.
