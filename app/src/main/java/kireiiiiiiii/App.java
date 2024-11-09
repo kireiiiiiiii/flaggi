@@ -112,7 +112,7 @@ public class App implements InteractableHandeler {
         // ------ Check if server is running
         if (!Client.isServerRunning(serverAddress, TCP_PORT)) {
             System.out.println("Cannot reach server.");
-            Logger.addLog("Coudn't reach the server - server is running. Exiting...");
+            Logger.addLog("Couldn't reach the server - server is running. Exiting...");
             System.exit(1);
         }
 
