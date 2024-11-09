@@ -1,6 +1,7 @@
 /*
  * Author: Matěj Šťastný
  * Date created: 7/23/2024
+ * Github link: https://github.com/kireiiiiiiii/Flaggi
  *
  *
  *

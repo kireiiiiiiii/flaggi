@@ -1,6 +1,7 @@
 /*
  * Author: Matěj Šťastný
  * Date created: 11/4/2024
+ * Github link: https://github.com/kireiiiiiiii/Flaggi
  *
  *
  *
@@ -35,7 +36,15 @@ import kireiiiiiiii.common.GPanel.Renderable;
 import kireiiiiiiii.constants.WidgetTags;
 import kireiiiiiiii.util.FontUtil;
 
+/**
+ * Player widget class.
+ * 
+ */
 public class Player implements Renderable {
+
+    /////////////////
+    // Variables
+    ////////////////
 
     private int[] pos = new int[2];
     private boolean visible = true;
@@ -44,6 +53,10 @@ public class Player implements Renderable {
     private int zindex;
     private String name;
 
+    /////////////////
+    // Constructor
+    ////////////////
+
     public Player(int[] pos, Color color, int zindex, String name, boolean isEnemy) {
         this.pos = pos;
         this.color = color;
@@ -51,6 +64,10 @@ public class Player implements Renderable {
         this.name = name;
         this.isEnemy = isEnemy;
     }
+
+    /////////////////
+    // Render methods
+    ////////////////
 
     @Override
     public void render(Graphics2D g, int[] size, int[] offset, Container focusCycleRootAncestor) {
@@ -97,6 +114,15 @@ public class Player implements Renderable {
         return tags;
     }
 
+    /////////////////
+    // Modifiers
+    ////////////////
+
+    /**
+     * Set a new player position.
+     * 
+     * @param pos - value.
+     */
     public void setPos(int[] pos) {
         this.pos = pos;
     }

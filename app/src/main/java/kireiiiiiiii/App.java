@@ -1,6 +1,7 @@
 /*
  * Author: Matěj Šťastný
  * Date created: 11/4/2024
+ * Github link: https://github.com/kireiiiiiiii/Flaggi
  *
  *
  *
@@ -60,6 +61,7 @@ public class App implements InteractableHandeler {
     // Constants
     ////////////////
 
+    public static final String PROJECT_NAME = "Flaggi";
     public static final int TCP_PORT = 54321;
     private static final int FPS = 60;
     private static final String IP_FILE = "ip.txt";
@@ -136,8 +138,7 @@ public class App implements InteractableHandeler {
 
         // ------ Initialize client & UI
         this.client = new Client(username, serverAddress);
-        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false,
-                "Tournament Tournament Tournament");
+        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false, PROJECT_NAME);
         initializeWidgets();
         this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
         Logger.addLog("UI window created");
@@ -252,13 +253,14 @@ public class App implements InteractableHandeler {
      * 
      */
     private void printHeader() {
-        System.out.println("\n" +
-                "     ____.  _________   _________    .____       _____    _______   \n" +
-                "    |    | /  _  \\   \\ /   /  _  \\   |    |     /  _  \\   \\      \\  \n" +
-                "    |    |/  /_\\  \\   Y   /  /_\\  \\  |    |    /  /_\\  \\  /   |   \\ \n" +
-                "/\\__|    /    |    \\     /    |    \\ |    |___/    |    \\/    |    \\\n" +
-                "\\________\\____|__  /\\___/\\____|__  / |_______ \\____|__  /\\____|__  /\n" +
-                "                 \\/              \\/          \\/       \\/         \\/ \n");
+        System.out.println("\n" + //
+                " ______   __         ______     ______     ______     __    \n" +
+                "/\\  ___\\ /\\ \\       /\\  __ \\   /\\  ___\\   /\\  ___\\   /\\ \\   \n" +
+                "\\ \\  __\\ \\ \\ \\____  \\ \\  __ \\  \\ \\ \\__ \\  \\ \\ \\__ \\  \\ \\ \\  \n" +
+                " \\ \\_\\    \\ \\_____\\  \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_____\\  \\ \\_\\ \n" +
+                "  \\/_/     \\/_____/   \\/_/\\/_/   \\/_____/   \\/_____/   \\/_/ \n" +
+                "                                                            \n" +
+                "");
     }
 
     /**

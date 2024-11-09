@@ -1,6 +1,7 @@
 /*
  * Author: Matěj Šťastný
  * Date created: 10/29/2024
+ * Github link: https://github.com/kireiiiiiiii/Flaggi
  *
  *
  *
@@ -28,6 +29,10 @@ package kireiiiiiiii.util;
 
 import java.awt.FontMetrics;
 
+/**
+ * Utility class to controll font stuff.
+ * 
+ */
 public class FontUtil {
     /////////////////
     // Measurment calculating methods
@@ -112,4 +117,5 @@ public class FontUtil {
         int[] pos = { calcX, calcY };
         return pos;
     }
+
 }

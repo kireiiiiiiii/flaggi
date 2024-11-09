@@ -1,3 +1,29 @@
+/*
+ * Author: Matěj Šťastný
+ * Date created: 11/5/2024
+ * Github link: https://github.com/kireiiiiiiii/Flaggi
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 package kireiiiiiiii.ui;
 
 import java.awt.Color;
@@ -9,9 +35,21 @@ import kireiiiiiiii.common.GPanel.Renderable;
 import kireiiiiiiii.constants.WidgetTags;
 import kireiiiiiiii.constants.ZIndex;
 
+/**
+ * Background widget.
+ * 
+ */
 public class Background implements Renderable {
 
+    /////////////////
+    // Variables
+    ////////////////
+
     private boolean visible = true;
+
+    /////////////////
+    // Rendering
+    ////////////////
 
     @Override
     public void render(Graphics2D g, int[] size, int[] offset, Container focusCycleRootAncestor) {

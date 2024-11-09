@@ -1,5 +1,35 @@
+/*
+ * Author: Matěj Šťastný
+ * Date created: 11/5/2024
+ * Github link: https://github.com/kireiiiiiiii/Flaggi
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 package kireiiiiiiii.constants;
 
+/**
+ * Constant class with z-layer data.
+ * 
+ */
 public class ZIndex {
 
     // GLOBAL

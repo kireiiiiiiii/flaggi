@@ -3,6 +3,7 @@
 ////////////////
 
 val mainClassName = "kireiiiiiiii.App"
+val projectName = "Flaggi"
 
 ///////////////////
 // BUILD SCRIPT ///
@@ -31,7 +32,7 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(8)) // Target Java 8
     }
-    sourceCompatibility = JavaVersion.VERSION_1_8 // Ensures compatibility
+    sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
@@ -46,5 +47,5 @@ tasks.named<Test>("test") {
 tasks.shadowJar {
     mergeServiceFiles()
     archiveClassifier.set("")
-    archiveFileName.set("TTT.jar")
+    archiveFileName.set(projectName + ".jar")
 }

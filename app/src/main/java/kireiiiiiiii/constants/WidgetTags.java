@@ -1,5 +1,35 @@
+/*
+ * Author: Matěj Šťastný
+ * Date created: 11/5/2024
+ * Github link: https://github.com/kireiiiiiiii/Flaggi
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 package kireiiiiiiii.constants;
 
+/**
+ * Constant class with widget tag data.
+ * 
+ */
 public class WidgetTags {
 
     public static final String MENU_ELEMENTS = "menu";
