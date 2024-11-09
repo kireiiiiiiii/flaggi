@@ -352,7 +352,13 @@ public class App implements InteractableHandeler {
 
             for (ClientStruct client : positions) {
                 int[] clientPosition = { client.getX(), client.getY() };
-                players.add(new Player(clientPosition, Color.RED, ZIndex.OTHER_PLAYERS, client.getName(), true));
+
+                // Cull clients out of viewport
+                int distanceX = Math.abs(clientPosition[0] - pos[0]);
+                int distanceY = Math.abs(clientPosition[1] - pos[1]);
+                if (distanceX < windowSize[0] / 1.5 && distanceY < windowSize[1] / 1.5) {
+                    players.add(new Player(clientPosition, Color.RED, ZIndex.OTHER_PLAYERS, client.getName(), true));
+                }
             }
 
             gpanel.add(players);
