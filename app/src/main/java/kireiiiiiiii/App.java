@@ -139,6 +139,7 @@ public class App implements InteractableHandeler {
         this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false,
                 "Tournament Tournament Tournament");
         initializeWidgets();
+        this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
         Logger.addLog("UI window created");
 
         // ------ Start game loop
