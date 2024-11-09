@@ -130,7 +130,7 @@ public class App implements InteractableHandeler {
 
         // ------ Initialize client & UI
         this.client = new Client(username, serverAddress);
-        this.gpanel = new GPanel(this, FPS, 500, 500, false, "Tournament Tournament Tournament");
+        this.gpanel = new GPanel(this, FPS, 1500, 1000, false, true, "Tournament Tournament Tournament");
         initializeWidgets();
         Logger.addLog("UI window created");
 

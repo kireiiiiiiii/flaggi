@@ -29,6 +29,8 @@ package kireiiiiiiii.common;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 // import java.awt.Taskbar;
 import java.awt.event.MouseEvent;
@@ -128,7 +130,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * @param owner - {JFrame} object, that owns this {@code JPanel}.
      */
     public GPanel(InteractableHandeler handeler, int fps, int windowWidth, int windowHeight, boolean resizable,
-            String appTitle) {
+            boolean fullscreen, String appTitle) {
         // ---- Variable Initiliazition ----
         this.handeler = handeler;
         this.widgets = new ArrayList<Renderable>();
@@ -141,6 +143,11 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         this.appFrame.setResizable(resizable);
         this.appFrame.setTitle(appTitle);
         this.appFrame.setLocationRelativeTo(null);
+        if (fullscreen) {
+            GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+            this.appFrame.setUndecorated(true);
+            device.setFullScreenWindow(this.appFrame);
+        }
         this.appFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.appFrame.setVisible(true);
         this.appFrame.add(this);
@@ -409,6 +416,15 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     public void setIcon(Image icon) {
         // Taskbar taskbar = Taskbar.getTaskbar();
         // taskbar.setIconImage(icon);
+    }
+
+    /**
+     * Fullscreens the app.
+     * 
+     * @param fullscreen - fullscreen/normal mode.
+     */
+    public void setFullscreen() {
+
     }
 
     /////////////////
