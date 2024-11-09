@@ -32,7 +32,7 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
-// import java.awt.Taskbar;
+import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -119,6 +119,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     private Renderer renderer;
     private boolean isRendering;
     private ArrayList<Renderable> widgets;
+    private int[] playerPos;
 
     /////////////////
     // Constructor
@@ -137,6 +138,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         this.appFrame = new JFrame();
         this.renderer = new Renderer(fps);
         this.isRendering = false;
+        this.playerPos = new int[2];
 
         // ---- JFrame setup ----
         this.appFrame.setSize(windowWidth, windowHeight);
@@ -205,7 +207,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         synchronized (this.widgets) {
             for (Renderable renderable : this.widgets) {
                 if (renderable.isVisible()) {
-                    renderable.render(g, size, this.appFrame.getFocusCycleRootAncestor());
+                    renderable.render(g, size, playerPos, this.appFrame.getFocusCycleRootAncestor());
                 }
             }
         }
@@ -374,6 +376,10 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         }
     }
 
+    public void setPosition(int[] playerPos) {
+        this.playerPos = playerPos;
+    }
+
     /**
      * Removes all widgets of the specified class.
      * 
@@ -396,6 +402,21 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         }
     }
 
+    public void removeWidgetsWithTags(String tag) {
+        synchronized (this.widgets) {
+            Iterator<Renderable> iterator = this.widgets.iterator();
+            while (iterator.hasNext()) {
+                Renderable r = iterator.next();
+                for (String currTag : r.getTags()) {
+                    if (currTag.equals(tag)) {
+                        iterator.remove();
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Adds all the widgets in a list using the {@code add()} method for all of
      * them.
@@ -413,9 +434,9 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      *
      * @param path - path of the icon
      */
-    public void setIcon(Image icon) {
-        // Taskbar taskbar = Taskbar.getTaskbar();
-        // taskbar.setIconImage(icon);
+    public void setIcon(String path) {
+        Image icon = Toolkit.getDefaultToolkit().getImage(path);
+        this.appFrame.setIconImage(icon);
     }
 
     /**
@@ -611,7 +632,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
          * @param g - {@code Graphocs2D} object reference of the target {@code JPanel}
          *          object.
          */
-        public void render(Graphics2D g, int[] size, Container focusCycleRootAncestor);
+        public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor);
 
         /**
          * This method returns the Z-Index of the object. The Z-Index cannot be

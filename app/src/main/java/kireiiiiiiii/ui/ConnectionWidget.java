@@ -57,7 +57,7 @@ public class ConnectionWidget implements Renderable {
     ////////////////
 
     @Override
-    public void render(Graphics2D g, int[] size, Container focusCycleRootAncestor) {
+    public void render(Graphics2D g, int[] size, int[] offset, Container focusCycleRootAncestor) {
         g.setColor(Color.GREEN);
         g.fillOval(size[0] - RADIUS * 3, RADIUS, this.RADIUS * 2, this.RADIUS * 2);
     }

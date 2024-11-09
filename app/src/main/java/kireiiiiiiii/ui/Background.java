@@ -14,7 +14,7 @@ public class Background implements Renderable {
     private boolean visible = true;
 
     @Override
-    public void render(Graphics2D g, int[] size, Container focusCycleRootAncestor) {
+    public void render(Graphics2D g, int[] size, int[] offset, Container focusCycleRootAncestor) {
         g.setColor(new Color(229, 204, 255));
         g.fillRect(0, 0, size[0], size[1]);
     }

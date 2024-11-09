@@ -44,10 +44,12 @@ import kireiiiiiiii.common.Logger;
 import kireiiiiiiii.common.Client.ClientStruct;
 import kireiiiiiiii.common.GPanel.InteractableHandeler;
 import kireiiiiiiii.common.GPanel.Renderable;
+import kireiiiiiiii.constants.WidgetTags;
 import kireiiiiiiii.constants.ZIndex;
 import kireiiiiiiii.ui.Background;
 import kireiiiiiiii.ui.ConnectionWidget;
 import kireiiiiiiii.ui.Player;
+import kireiiiiiiii.util.ScreenUtil;
 
 /**
  * Main class for the LAN Game application.
@@ -70,6 +72,8 @@ public class App implements InteractableHandeler {
     private String username;
     private GPanel gpanel;
     private int[] pos;
+    private int[] windowSize;
+    private int[] initPos;
 
     /////////////////
     // Main & Constructor
@@ -112,14 +116,16 @@ public class App implements InteractableHandeler {
         // ------ Check if server is running
         if (!Client.isServerRunning(serverAddress, TCP_PORT)) {
             System.out.println("Cannot reach server.");
-            Logger.addLog("Coudn't reach the server - server is running. Exiting...");
+            Logger.addLog("Couldn't reach the server - server is running. Exiting...");
             System.exit(1);
         }
 
         // ------ Initialize game
+        this.windowSize = ScreenUtil.getScreenDimensions();
         this.pos = new int[2];
-        this.pos[0] = 250;
-        this.pos[1] = 250;
+        this.pos[0] = 0;
+        this.pos[1] = 0;
+        this.initPos = new int[] { this.windowSize[0] / 2, this.windowSize[1] / 2 };
         Scanner console = new Scanner(System.in);
         printHeader();
 
@@ -130,7 +136,8 @@ public class App implements InteractableHandeler {
 
         // ------ Initialize client & UI
         this.client = new Client(username, serverAddress);
-        this.gpanel = new GPanel(this, FPS, 1500, 1000, false, true, "Tournament Tournament Tournament");
+        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false,
+                "Tournament Tournament Tournament");
         initializeWidgets();
         Logger.addLog("UI window created");
 
@@ -164,6 +171,8 @@ public class App implements InteractableHandeler {
      */
     public void initializeWidgets() {
         gpanel.add(new Background());
+        gpanel.add(
+                new Player(new int[] { this.initPos[0], this.initPos[1] }, Color.BLUE, ZIndex.PLAYER, username, false));
     }
 
     /////////////////
@@ -228,6 +237,9 @@ public class App implements InteractableHandeler {
             default:
                 break;
         }
+
+        // Update viewport
+        this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
     }
 
     /////////////////
@@ -335,12 +347,18 @@ public class App implements InteractableHandeler {
                     .updatePlayerPositions(new ClientStruct(pos[0], pos[1], username));
             ArrayList<Renderable> players = new ArrayList<Renderable>();
 
-            gpanel.removeWidgetsOfClass(Player.class);
-            players.add(new Player(pos, Color.BLUE, ZIndex.PLAYER, username));
+            // gpanel.removeWidgetsOfClass(Player.class);
+            gpanel.removeWidgetsWithTags(WidgetTags.ENEMY_PLAYER);
 
             for (ClientStruct client : positions) {
                 int[] clientPosition = { client.getX(), client.getY() };
-                players.add(new Player(clientPosition, Color.RED, ZIndex.OTHER_PLAYERS, client.getName()));
+
+                // Cull clients out of viewport
+                int distanceX = Math.abs(clientPosition[0] - pos[0]);
+                int distanceY = Math.abs(clientPosition[1] - pos[1]);
+                if (distanceX < windowSize[0] / 1.5 && distanceY < windowSize[1] / 1.5) {
+                    players.add(new Player(clientPosition, Color.RED, ZIndex.OTHER_PLAYERS, client.getName(), true));
+                }
             }
 
             gpanel.add(players);
