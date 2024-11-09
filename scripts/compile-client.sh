@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ~/devel/TTT
+cd ~/devel/flaggi
 gradle shadowjar
-cd ~/devel/TTT/app/build/libs
+cd ~/devel/flaggi/app/build/libs
 java -jar Flaggi.jar
