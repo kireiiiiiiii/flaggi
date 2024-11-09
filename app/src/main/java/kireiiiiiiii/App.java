@@ -48,6 +48,7 @@ import kireiiiiiiii.constants.ZIndex;
 import kireiiiiiiii.ui.Background;
 import kireiiiiiiii.ui.ConnectionWidget;
 import kireiiiiiiii.ui.Player;
+import kireiiiiiiii.util.ScreenUtil;
 
 /**
  * Main class for the LAN Game application.
@@ -61,7 +62,6 @@ public class App implements InteractableHandeler {
     public static final int TCP_PORT = 54321;
     private static final int FPS = 60;
     private static final String IP_FILE = "ip.txt";
-    private static final int[] INIT_POS = { 500, 500 };
 
     /////////////////
     // Variables
@@ -71,6 +71,8 @@ public class App implements InteractableHandeler {
     private String username;
     private GPanel gpanel;
     private int[] pos;
+    private int[] windowSize;
+    private int[] initPos;
 
     /////////////////
     // Main & Constructor
@@ -118,9 +120,11 @@ public class App implements InteractableHandeler {
         }
 
         // ------ Initialize game
+        this.windowSize = ScreenUtil.getScreenDimensions();
         this.pos = new int[2];
-        this.pos[0] = 250;
-        this.pos[1] = 250;
+        this.pos[0] = 0;
+        this.pos[1] = 0;
+        this.initPos = new int[] { this.windowSize[0] / 2, this.windowSize[1] / 2 };
         Scanner console = new Scanner(System.in);
         printHeader();
 
@@ -131,7 +135,8 @@ public class App implements InteractableHandeler {
 
         // ------ Initialize client & UI
         this.client = new Client(username, serverAddress);
-        this.gpanel = new GPanel(this, FPS, 1500, 1000, false, false, "Tournament Tournament Tournament");
+        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false,
+                "Tournament Tournament Tournament");
         initializeWidgets();
         Logger.addLog("UI window created");
 
@@ -229,7 +234,7 @@ public class App implements InteractableHandeler {
             default:
                 break;
         }
-        this.gpanel.setPosition(new int[] { -this.pos[0] + INIT_POS[0], -this.pos[1] + INIT_POS[1] });
+        this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
     }
 
     /////////////////
