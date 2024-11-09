@@ -119,6 +119,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     private Renderer renderer;
     private boolean isRendering;
     private ArrayList<Renderable> widgets;
+    private int[] playerPos;
 
     /////////////////
     // Constructor
@@ -137,6 +138,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         this.appFrame = new JFrame();
         this.renderer = new Renderer(fps);
         this.isRendering = false;
+        this.playerPos = new int[2];
 
         // ---- JFrame setup ----
         this.appFrame.setSize(windowWidth, windowHeight);
@@ -205,7 +207,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         synchronized (this.widgets) {
             for (Renderable renderable : this.widgets) {
                 if (renderable.isVisible()) {
-                    renderable.render(g, size, this.appFrame.getFocusCycleRootAncestor());
+                    renderable.render(g, size, playerPos, this.appFrame.getFocusCycleRootAncestor());
                 }
             }
         }
@@ -372,6 +374,10 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
                 this.add(r);
             }
         }
+    }
+
+    public void setPosition(int[] playerPos) {
+        this.playerPos = playerPos;
     }
 
     /**
@@ -611,7 +617,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
          * @param g - {@code Graphocs2D} object reference of the target {@code JPanel}
          *          object.
          */
-        public void render(Graphics2D g, int[] size, Container focusCycleRootAncestor);
+        public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor);
 
         /**
          * This method returns the Z-Index of the object. The Z-Index cannot be

@@ -61,6 +61,7 @@ public class App implements InteractableHandeler {
     public static final int TCP_PORT = 54321;
     private static final int FPS = 60;
     private static final String IP_FILE = "ip.txt";
+    private static final int[] INIT_POS = { 500, 500 };
 
     /////////////////
     // Variables
@@ -130,7 +131,7 @@ public class App implements InteractableHandeler {
 
         // ------ Initialize client & UI
         this.client = new Client(username, serverAddress);
-        this.gpanel = new GPanel(this, FPS, 1500, 1000, false, true, "Tournament Tournament Tournament");
+        this.gpanel = new GPanel(this, FPS, 1500, 1000, false, false, "Tournament Tournament Tournament");
         initializeWidgets();
         Logger.addLog("UI window created");
 
@@ -228,6 +229,7 @@ public class App implements InteractableHandeler {
             default:
                 break;
         }
+        this.gpanel.setPosition(new int[] { -this.pos[0] + INIT_POS[0], -this.pos[1] + INIT_POS[1] });
     }
 
     /////////////////
@@ -336,7 +338,7 @@ public class App implements InteractableHandeler {
             ArrayList<Renderable> players = new ArrayList<Renderable>();
 
             gpanel.removeWidgetsOfClass(Player.class);
-            players.add(new Player(pos, Color.BLUE, ZIndex.PLAYER, username));
+            players.add(new Player(new int[] { pos[0], pos[1] }, Color.BLUE, ZIndex.PLAYER, username));
 
             for (ClientStruct client : positions) {
                 int[] clientPosition = { client.getX(), client.getY() };
