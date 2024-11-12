@@ -24,7 +24,7 @@
  *
  */
 
-package kireiiiiiiii.constants;
+package flaggi.constants;
 
 /**
  * Constant class with widget tag data.

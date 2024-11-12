@@ -24,7 +24,7 @@
  *
  */
 
-package kireiiiiiiii.common;
+package flaggi.common;
 
 import java.io.FileWriter;
 import java.io.IOException;

@@ -24,7 +24,7 @@
  *
  */
 
-package kireiiiiiiii.ui;
+package flaggi.ui;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -32,9 +32,9 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
-import kireiiiiiiii.common.GPanel.Renderable;
-import kireiiiiiiii.constants.WidgetTags;
-import kireiiiiiiii.util.FontUtil;
+import flaggi.common.GPanel.Renderable;
+import flaggi.constants.WidgetTags;
+import flaggi.util.FontUtil;
 
 /**
  * Player widget class.

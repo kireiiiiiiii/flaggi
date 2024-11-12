@@ -25,7 +25,7 @@
  *
  */
 
-package kireiiiiiiii.common;
+package flaggi.common;
 
 import java.awt.Dimension;
 import java.awt.Graphics;

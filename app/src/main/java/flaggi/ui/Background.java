@@ -1,6 +1,6 @@
 /*
  * Author: Matěj Šťastný
- * Date created: 11/8/2024
+ * Date created: 11/5/2024
  * Github link: https://github.com/kireiiiiiiii/Flaggi
  *
  *
@@ -24,28 +24,22 @@
  *
  */
 
-package kireiiiiiiii.ui;
+package flaggi.ui;
 
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
-import kireiiiiiiii.common.GPanel.Renderable;
-import kireiiiiiiii.constants.WidgetTags;
-import kireiiiiiiii.constants.ZIndex;
+import flaggi.common.GPanel.Renderable;
+import flaggi.constants.WidgetTags;
+import flaggi.constants.ZIndex;
 
 /**
- * Widget displayed on server connection.
+ * Background widget.
  * 
  */
-public class ConnectionWidget implements Renderable {
-
-    /////////////////
-    // Constants
-    ////////////////
-
-    private final int RADIUS = 5;
+public class Background implements Renderable {
 
     /////////////////
     // Variables
@@ -59,13 +53,13 @@ public class ConnectionWidget implements Renderable {
 
     @Override
     public void render(Graphics2D g, int[] size, int[] offset, Container focusCycleRootAncestor) {
-        g.setColor(Color.GREEN);
-        g.fillOval(size[0] - RADIUS * 3, RADIUS, this.RADIUS * 2, this.RADIUS * 2);
+        g.setColor(new Color(229, 204, 255));
+        g.fillRect(0, 0, size[0], size[1]);
     }
 
     @Override
     public int getZIndex() {
-        return ZIndex.CONNECTION;
+        return ZIndex.BACKGROUND;
     }
 
     @Override
@@ -86,8 +80,8 @@ public class ConnectionWidget implements Renderable {
     @Override
     public ArrayList<String> getTags() {
         ArrayList<String> tags = new ArrayList<String>();
-        tags.add(WidgetTags.GAME_ELEMENTS);
         tags.add(WidgetTags.MENU_ELEMENTS);
+        tags.add(WidgetTags.GAME_ELEMENTS);
         return tags;
     }
 

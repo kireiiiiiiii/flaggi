@@ -25,7 +25,7 @@
  *
  */
 
-package kireiiiiiiii.util;
+package flaggi.util;
 
 import java.awt.FontMetrics;
 

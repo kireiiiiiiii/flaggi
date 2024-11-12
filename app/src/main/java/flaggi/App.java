@@ -24,7 +24,7 @@
  *
  */
 
-package kireiiiiiiii;
+package flaggi;
 
 import java.awt.Color;
 import java.awt.event.KeyEvent;
@@ -39,18 +39,18 @@ import java.util.Scanner;
 
 import javax.swing.SwingUtilities;
 
-import kireiiiiiiii.common.Client;
-import kireiiiiiiii.common.GPanel;
-import kireiiiiiiii.common.Logger;
-import kireiiiiiiii.common.Client.ClientStruct;
-import kireiiiiiiii.common.GPanel.InteractableHandeler;
-import kireiiiiiiii.common.GPanel.Renderable;
-import kireiiiiiiii.constants.WidgetTags;
-import kireiiiiiiii.constants.ZIndex;
-import kireiiiiiiii.ui.Background;
-import kireiiiiiiii.ui.ConnectionWidget;
-import kireiiiiiiii.ui.Player;
-import kireiiiiiiii.util.ScreenUtil;
+import flaggi.common.Client;
+import flaggi.common.GPanel;
+import flaggi.common.Logger;
+import flaggi.common.Client.ClientStruct;
+import flaggi.common.GPanel.InteractableHandeler;
+import flaggi.common.GPanel.Renderable;
+import flaggi.constants.WidgetTags;
+import flaggi.constants.ZIndex;
+import flaggi.ui.Background;
+import flaggi.ui.ConnectionWidget;
+import flaggi.ui.Player;
+import flaggi.util.ScreenUtil;
 
 /**
  * Main class for the LAN Game application.
