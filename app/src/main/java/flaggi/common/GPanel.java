@@ -466,6 +466,11 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         this.appFrame.setIconImage(icon);
     }
 
+    /**
+     * Sets an action meant to be performed when the JPanel window is closed.
+     * 
+     * @param operation - {@code Runnable} executed on window close.
+     */
     public void setExitOperation(Runnable operation) {
         this.appFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.appFrame.addWindowListener(new WindowAdapter() {
