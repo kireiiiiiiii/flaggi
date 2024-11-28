@@ -339,6 +339,25 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         }
     }
 
+    /**
+     * This method makes a list of {@code Renderable} objects in the {@code widgets}
+     * list that are also implementing the {@code Interacteble} inteface.
+     * 
+     * @return - list of {@code Renderable} object, that are implementing the
+     *         {@code Interactable} interface.
+     */
+    public ArrayList<Renderable> getTypables() {
+        synchronized (this.widgets) {
+            ArrayList<Renderable> typables = new ArrayList<>();
+            for (Renderable r : this.widgets) {
+                if (r instanceof Typable) {
+                    typables.add(r);
+                }
+            }
+            return typables;
+        }
+    }
+
     /////////////////
     // Modifier methods
     ////////////////
@@ -686,15 +705,12 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
          * @param e - target {@code MouseEvent}.
          * @return {@code true} if interacted, and {@code false} if not.
          */
-        public boolean wasInteracted(MouseEvent e);
+        public boolean interact(MouseEvent e);
 
-        /**
-         * Accesor method for the event, that is supposed to happen on interact.
-         * 
-         * @return a {@code Runnable} event.
-         */
-        public Runnable getInteraction();
+    }
 
+    public interface Typable {
+        public void type(KeyEvent k);
     }
 
     /**

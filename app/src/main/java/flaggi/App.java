@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.Arrays;
 
 import javax.swing.SwingUtilities;
 
@@ -43,12 +43,15 @@ import flaggi.common.Client;
 import flaggi.common.GPanel;
 import flaggi.common.Logger;
 import flaggi.common.Client.ClientStruct;
+import flaggi.common.GPanel.Interactable;
 import flaggi.common.GPanel.InteractableHandeler;
 import flaggi.common.GPanel.Renderable;
+import flaggi.common.GPanel.Typable;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
 import flaggi.ui.Background;
 import flaggi.ui.ConnectionWidget;
+import flaggi.ui.MenuScreen;
 import flaggi.ui.Player;
 import flaggi.util.ScreenUtil;
 
@@ -73,9 +76,8 @@ public class App implements InteractableHandeler {
     private Client client;
     private String username;
     private GPanel gpanel;
-    private int[] pos;
-    private int[] windowSize;
-    private int[] initPos;
+    private int[] pos, initPos, windowSize;
+    private boolean movementEnabled;
 
     /////////////////
     // Main & Constructor
@@ -98,14 +100,43 @@ public class App implements InteractableHandeler {
      */
     public App() {
 
+        // ------ Initialize game
+        this.windowSize = ScreenUtil.getScreenDimensions();
+        this.pos = new int[2];
+        this.pos[0] = 0;
+        this.pos[1] = 0;
+        this.initPos = new int[] { this.windowSize[0] / 2, this.windowSize[1] / 2 };
+        movementEnabled = false;
+        printHeader();
+
+        // ------ Initialize UI
+        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false, PROJECT_NAME);
+        initializeWidgets();
+        this.gpanel.hideAllWidgets();
+        this.gpanel.showTaggedWidgets(WidgetTags.MENU_ELEMENTS);
+        this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
+        Logger.addLog("UI window created");
+
+    }
+
+    /////////////////
+    // Events
+    ////////////////
+
+    public void startGame() {
         // ------ Get IP
-        String ip = getFirstLine(IP_FILE);
+        String ip = "";
+        for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+            ip = m.getIP();
+        }
+
         InetAddress serverAddress;
         if (ip != null) {
             try {
                 serverAddress = InetAddress.getByName(ip);
             } catch (UnknownHostException e) {
-                Logger.addLog("Unknown host exception when trying to get IP from a file.", e);
+                Logger.addLog("Unknown host exception when trying to get IP from a file.",
+                        e);
                 serverAddress = Client.getIPv4Address();
                 Logger.addLog("No " + IP_FILE + ". Detected ip. Using local IP adress");
             }
@@ -122,39 +153,27 @@ public class App implements InteractableHandeler {
             System.exit(1);
         }
 
-        // ------ Initialize game
-        this.windowSize = ScreenUtil.getScreenDimensions();
-        this.pos = new int[2];
-        this.pos[0] = 0;
-        this.pos[1] = 0;
-        this.initPos = new int[] { this.windowSize[0] / 2, this.windowSize[1] / 2 };
-        Scanner console = new Scanner(System.in);
-        printHeader();
-
         // ------ Get username
-        System.out.print("\nEnter your name: ");
-        this.username = console.nextLine();
+        for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+            this.username = m.getName();
+        }
         Logger.addLog("User entered name: " + username);
 
-        // ------ Initialize client & UI
+        // ------ Initialize client & change UI
         this.client = new Client(username, serverAddress);
-        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false, PROJECT_NAME);
-        initializeWidgets();
-        this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
-        Logger.addLog("UI window created");
+        this.gpanel.add(new Player(new int[] { this.initPos[0], this.initPos[1] }, Color.BLUE, ZIndex.PLAYER, username,
+                false));
+
+        this.gpanel.hideAllWidgets();
+        this.gpanel.showTaggedWidgets(WidgetTags.GAME_ELEMENTS);
 
         // ------ Start game loop
+        this.movementEnabled = true;
         GameLoop gameLoop = new GameLoop(FPS);
         gameLoop.start();
         Logger.addLog("Game loop started");
 
-        // ------ Bottom of main
-        console.close();
     }
-
-    /////////////////
-    // Events
-    ////////////////
 
     /**
      * Updates the local position of this player.
@@ -172,9 +191,14 @@ public class App implements InteractableHandeler {
      * 
      */
     public void initializeWidgets() {
-        gpanel.add(new Background());
-        gpanel.add(
-                new Player(new int[] { this.initPos[0], this.initPos[1] }, Color.BLUE, ZIndex.PLAYER, username, false));
+        ArrayList<Renderable> widgets = new ArrayList<Renderable>(Arrays.asList(
+                new Background(),
+                new MenuScreen(() -> {
+                    startGame();
+                })));
+
+        // Add all the widgets
+        this.gpanel.add(widgets);
     }
 
     /////////////////
@@ -199,6 +223,10 @@ public class App implements InteractableHandeler {
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        for (Renderable r : gpanel.getInteractables()) {
+            Interactable i = (Interactable) r;
+            i.interact(e);
+        }
     }
 
     @Override
@@ -219,25 +247,32 @@ public class App implements InteractableHandeler {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP:
-            case KeyEvent.VK_W:
-                this.pos[1] -= 10;
-                break;
-            case KeyEvent.VK_DOWN:
-            case KeyEvent.VK_S:
-                this.pos[1] += 10;
-                break;
-            case KeyEvent.VK_LEFT:
-            case KeyEvent.VK_A:
-                this.pos[0] -= 10;
-                break;
-            case KeyEvent.VK_RIGHT:
-            case KeyEvent.VK_D:
-                this.pos[0] += 10;
-                break;
-            default:
-                break;
+        if (this.movementEnabled) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_UP:
+                case KeyEvent.VK_W:
+                    this.pos[1] -= 10;
+                    break;
+                case KeyEvent.VK_DOWN:
+                case KeyEvent.VK_S:
+                    this.pos[1] += 10;
+                    break;
+                case KeyEvent.VK_LEFT:
+                case KeyEvent.VK_A:
+                    this.pos[0] -= 10;
+                    break;
+                case KeyEvent.VK_RIGHT:
+                case KeyEvent.VK_D:
+                    this.pos[0] += 10;
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            for (Renderable r : gpanel.getTypables()) {
+                Typable t = (Typable) r;
+                t.type(e);
+            }
         }
 
         // Update viewport
