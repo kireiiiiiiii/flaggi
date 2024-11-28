@@ -53,7 +53,6 @@ import flaggi.ui.Background;
 import flaggi.ui.ConnectionWidget;
 import flaggi.ui.MenuScreen;
 import flaggi.ui.Player;
-import flaggi.util.ImageUtil;
 import flaggi.util.ScreenUtil;
 
 /**
