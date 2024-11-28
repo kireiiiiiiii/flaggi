@@ -30,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Iterator;
 
 /**
  * Server class for the LAN Game application.
@@ -43,11 +44,7 @@ public class Server {
 
     public static final int TCP_PORT = 54321;
     public static final int UDP_PORT = 54322;
-
-    /////////////////
-    // Variables
-    ////////////////
-
+    private static final int CLIENT_TIMEOUT_SECONDS = 4;
     private static final List<Client> clients = new ArrayList<>();
     private static int clientNum = 0;
 
@@ -96,7 +93,7 @@ public class Server {
     private static void startTCPListener(ServerSocket serverSocket) {
         while (true) {
             try (Socket clientSocket = serverSocket.accept()) {
-                clientSocket.setSoTimeout(500); // Short timeout to handle test connections quickly
+                clientSocket.setSoTimeout(500);
 
                 try (ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
                         ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream())) {
@@ -151,21 +148,11 @@ public class Server {
                 udpSocket.receive(packet);
 
                 String message = new String(packet.getData(), 0, packet.getLength());
-                if (message.equals("HEARTBEAT")) {
-                    String ackMessage = "ACK";
-                    byte[] ackBuffer = ackMessage.getBytes();
-                    DatagramPacket ackPacket = new DatagramPacket(
-                            ackBuffer, ackBuffer.length, packet.getAddress(), packet.getPort());
-                    udpSocket.send(ackPacket);
-                    continue;
-                }
-
                 String[] parts = message.split(",");
                 if (parts.length >= 4) {
                     int clientId = Integer.parseInt(parts[0]);
                     int x = Integer.parseInt(parts[1]);
                     int y = Integer.parseInt(parts[2]);
-                    // String name = parts[3];
 
                     Client client;
                     synchronized (clients) {
@@ -174,6 +161,7 @@ public class Server {
 
                     if (client != null) {
                         client.setPosition(x, y);
+                        client.updateLastReceivedTime();
 
                         String playerData = getAllClientsData();
                         byte[] responseBuffer = playerData.getBytes();
@@ -183,16 +171,37 @@ public class Server {
                         udpSocket.send(responsePacket);
 
                     } else {
-                        log(RED, "Client null");
+                        log(RED, "Client not found with ID: " + clientId);
                     }
                 } else {
-                    log(RED, "Recieved server message doesn't have 4 parts");
+                    log(RED, "Received message doesn't have enough parts");
                 }
+
+                checkForDisconnectedClients();
 
                 buffer = new byte[1024];
             }
         } catch (IOException e) {
             log(RED, "Error in UDP listener: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Checks, if any clients reached the timeout limit => disconnected. If so, removes them.
+     * 
+     */
+    private static void checkForDisconnectedClients() {
+        long currentTime = System.currentTimeMillis();
+        Iterator<Client> iterator = clients.iterator();
+
+        while (iterator.hasNext()) {
+            Client client = iterator.next();
+            long timeDifference = currentTime - client.getLastReceivedTime();
+
+            if (timeDifference > CLIENT_TIMEOUT_SECONDS * 1000) {
+                log(CYAN, "Client '" + client.getDisplayName() + "' disconnected (Timed out).");
+                iterator.remove();
+            }
         }
     }
 
@@ -235,11 +244,6 @@ public class Server {
         return positions.toString();
     }
 
-    /**
-     * Helper method to get the IPv4 adress of the client, to contact the server.
-     * 
-     * @return - a {@code InterAdress} of the client IPv4.
-     */
     private static InetAddress getIPv4Address() {
         try {
             Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
@@ -274,7 +278,7 @@ public class Server {
     public static final String YELLOW = "\033[0;33m"; // init server
     public static final String BLUE = "\033[0;34m"; // recieve
     public static final String PURPLE = "\033[0;35m"; // send
-    public static final String CYAN = "\033[0;36m";
+    public static final String CYAN = "\033[0;36m"; // disconnects
     public static final String WHITE = "\033[0;37m";
 
     /**
@@ -297,16 +301,19 @@ public class Server {
      * 
      */
     private static class Client {
+
         private final int id;
         private final String displayName;
         private final InetAddress inetAddress;
         private int x;
         private int y;
+        private long lastReceivedTime;
 
         public Client(int id, String displayName, InetAddress inetAddress) {
             this.id = id;
             this.displayName = displayName;
             this.inetAddress = inetAddress;
+            updateLastReceivedTime();
         }
 
         public int getId() {
@@ -333,5 +340,14 @@ public class Server {
             this.x = x;
             this.y = y;
         }
+
+        public long getLastReceivedTime() {
+            return lastReceivedTime;
+        }
+
+        public void updateLastReceivedTime() {
+            this.lastReceivedTime = System.currentTimeMillis();
+        }
     }
+
 }
