@@ -50,11 +50,11 @@ public class MenuScreen implements Renderable, Interactable, Typable {
     private boolean visible;
 
     // Button bounding boxes
-    private Rectangle nameFieldBounds, ipFieldBounds, startButtonBounds;
+    private Rectangle nameFieldBounds, ipFieldBounds, startButtonBounds, exitButtonBounds;
 
     private String nameUserInput = "", ipUserInput = "";
     private boolean isNameFieldFocused = false, isIpFieldFocused = false;
-    private Runnable startButtonAction;
+    private Runnable startButtonAction, exitAction;
 
     /////////////////
     // Constructor
@@ -66,11 +66,12 @@ public class MenuScreen implements Renderable, Interactable, Typable {
      * @param startAction - {@code Runnable} to be executed when the start button is
      *                    clicked.
      */
-    public MenuScreen(Runnable startAction) {
+    public MenuScreen(Runnable startAction, Runnable exitAction) {
 
         // Set variables
         this.visible = true;
         this.startButtonAction = startAction;
+        this.exitAction = exitAction;
 
         int fieldWidth = 200, fieldHeight = 30, buttonWidth = 100, buttonHeight = 40;
 
@@ -79,6 +80,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         this.nameFieldBounds = new Rectangle(0, 0, fieldWidth, fieldHeight);
         this.ipFieldBounds = new Rectangle(0, 0, fieldWidth, fieldHeight);
         this.startButtonBounds = new Rectangle(0, 0, buttonWidth, buttonHeight);
+        this.exitButtonBounds = new Rectangle(0, 0, buttonWidth, buttonWidth);
     }
 
     /////////////////
@@ -105,6 +107,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         this.nameFieldBounds.setBounds(centerX - fieldWidth / 2, centerY - 60, fieldWidth, fieldHeight);
         this.ipFieldBounds.setBounds(centerX - fieldWidth / 2, centerY, fieldWidth, fieldHeight);
         this.startButtonBounds.setBounds(centerX - buttonWidth / 2, centerY + 60, buttonWidth, buttonHeight);
+        this.exitButtonBounds.setBounds(10, 10, buttonWidth / 3, buttonWidth / 3);
 
         // Render elements
         g.drawImage(ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("logo.png"), 600), centerX - 300, centerY - 400,
@@ -122,6 +125,9 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
         g.setColor(Color.GREEN);
         g.fillRect(startButtonBounds.x, startButtonBounds.y, startButtonBounds.width, startButtonBounds.height);
+        g.setColor(Color.RED);
+        g.fillRoundRect(exitButtonBounds.x, exitButtonBounds.y, exitButtonBounds.width, exitButtonBounds.height, 20,
+                20);
         g.setColor(Color.BLACK);
         g.drawString("Start", startButtonBounds.x + (buttonWidth / 2) - 20,
                 startButtonBounds.y + (buttonHeight / 2) + 5);
@@ -177,6 +183,10 @@ public class MenuScreen implements Renderable, Interactable, Typable {
                 startButtonAction.run();
             }
             return true;
+        } else if (exitButtonBounds.contains(e.getPoint())) {
+            if (exitAction != null) {
+                exitAction.run();
+            }
         }
         isNameFieldFocused = false;
         isIpFieldFocused = false;

@@ -47,6 +47,7 @@ public class Server {
     private static final int CLIENT_TIMEOUT_SECONDS = 4;
     private static final List<Client> clients = new ArrayList<>();
     private static int clientNum = 0;
+    private static String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi-server";
 
     /////////////////
     // Main
@@ -267,6 +268,46 @@ public class Server {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * Gets the program Application Data Folder path. If it doesn't exist, it will
+     * create one.
+     * 
+     * @return - {@code String} of the application data folder path.
+     */
+    private static String getApplicationDataFolder() {
+        String os = System.getProperty("os.name").toLowerCase();
+        String appDataFolder;
+
+        if (os.contains("win")) {
+            // Windows: Use %APPDATA%
+            appDataFolder = System.getenv("APPDATA");
+        } else if (os.contains("mac")) {
+            // macOS: Use ~/Library/Application Support/
+            appDataFolder = System.getProperty("user.home") + File.separator + "Library" + File.separator
+                    + "Application Support";
+        } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+            // Linux/Unix: Use ~/.config/
+            appDataFolder = System.getProperty("user.home") + File.separator + ".config";
+        } else {
+            // Other: Use the directory of server jar.
+            appDataFolder = File.separator;
+        }
+
+        // Add the application's specific folder name
+        appDataFolder = appDataFolder + File.separator + DATA_DIRECTORY_NAME;
+
+        // Ensure the directory exists
+        File folder = new File(appDataFolder);
+        if (!folder.exists()) {
+            boolean created = folder.mkdirs();
+            if (!created) {
+                throw new RuntimeException("Failed to create application data folder at: " + appDataFolder);
+            }
+        }
+
+        return appDataFolder;
     }
 
     /**

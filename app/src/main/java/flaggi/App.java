@@ -177,6 +177,15 @@ public class App implements InteractableHandeler {
     }
 
     /**
+     * Event done on exit the game.
+     * 
+     */
+    public void exitGame() {
+        // TODO: save data
+        System.exit(0);
+    }
+
+    /**
      * Toggles the game pause menu.
      * 
      */
@@ -230,6 +239,8 @@ public class App implements InteractableHandeler {
                 new Background(),
                 new MenuScreen(() -> {
                     startGame();
+                }, () -> {
+                    exitGame();
                 }),
                 new PauseMenu(() -> {
                     togglePauseMenu();
