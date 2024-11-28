@@ -35,6 +35,7 @@ import flaggi.common.GPanel.Renderable;
 import flaggi.common.GPanel.Typable;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
+import flaggi.util.FontUtil;
 import flaggi.util.ImageUtil;
 
 /**
@@ -52,7 +53,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
     // Button bounding boxes
     private Rectangle nameFieldBounds, ipFieldBounds, startButtonBounds, exitButtonBounds;
 
-    private String nameUserInput = "", ipUserInput = "";
+    private String nameUserInput = "", ipUserInput = "", errorMessage = "";
     private boolean isNameFieldFocused = false, isIpFieldFocused = false;
     private Runnable startButtonAction, exitAction;
 
@@ -106,12 +107,16 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         // Update bounding boxes for interactable elements
         this.nameFieldBounds.setBounds(centerX - fieldWidth / 2, centerY - 60, fieldWidth, fieldHeight);
         this.ipFieldBounds.setBounds(centerX - fieldWidth / 2, centerY, fieldWidth, fieldHeight);
-        this.startButtonBounds.setBounds(centerX - buttonWidth / 2, centerY + 60, buttonWidth, buttonHeight);
+        this.startButtonBounds.setBounds(centerX - buttonWidth / 2, centerY + 80, buttonWidth, buttonHeight);
         this.exitButtonBounds.setBounds(10, 10, buttonWidth / 3, buttonWidth / 3);
 
         // Render elements
         g.drawImage(ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("logo.png"), 600), centerX - 300, centerY - 400,
                 focusCycleRootAncestor);
+
+        g.setColor(Color.RED);
+        int[] errorPos = FontUtil.getCenteredPos(size[0], size[1], g.getFontMetrics(), this.errorMessage);
+        g.drawString(this.errorMessage, errorPos[0], errorPos[1] + 50);
 
         g.setColor(Color.LIGHT_GRAY);
         g.fillRect(nameFieldBounds.x, nameFieldBounds.y, nameFieldBounds.width, nameFieldBounds.height);
@@ -215,8 +220,17 @@ public class MenuScreen implements Renderable, Interactable, Typable {
     }
 
     /////////////////
-    // Accesors
+    // Helpers
     ////////////////
+
+    /**
+     * Displays an error message on the menu screen.
+     * 
+     * @param errorMessage
+     */
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
 
     /**
      * Returns the entered user name.
@@ -227,6 +241,11 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         return nameUserInput == null ? "" : nameUserInput;
     }
 
+    /**
+     * Gets the entered IP address.
+     * 
+     * @return
+     */
     public String getIP() {
         return ipUserInput == null ? "" : ipUserInput;
     }

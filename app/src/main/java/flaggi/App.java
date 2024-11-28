@@ -29,9 +29,6 @@ package flaggi;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -68,7 +65,6 @@ public class App implements InteractableHandeler {
     public static final String PROJECT_NAME = "Flaggi";
     public static final int TCP_PORT = 54321;
     private static final int FPS = 60;
-    private static final String IP_FILE = "ip.txt";
 
     /////////////////
     // Variables
@@ -128,40 +124,48 @@ public class App implements InteractableHandeler {
     ////////////////
 
     public void startGame() {
+        // ------ Get username
+        for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+            this.username = m.getName();
+        }
+        String userNameValidation = isValidUsername(this.username);
+        if (userNameValidation != null) {
+            for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+                m.setErrorMessage(userNameValidation);
+            }
+            return;
+        }
+        Logger.addLog("User entered name: " + username);
+
         // ------ Get IP
         String ip = "";
         for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
             ip = m.getIP();
         }
+        if (ip.length() < 1) {
+            for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+                m.setErrorMessage("No server IP entered.");
+            }
+            return;
+        }
 
         InetAddress serverAddress;
-        if (ip != null) {
-            try {
-                serverAddress = InetAddress.getByName(ip);
-            } catch (UnknownHostException e) {
-                Logger.addLog("Unknown host exception when trying to get IP from a file.",
-                        e);
-                serverAddress = Client.getIPv4Address();
-                Logger.addLog("No " + IP_FILE + ". Detected ip. Using local IP adress");
-            }
-            Logger.addLog("Found " + IP_FILE + ". Detected ip: " + ip);
-        } else {
-            serverAddress = Client.getIPv4Address();
-            Logger.addLog("No " + IP_FILE + ". Detected ip. Using local IP adress");
+        try {
+            serverAddress = InetAddress.getByName(ip);
+        } catch (UnknownHostException e) {
+            Logger.addLog("Unknown host exception when trying to get IP from a file.",
+                    e);
+            return;
         }
+        Logger.addLog("Selected ip: " + ip);
 
         // ------ Check if server is running
         if (!Client.isServerRunning(serverAddress, TCP_PORT)) {
-            System.out.println("Cannot reach server.");
-            Logger.addLog("Couldn't reach the server - server is running. Exiting...");
-            System.exit(1);
+            for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+                m.setErrorMessage("Not a valid IP. Please try again.");
+            }
+            return;
         }
-
-        // ------ Get username
-        for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
-            this.username = m.getName();
-        }
-        Logger.addLog("User entered name: " + username);
 
         // ------ Initialize client & change UI
         this.client = new Client(username, serverAddress);
@@ -356,17 +360,19 @@ public class App implements InteractableHandeler {
     }
 
     /**
-     * Gets the first line of a {@code .txt} file.
+     * Checks if a username is a valid one (if it can exist, not if it exists).
      * 
-     * @param filePath - {@code String} of the file path.
-     * @return - a {@code String} of the first line of the file.
+     * @param username - target username.
+     * @return {@code String} of the error message if the username is invalid,
+     *         otherwise {@code null}.
      */
-    public static String getFirstLine(String filePath) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            return reader.readLine();
-        } catch (IOException e) {
-            return null;
+    private static String isValidUsername(String username) {
+        if (username == null) {
+            return "Username null.";
+        } else if (username.length() < 1) {
+            return "Username too short.";
         }
+        return null;
     }
 
     /////////////////
