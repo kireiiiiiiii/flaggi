@@ -37,6 +37,8 @@ import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.KeyEvent;
 import java.awt.Container;
@@ -422,6 +424,11 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         }
     }
 
+    /**
+     * Removes widgets with a tag.
+     * 
+     * @param tag - target tag.
+     */
     public void removeWidgetsWithTags(String tag) {
         synchronized (this.widgets) {
             Iterator<Renderable> iterator = this.widgets.iterator();
@@ -457,6 +464,16 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     public void setIcon(String path) {
         Image icon = Toolkit.getDefaultToolkit().getImage(path);
         this.appFrame.setIconImage(icon);
+    }
+
+    public void setExitOperation(Runnable operation) {
+        this.appFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.appFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                operation.run();
+            }
+        });
     }
 
     /**

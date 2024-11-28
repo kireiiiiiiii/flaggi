@@ -114,6 +114,9 @@ public class App implements InteractableHandeler {
 
         // ------ Initialize UI
         this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false, PROJECT_NAME);
+        this.gpanel.setExitOperation(() -> {
+            exitGame();
+        });
         initializeWidgets();
         Logger.addLog("UI window created");
         goToMenu();
