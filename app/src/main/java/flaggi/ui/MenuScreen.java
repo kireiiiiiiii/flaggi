@@ -37,7 +37,7 @@ import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
 
 /**
- * Menu screen for Flaggi.
+ * The main menu screen for Flaggi.
  * 
  */
 public class MenuScreen implements Renderable, Interactable, Typable {
@@ -51,9 +51,9 @@ public class MenuScreen implements Renderable, Interactable, Typable {
     // Button bounding boxes
     private Rectangle nameFieldBounds, ipFieldBounds, startButtonBounds;
 
-    private String nameText = "", ipText = "";
+    private String nameUserInput = "", ipUserInput = "";
     private boolean isNameFieldFocused = false, isIpFieldFocused = false;
-    private Runnable startAction;
+    private Runnable startButtonAction;
 
     /////////////////
     // Constructor
@@ -66,39 +66,60 @@ public class MenuScreen implements Renderable, Interactable, Typable {
      *                    clicked.
      */
     public MenuScreen(Runnable startAction) {
+
+        // Set variables
         this.visible = true;
-        this.startAction = startAction;
+        this.startButtonAction = startAction;
 
         int fieldWidth = 200, fieldHeight = 30, buttonWidth = 100, buttonHeight = 40;
-        int startX = 300, startY = 200;
 
-        nameFieldBounds = new Rectangle(startX, startY, fieldWidth, fieldHeight);
-        ipFieldBounds = new Rectangle(startX, startY + 50, fieldWidth, fieldHeight);
-        startButtonBounds = new Rectangle(startX, startY + 120, buttonWidth, buttonHeight);
+        // Initialize rectangles with dummy values, they will be updated during
+        // rendering
+        this.nameFieldBounds = new Rectangle(0, 0, fieldWidth, fieldHeight);
+        this.ipFieldBounds = new Rectangle(0, 0, fieldWidth, fieldHeight);
+        this.startButtonBounds = new Rectangle(0, 0, buttonWidth, buttonHeight);
     }
 
     /////////////////
     // Rendering
-    ////////////////
+    /////////////////
 
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
+        // Calculate the center of the window
+        int windowWidth = size[0];
+        int windowHeight = size[1];
 
+        // Dynamically position elements in the center
+        int fieldWidth = nameFieldBounds.width;
+        int fieldHeight = nameFieldBounds.height;
+        int buttonWidth = startButtonBounds.width;
+        int buttonHeight = startButtonBounds.height;
+
+        int centerX = windowWidth / 2;
+        int centerY = windowHeight / 2;
+
+        // Update bounding boxes for interactable elements
+        this.nameFieldBounds.setBounds(centerX - fieldWidth / 2, centerY - 60, fieldWidth, fieldHeight);
+        this.ipFieldBounds.setBounds(centerX - fieldWidth / 2, centerY, fieldWidth, fieldHeight);
+        this.startButtonBounds.setBounds(centerX - buttonWidth / 2, centerY + 60, buttonWidth, buttonHeight);
+
+        // Render elements
         g.setColor(Color.LIGHT_GRAY);
         g.fillRect(nameFieldBounds.x, nameFieldBounds.y, nameFieldBounds.width, nameFieldBounds.height);
         g.fillRect(ipFieldBounds.x, ipFieldBounds.y, ipFieldBounds.width, ipFieldBounds.height);
 
         g.setColor(isNameFieldFocused ? Color.BLUE : Color.BLACK);
-        g.drawString("Name: " + nameText, nameFieldBounds.x + 5, nameFieldBounds.y + 20);
+        g.drawString("Name: " + nameUserInput, nameFieldBounds.x + 5, nameFieldBounds.y + 20);
 
         g.setColor(isIpFieldFocused ? Color.BLUE : Color.BLACK);
-        g.drawString("IP: " + ipText, ipFieldBounds.x + 5, ipFieldBounds.y + 20);
+        g.drawString("IP: " + ipUserInput, ipFieldBounds.x + 5, ipFieldBounds.y + 20);
 
         g.setColor(Color.GREEN);
         g.fillRect(startButtonBounds.x, startButtonBounds.y, startButtonBounds.width, startButtonBounds.height);
         g.setColor(Color.BLACK);
-        g.drawString("Start", startButtonBounds.x + 30, startButtonBounds.y + 25);
-
+        g.drawString("Start", startButtonBounds.x + (buttonWidth / 2) - 20,
+                startButtonBounds.y + (buttonHeight / 2) + 5);
     }
 
     @Override
@@ -146,8 +167,8 @@ public class MenuScreen implements Renderable, Interactable, Typable {
             isNameFieldFocused = false;
             return true;
         } else if (startButtonBounds.contains(e.getPoint())) {
-            if (startAction != null) {
-                startAction.run();
+            if (startButtonAction != null) {
+                startButtonAction.run();
             }
             return true;
         }
@@ -164,15 +185,15 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         char c = e.getKeyChar();
         if (isNameFieldFocused) {
             if (Character.isLetterOrDigit(c) || Character.isWhitespace(c)) {
-                nameText += c;
-            } else if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE && nameText.length() > 0) {
-                nameText = nameText.substring(0, nameText.length() - 1);
+                nameUserInput += c;
+            } else if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE && nameUserInput.length() > 0) {
+                nameUserInput = nameUserInput.substring(0, nameUserInput.length() - 1);
             }
         } else if (isIpFieldFocused) {
             if (Character.isDigit(c) || c == '.') {
-                ipText += c;
-            } else if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE && ipText.length() > 0) {
-                ipText = ipText.substring(0, ipText.length() - 1);
+                ipUserInput += c;
+            } else if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE && ipUserInput.length() > 0) {
+                ipUserInput = ipUserInput.substring(0, ipUserInput.length() - 1);
             }
         }
     }
@@ -187,11 +208,11 @@ public class MenuScreen implements Renderable, Interactable, Typable {
      * @return
      */
     public String getName() {
-        return nameText == null ? "" : nameText;
+        return nameUserInput == null ? "" : nameUserInput;
     }
 
     public String getIP() {
-        return ipText == null ? "" : ipText;
+        return ipUserInput == null ? "" : ipUserInput;
     }
 
 }
