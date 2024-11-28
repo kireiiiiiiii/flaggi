@@ -1,3 +1,29 @@
+/*
+ * Author: Matěj Šťastný
+ * Date created: 28/4/2024
+ * Github link: https://github.com/kireiiiiiiii/Flaggi
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 package flaggi.ui;
 
 import java.awt.Color;
@@ -14,6 +40,10 @@ import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
 import flaggi.util.FontUtil;
 
+/**
+ * Pause menu screen UI. Contains 2 buttons: "Quit" and "Resume".
+ * 
+ */
 public class PauseMenu implements Renderable, Interactable {
 
     private static int ARC_SIZE = 10;
