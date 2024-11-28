@@ -35,6 +35,7 @@ import flaggi.common.GPanel.Renderable;
 import flaggi.common.GPanel.Typable;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
+import flaggi.util.ImageUtil;
 
 /**
  * The main menu screen for Flaggi.
@@ -106,6 +107,9 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         this.startButtonBounds.setBounds(centerX - buttonWidth / 2, centerY + 60, buttonWidth, buttonHeight);
 
         // Render elements
+        g.drawImage(ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("logo.png"), 600), centerX - 300, centerY - 400,
+                focusCycleRootAncestor);
+
         g.setColor(Color.LIGHT_GRAY);
         g.fillRect(nameFieldBounds.x, nameFieldBounds.y, nameFieldBounds.width, nameFieldBounds.height);
         g.fillRect(ipFieldBounds.x, ipFieldBounds.y, ipFieldBounds.width, ipFieldBounds.height);
