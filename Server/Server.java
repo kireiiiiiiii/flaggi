@@ -187,7 +187,8 @@ public class Server {
     }
 
     /**
-     * Checks, if any clients reached the timeout limit => disconnected. If so, removes them.
+     * Checks, if any clients reached the timeout limit => disconnected. If so,
+     * removes them.
      * 
      */
     private static void checkForDisconnectedClients() {
