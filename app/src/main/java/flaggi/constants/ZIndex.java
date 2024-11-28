@@ -38,6 +38,7 @@ public class ZIndex {
 
     // MENU
     public static final int MENU_SCREEN = 2;
+    public static final int PAUSE_SCREEN = 10;
 
     // GAME
     public static final int PLAYER = 5;
