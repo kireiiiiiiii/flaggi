@@ -2,6 +2,7 @@
 .gradle/
 build/
 out/
+app/bin
 
 # macOS
 .DS_Store

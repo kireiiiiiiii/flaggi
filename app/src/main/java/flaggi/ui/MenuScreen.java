@@ -86,6 +86,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
+
         // Calculate the center of the window
         int windowWidth = size[0];
         int windowHeight = size[1];
@@ -120,6 +121,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         g.setColor(Color.BLACK);
         g.drawString("Start", startButtonBounds.x + (buttonWidth / 2) - 20,
                 startButtonBounds.y + (buttonHeight / 2) + 5);
+
     }
 
     @Override
