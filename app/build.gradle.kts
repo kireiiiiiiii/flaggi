@@ -2,7 +2,7 @@
 // VARIABLES ///
 ////////////////
 
-val mainClassName = "kireiiiiiiii.App"
+val mainClassName = "flaggi.App"
 val projectName = "Flaggi"
 
 ///////////////////
