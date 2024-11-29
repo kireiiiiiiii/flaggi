@@ -81,6 +81,7 @@ public class App implements InteractableHandeler {
     private GPanel gpanel;
     private GameLoop gameLoop;
     private AdvancedVariable<AppOptions> appOptions;
+    private ArrayList<KeyEvent> pressedKeys;
     private int[] pos, initPos, windowSize;
     private boolean movementEnabled, paused;
 
@@ -122,8 +123,9 @@ public class App implements InteractableHandeler {
         this.pos[0] = 0;
         this.pos[1] = 0;
         this.initPos = new int[] { this.windowSize[0] / 2, this.windowSize[1] / 2 };
-        movementEnabled = false;
-        paused = false;
+        this.movementEnabled = false;
+        this.paused = false;
+        this.pressedKeys = new ArrayList<KeyEvent>();
         printHeader();
 
         // ------ Initialize UI
@@ -254,6 +256,38 @@ public class App implements InteractableHandeler {
     }
 
     /**
+     * Moves the player.
+     * 
+     * @param e
+     */
+    public void move(KeyEvent e) {
+        int step = 8;
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_UP:
+            case KeyEvent.VK_W:
+                this.pos[1] -= step;
+                break;
+            case KeyEvent.VK_DOWN:
+            case KeyEvent.VK_S:
+                this.pos[1] += step;
+                break;
+            case KeyEvent.VK_LEFT:
+            case KeyEvent.VK_A:
+                this.pos[0] -= step;
+                break;
+            case KeyEvent.VK_RIGHT:
+            case KeyEvent.VK_D:
+                this.pos[0] += step;
+                break;
+            default:
+                break;
+        }
+
+        // Update viewport
+        this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
+    }
+
+    /**
      * Updates the local position of this player.
      * 
      * @param x - new X value.
@@ -326,43 +360,40 @@ public class App implements InteractableHandeler {
 
     @Override
     public void keyReleased(KeyEvent e) {
+        for (KeyEvent ke : this.pressedKeys) {
+            if (ke.getKeyCode() == e.getKeyCode()) {
+                this.pressedKeys.remove(ke);
+                break;
+            }
+        }
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (this.movementEnabled) {
-            switch (e.getKeyCode()) {
-                case KeyEvent.VK_UP:
-                case KeyEvent.VK_W:
-                    this.pos[1] -= 10;
-                    break;
-                case KeyEvent.VK_DOWN:
-                case KeyEvent.VK_S:
-                    this.pos[1] += 10;
-                    break;
-                case KeyEvent.VK_LEFT:
-                case KeyEvent.VK_A:
-                    this.pos[0] -= 10;
-                    break;
-                case KeyEvent.VK_RIGHT:
-                case KeyEvent.VK_D:
-                    this.pos[0] += 10;
-                    break;
-                case KeyEvent.VK_ESCAPE:
-                    togglePauseMenu();
-                    break;
-                default:
-                    break;
-            }
-        } else {
+        if (!this.movementEnabled) {
             for (Renderable r : gpanel.getTypables()) {
                 Typable t = (Typable) r;
                 t.type(e);
             }
         }
 
-        // Update viewport
-        this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
+        // Check for duplication
+        for (KeyEvent ke : this.pressedKeys) {
+            if (ke.getKeyCode() == e.getKeyCode()) {
+                return;
+            }
+        }
+        this.pressedKeys.add(e);
+
+        // Exceptions
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_ESCAPE:
+                togglePauseMenu();
+                return;
+            default:
+                break;
+        }
+
     }
 
     /////////////////
@@ -457,7 +488,6 @@ public class App implements InteractableHandeler {
      * Game loop for the application.
      * 
      */
-    @SuppressWarnings("unused")
     private class GameLoop implements Runnable {
 
         private boolean running = false;
@@ -516,6 +546,12 @@ public class App implements InteractableHandeler {
          * 
          */
         private void update() {
+            if (movementEnabled) {
+                for (KeyEvent e : pressedKeys) {
+                    move(e);
+                }
+            }
+
             gpanel.removeWidgetsOfClass(ConnectionWidget.class);
 
             ArrayList<ClientStruct> positions = client
