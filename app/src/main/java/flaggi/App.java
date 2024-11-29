@@ -55,6 +55,7 @@ import flaggi.ui.ConnectionWidget;
 import flaggi.ui.MenuScreen;
 import flaggi.ui.PauseMenu;
 import flaggi.ui.Player;
+import flaggi.util.ImageUtil;
 import flaggi.util.ScreenUtil;
 
 /**
@@ -127,6 +128,7 @@ public class App implements InteractableHandeler {
 
         // ------ Initialize UI
         this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false, PROJECT_NAME);
+        this.gpanel.setIcon(ImageUtil.getImageFromFile("icon.png"));
         this.gpanel.setExitOperation(() -> {
             exitGame();
         });

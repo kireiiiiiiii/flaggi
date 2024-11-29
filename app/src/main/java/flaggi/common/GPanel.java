@@ -33,7 +33,6 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -461,8 +460,14 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      *
      * @param path - path of the icon
      */
-    public void setIcon(String path) {
-        Image icon = Toolkit.getDefaultToolkit().getImage(path);
+    public void setIcon(Image icon) {
+        try {
+            Class<?> appClass = Class.forName("com.apple.eawt.Application");
+            Object appInstance = appClass.getMethod("getApplication").invoke(null);
+            appClass.getMethod("setDockIconImage", Image.class).invoke(appInstance, icon);
+        } catch (Exception e) {
+        }
+
         this.appFrame.setIconImage(icon);
     }
 
