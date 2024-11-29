@@ -44,9 +44,9 @@ public class Server {
 
     public static final int TCP_PORT = 54321;
     public static final int UDP_PORT = 54322;
-    private static final int CLIENT_TIMEOUT_SECONDS = 4;
+    private static final int CLIENT_TIMEOUT_SECONDS = 3;
     private static final List<Client> clients = new ArrayList<>();
-    private static int clientNum = 0;
+    private static int maxClientID = 0;
     private static String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi-server";
 
     /////////////////
@@ -110,7 +110,7 @@ public class Server {
 
                     clientSocket.setSoTimeout(0);
 
-                    int clientId = clientNum++;
+                    int clientId = maxClientID++;
                     String clientName = initialMessage;
                     InetAddress clientAddress = clientSocket.getInetAddress();
 
@@ -143,10 +143,17 @@ public class Server {
         try (DatagramSocket udpSocket = new DatagramSocket(UDP_PORT)) {
 
             byte[] buffer = new byte[1024];
+            udpSocket.setSoTimeout(CLIENT_TIMEOUT_SECONDS * 1000);
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                udpSocket.receive(packet);
+                try {
+                    udpSocket.receive(packet);
+                } catch (SocketTimeoutException e) {
+                    checkForDisconnectedClients();
+                    refreshIDNumberIfNoUsers();
+                    continue;
+                }
 
                 String message = new String(packet.getData(), 0, packet.getLength());
                 String[] parts = message.split(",");
@@ -179,6 +186,7 @@ public class Server {
                 }
 
                 checkForDisconnectedClients();
+                refreshIDNumberIfNoUsers();
 
                 buffer = new byte[1024];
             }
@@ -186,6 +194,10 @@ public class Server {
             log(RED, "Error in UDP listener: " + e.getMessage());
         }
     }
+
+    /////////////////
+    // Helper methods
+    ////////////////
 
     /**
      * Checks, if any clients reached the timeout limit => disconnected. If so,
@@ -207,9 +219,17 @@ public class Server {
         }
     }
 
-    /////////////////
-    // Helper methods
-    ////////////////
+    /**
+     * Checks if any users are connected, if not, resets the max client id back to 0
+     * to avoid huge id numbers.
+     * 
+     */
+    private static void refreshIDNumberIfNoUsers() {
+        if (clients.isEmpty() && maxClientID > 0) {
+            maxClientID = 0;
+            log(CYAN, "No users connected, resetting ID number to 0.");
+        }
+    }
 
     /**
      * Accesor for the client using the client ID.
@@ -320,7 +340,7 @@ public class Server {
     public static final String YELLOW = "\033[0;33m"; // init server
     public static final String BLUE = "\033[0;34m"; // recieve
     public static final String PURPLE = "\033[0;35m"; // send
-    public static final String CYAN = "\033[0;36m"; // disconnects
+    public static final String CYAN = "\033[0;36m"; // disconnects, reset id
     public static final String WHITE = "\033[0;37m";
 
     /**
