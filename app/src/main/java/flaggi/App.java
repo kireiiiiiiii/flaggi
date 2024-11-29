@@ -29,6 +29,8 @@ package flaggi;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -36,6 +38,8 @@ import java.util.Arrays;
 
 import javax.swing.SwingUtilities;
 
+import flaggi.common.AdvancedVariable;
+import flaggi.common.AppOptions;
 import flaggi.common.Client;
 import flaggi.common.GPanel;
 import flaggi.common.Logger;
@@ -63,6 +67,7 @@ public class App implements InteractableHandeler {
     ////////////////
 
     public static final String PROJECT_NAME = "Flaggi";
+    public static final String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi";
     public static final int TCP_PORT = 54321;
     private static final int FPS = 60;
 
@@ -71,9 +76,10 @@ public class App implements InteractableHandeler {
     ////////////////
 
     private Client client;
-    private String username;
+    private String username, ip;
     private GPanel gpanel;
     private GameLoop gameLoop;
+    private AdvancedVariable<AppOptions> appOptions;
     private int[] pos, initPos, windowSize;
     private boolean movementEnabled, paused;
 
@@ -99,6 +105,17 @@ public class App implements InteractableHandeler {
     public App() {
 
         // ------ Initialize game
+        try {
+            this.appOptions = new AdvancedVariable<AppOptions>(
+                    getApplicationDataFolder() + File.separator + "user-options.json", AppOptions.class);
+        } catch (IOException e) {
+            Logger.addLog("Error loading app options.", e);
+            System.exit(0);
+        }
+        if (this.appOptions.get() == null) {
+            this.appOptions.set(getDefaultOptions());
+        }
+
         this.windowSize = ScreenUtil.getScreenDimensions();
         this.pos = new int[2];
         this.pos[0] = 0;
@@ -135,10 +152,10 @@ public class App implements InteractableHandeler {
             }
             return;
         }
-        Logger.addLog("User entered name: " + username);
+        Logger.addLog("User entered name '" + username + "'");
 
         // ------ Get IP
-        String ip = "";
+        this.ip = "";
         for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
             ip = m.getIP();
         }
@@ -188,8 +205,16 @@ public class App implements InteractableHandeler {
      * 
      */
     public void exitGame() {
-        // TODO: save data
-        System.exit(0);
+        try {
+            if (this.username != null && this.ip != null) {
+                this.appOptions.set(new AppOptions(this.username, this.ip));
+            }
+            this.appOptions.save();
+            Logger.addLog("Menu fields data saved succesfully.");
+        } catch (IOException e) {
+            Logger.addLog("Saving menu fields data not succesful.", e);
+        }
+        System.exit(1);
     }
 
     /**
@@ -248,7 +273,7 @@ public class App implements InteractableHandeler {
                     startGame();
                 }, () -> {
                     exitGame();
-                }),
+                }, this.appOptions.get().name, this.appOptions.get().ip),
                 new PauseMenu(() -> {
                     togglePauseMenu();
                 }, () -> {
@@ -373,6 +398,55 @@ public class App implements InteractableHandeler {
             return "Username too short.";
         }
         return null;
+    }
+
+    /**
+     * Gets the program Application Data Folder path. If it doesn't exist, it will
+     * create one.
+     * 
+     * @return - {@code String} of the application data folder path.
+     */
+    private static String getApplicationDataFolder() {
+        String os = System.getProperty("os.name").toLowerCase();
+        String appDataFolder;
+
+        if (os.contains("win")) {
+            // Windows: Use %APPDATA%
+            appDataFolder = System.getenv("APPDATA");
+        } else if (os.contains("mac")) {
+            // macOS: Use ~/Library/Application Support/
+            appDataFolder = System.getProperty("user.home") + File.separator + "Library" + File.separator
+                    + "Application Support";
+        } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+            // Linux/Unix: Use ~/.config/
+            appDataFolder = System.getProperty("user.home") + File.separator + ".config";
+        } else {
+            // Other: Use the directory of server jar.
+            appDataFolder = File.separator;
+        }
+
+        // Add the application's specific folder name
+        appDataFolder = appDataFolder + File.separator + DATA_DIRECTORY_NAME;
+
+        // Ensure the directory exists
+        File folder = new File(appDataFolder);
+        if (!folder.exists()) {
+            boolean created = folder.mkdirs();
+            if (!created) {
+                throw new RuntimeException("Failed to create application data folder at: " + appDataFolder);
+            }
+        }
+
+        return appDataFolder;
+    }
+
+    /**
+     * Returns the default menu options.
+     * 
+     * @return - a {@code AppOptions} object.
+     */
+    private AppOptions getDefaultOptions() {
+        return new AppOptions("", "");
     }
 
     /////////////////

@@ -67,12 +67,14 @@ public class MenuScreen implements Renderable, Interactable, Typable {
      * @param startAction - {@code Runnable} to be executed when the start button is
      *                    clicked.
      */
-    public MenuScreen(Runnable startAction, Runnable exitAction) {
+    public MenuScreen(Runnable startAction, Runnable exitAction, String name, String ip) {
 
         // Set variables
         this.visible = true;
         this.startButtonAction = startAction;
         this.exitAction = exitAction;
+        this.nameUserInput = name == null ? "" : name;
+        this.ipUserInput = ip == null ? "" : ip;
 
         int fieldWidth = 200, fieldHeight = 30, buttonWidth = 100, buttonHeight = 40;
 
