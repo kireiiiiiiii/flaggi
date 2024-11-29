@@ -481,15 +481,6 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         });
     }
 
-    /**
-     * Fullscreens the app.
-     * 
-     * @param fullscreen - fullscreen/normal mode.
-     */
-    public void setFullscreen() {
-
-    }
-
     /////////////////
     // UI visibility methods
     ////////////////
