@@ -55,6 +55,7 @@ import flaggi.ui.ConnectionWidget;
 import flaggi.ui.MenuScreen;
 import flaggi.ui.PauseMenu;
 import flaggi.ui.Player;
+import flaggi.ui.Tree;
 import flaggi.util.ImageUtil;
 import flaggi.util.ScreenUtil;
 
@@ -112,7 +113,7 @@ public class App implements InteractableHandeler {
                     getApplicationDataFolder() + File.separator + "user-options.json", AppOptions.class);
         } catch (IOException e) {
             Logger.addLog("Error loading app options.", e);
-            System.exit(0);
+            this.appOptions.set(getDefaultOptions());
         }
         if (this.appOptions.get() == null) {
             this.appOptions.set(getDefaultOptions());
@@ -312,7 +313,8 @@ public class App implements InteractableHandeler {
                     togglePauseMenu();
                 }, () -> {
                     goToMenu();
-                })));
+                }),
+                new Tree()));
 
         // Add all the widgets
         this.gpanel.add(widgets);

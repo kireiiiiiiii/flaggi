@@ -37,4 +37,6 @@ public class WidgetTags {
     public static final String ENEMY_PLAYER = "enemy";
     public static final String PAUSE_MENU = "pause";
 
+    public static final String ENVIRONMENT = "environment";
+
 }
