@@ -271,8 +271,6 @@ public class App implements InteractableHandeler {
                 new Background(),
                 new MenuScreen(() -> {
                     startGame();
-                }, () -> {
-                    exitGame();
                 }, this.appOptions.get().name, this.appOptions.get().ip),
                 new PauseMenu(() -> {
                     togglePauseMenu();

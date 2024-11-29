@@ -11,6 +11,9 @@ app/bin
 Icon?
 ._*
 
+# VSCode
+.vscode
+
 # Java specific
 *.class
 *.jar
@@ -41,3 +44,4 @@ output.json
 
 # My local files
 Server/info.txt
+log.txt

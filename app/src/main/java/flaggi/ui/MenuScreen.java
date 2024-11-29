@@ -55,7 +55,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
     private String nameUserInput = "", ipUserInput = "", errorMessage = "";
     private boolean isNameFieldFocused = false, isIpFieldFocused = false;
-    private Runnable startButtonAction, exitAction;
+    private Runnable startButtonAction;
 
     /////////////////
     // Constructor
@@ -67,12 +67,11 @@ public class MenuScreen implements Renderable, Interactable, Typable {
      * @param startAction - {@code Runnable} to be executed when the start button is
      *                    clicked.
      */
-    public MenuScreen(Runnable startAction, Runnable exitAction, String name, String ip) {
+    public MenuScreen(Runnable startAction, String name, String ip) {
 
         // Set variables
         this.visible = true;
         this.startButtonAction = startAction;
-        this.exitAction = exitAction;
         this.nameUserInput = name == null ? "" : name;
         this.ipUserInput = ip == null ? "" : ip;
 
@@ -132,9 +131,6 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
         g.setColor(Color.GREEN);
         g.fillRect(startButtonBounds.x, startButtonBounds.y, startButtonBounds.width, startButtonBounds.height);
-        g.setColor(Color.RED);
-        g.fillRoundRect(exitButtonBounds.x, exitButtonBounds.y, exitButtonBounds.width, exitButtonBounds.height, 20,
-                20);
         g.setColor(Color.BLACK);
         g.drawString("Start", startButtonBounds.x + (buttonWidth / 2) - 20,
                 startButtonBounds.y + (buttonHeight / 2) + 5);
@@ -190,10 +186,6 @@ public class MenuScreen implements Renderable, Interactable, Typable {
                 startButtonAction.run();
             }
             return true;
-        } else if (exitButtonBounds.contains(e.getPoint())) {
-            if (exitAction != null) {
-                exitAction.run();
-            }
         }
         isNameFieldFocused = false;
         isIpFieldFocused = false;
