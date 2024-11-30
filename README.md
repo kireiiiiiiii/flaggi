@@ -10,19 +10,17 @@ Flaggi is a simple game where two players take turns placing flags on a grid. Th
 
 ## Game installation
 
-Install the latest release of the `Server.jar` and `Flaggi.jar` from the [releases](https://github.com/kireiiiiiiii/Flaggi/releases). Run the server by using the command:
+Install the latest release of the `Server.jar` and `Flaggi.jar` from the [latest release](https://github.com/kireiiiiiiii/Flaggi/releases/latest). This game is a multiplayer game, requiring a server to run. You can run the server by using the command:
 
 ```bash
 java -jar Server.jar
 ```
 
-The server will log the IP it was creted on. Paste this ip into an `ip.txt` file in the same directory as the `Flaggi.jar` and run the game by using the command:
+The server will log (amongst other things) the IP it was creted on. You will need this IP to connect to the server from the client. The client can be run bu using the following command in the directory of the `Flaggi.jar`:
 
 ```bash
 java -jar Flaggi.jar
 ```
-
-If there is no `ip.txt` the user local IP will be used. This will work if the server is running on the same computer as the client.
 
 ## Resources
 
