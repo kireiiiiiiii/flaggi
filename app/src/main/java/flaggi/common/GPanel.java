@@ -40,6 +40,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.KeyEvent;
+import java.awt.Color;
 import java.awt.Container;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -128,16 +129,28 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     ////////////////
 
     /**
-     * Standart constructor
+     * Standard constructor.
      * 
-     * @param owner - {JFrame} object, that owns this {@code JPanel}.
+     * @param handeler               - {@code InteractableHandeler} object, that
+     *                               will handle
+     *                               panel interaction.
+     * @param fps                    - frames per second.
+     * @param windowWidth            - window width.
+     * @param windowHeight           - window height.
+     * @param resizable              - if the panel is resizable by the user.
+     * @param fullscreen             - if the panel is fullscreen. Cannot be
+     *                               changed.
+     * @param appTitle               - title of the window (name of the app).
+     * @param loadingBackgroundColor - color of the {@code JFrame} displayed before
+     *                               the {@code JPanel} is initialized.
      */
     public GPanel(InteractableHandeler handeler, int fps, int windowWidth, int windowHeight, boolean resizable,
-            boolean fullscreen, String appTitle) {
+            boolean fullscreen, String appTitle, Color loadingBackgroundColor) {
         // ---- Variable Initiliazition ----
+        this.appFrame = new JFrame();
+        this.appFrame.setBackground(loadingBackgroundColor);
         this.handeler = handeler;
         this.widgets = new ArrayList<Renderable>();
-        this.appFrame = new JFrame();
         this.renderer = new Renderer(fps);
         this.isRendering = false;
         this.playerPos = new int[2];
@@ -165,6 +178,24 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         // ---- Start rendering ----
         startRendering();
 
+    }
+
+    /**
+     * Constructor without loading color. Useful for {@code GPanel}s without
+     * difficult initial calculations.
+     * 
+     * @param handeler     - {@code InteractableHandeler} object, that will handle
+     *                     panel interaction.
+     * @param fps          - frames per second.
+     * @param windowWidth  - window width.
+     * @param windowHeight - window height.
+     * @param resizable    - if the panel is resizable by the user.
+     * @param fullscreen   - if the panel is fullscreen. Cannot be changed.
+     * @param appTitle     - title of the window (name of the app).
+     */
+    public GPanel(InteractableHandeler handeler, int fps, int windowWidth, int windowHeight, boolean resizable,
+            boolean fullscreen, String appTitle) {
+        this(handeler, fps, windowWidth, windowHeight, resizable, fullscreen, appTitle, Color.WHITE);
     }
 
     /////////////////
