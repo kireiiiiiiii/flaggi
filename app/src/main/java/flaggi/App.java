@@ -36,6 +36,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.swing.SwingUtilities;
 
@@ -262,32 +263,60 @@ public class App implements InteractableHandeler {
     /**
      * Moves the player.
      * 
-     * @param e
+     * @param events - {@code List<KeyEvent>} of the pressed keys.
      */
-    public void move(KeyEvent e) {
+    public void move(List<KeyEvent> events) {
         int step = 8;
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP:
-            case KeyEvent.VK_W:
-                this.pos[1] -= step;
-                break;
-            case KeyEvent.VK_DOWN:
-            case KeyEvent.VK_S:
-                this.pos[1] += step;
-                break;
-            case KeyEvent.VK_LEFT:
-            case KeyEvent.VK_A:
-                this.pos[0] -= step;
-                break;
-            case KeyEvent.VK_RIGHT:
-            case KeyEvent.VK_D:
-                this.pos[0] += step;
-                break;
-            default:
-                break;
+        boolean moveUp = false, moveDown = false, moveLeft = false, moveRight = false;
+
+        for (KeyEvent e : events) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_UP:
+                case KeyEvent.VK_W:
+                    moveUp = true;
+                    break;
+                case KeyEvent.VK_DOWN:
+                case KeyEvent.VK_S:
+                    moveDown = true;
+                    break;
+                case KeyEvent.VK_LEFT:
+                case KeyEvent.VK_A:
+                    moveLeft = true;
+                    break;
+                case KeyEvent.VK_RIGHT:
+                case KeyEvent.VK_D:
+                    moveRight = true;
+                    break;
+                default:
+                    break;
+            }
         }
 
-        // Update viewport
+        // Calculate horizontal and vertical movement distances.
+        double deltaX = 0;
+        double deltaY = 0;
+
+        if (moveUp)
+            deltaY -= 1;
+        if (moveDown)
+            deltaY += 1;
+        if (moveLeft)
+            deltaX -= 1;
+        if (moveRight)
+            deltaX += 1;
+
+        // Diagonal movement handeling
+        double magnitude = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        if (magnitude > 0) {
+            deltaX = (deltaX / magnitude) * step;
+            deltaY = (deltaY / magnitude) * step;
+        }
+
+        // Update the player's position
+        this.pos[0] += deltaX;
+        this.pos[1] += deltaY;
+
+        // Update the viewport
         this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
     }
 
@@ -617,9 +646,7 @@ public class App implements InteractableHandeler {
         private void update() {
             gpanel.removeWidgetsOfClass(ConnectionWidget.class);
             if (movementEnabled) {
-                for (KeyEvent e : pressedKeys) {
-                    move(e);
-                }
+                move(pressedKeys);
             }
 
             updatePlayerPositions();
