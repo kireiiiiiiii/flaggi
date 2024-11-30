@@ -236,13 +236,26 @@ public class Client {
 
                 // Exclude the local player
                 if (clientID != excludeID) {
-                    positions.add(new ClientStruct(posX, posY, displayName));
+                    positions.add(new ClientStruct(posX, posY, clientID, displayName));
                 }
             } else {
                 Logger.addLog("Recieved server message doesn't have 4 parts");
             }
         }
         return positions;
+    }
+
+    /////////////////
+    /// Accesors
+    ////////////////
+
+    /**
+     * Returns the id of the client given by the server.
+     * 
+     * @return {@code int} of the client ID.
+     */
+    public int getId() {
+        return this.clientId;
     }
 
     /////////////////
@@ -255,13 +268,13 @@ public class Client {
      */
     public static class ClientStruct {
 
-        private int x;
-        private int y;
+        private int x, y, id;
         private String displayName;
 
-        public ClientStruct(int x, int y, String displayName) {
+        public ClientStruct(int x, int y, int id, String displayName) {
             this.x = x;
             this.y = y;
+            this.id = id;
             this.displayName = displayName;
         }
 
@@ -275,6 +288,10 @@ public class Client {
 
         public String getName() {
             return this.displayName;
+        }
+
+        public int getId() {
+            return this.id;
         }
 
         @Override

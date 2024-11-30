@@ -50,19 +50,20 @@ public class Player implements Renderable {
     private boolean visible = true;
     private boolean isEnemy;
     private Color color;
-    private int zindex;
+    private int zindex, id;
     private String name;
 
     /////////////////
     // Constructor
     ////////////////
 
-    public Player(int[] pos, Color color, int zindex, String name, boolean isEnemy) {
+    public Player(int[] pos, Color color, int zindex, String name, boolean isEnemy, int id) {
         this.pos = pos;
         this.color = color;
         this.zindex = zindex;
         this.name = name;
         this.isEnemy = isEnemy;
+        this.id = id;
     }
 
     /////////////////
@@ -115,7 +116,7 @@ public class Player implements Renderable {
     }
 
     /////////////////
-    // Modifiers
+    // Modifiers & Accesors
     ////////////////
 
     /**
@@ -125,6 +126,14 @@ public class Player implements Renderable {
      */
     public void setPos(int[] pos) {
         this.pos = pos;
+    }
+
+    public boolean isEnemy() {
+        return this.isEnemy;
+    }
+
+    public int getId() {
+        return this.id;
     }
 
 }

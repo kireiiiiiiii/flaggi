@@ -456,6 +456,19 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     }
 
     /**
+     * Removes a specified widget from the list of widgets being rendered by this
+     * {@code GPanel}.
+     * 
+     * @param renderable - the {@code Renderable} object to be removed.
+     * @return {@code true} if the widget was removed, {@code false} otherwise.
+     */
+    public boolean remove(Renderable renderable) {
+        synchronized (this.widgets) {
+            return this.widgets.remove(renderable);
+        }
+    }
+
+    /**
      * Changes the window icon.
      *
      * @param path - path of the icon

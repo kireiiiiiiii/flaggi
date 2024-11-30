@@ -35,6 +35,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import javax.swing.SwingUtilities;
 
@@ -79,6 +80,7 @@ public class App implements InteractableHandeler {
 
     private Client client;
     private String username, ip;
+    private int id;
     private GPanel gpanel;
     private GameLoop gameLoop;
     private AdvancedVariable<AppOptions> appOptions;
@@ -191,8 +193,9 @@ public class App implements InteractableHandeler {
 
         // ------ Initialize client & change UI
         this.client = new Client(username, serverAddress);
+        this.id = this.client.getId();
         this.gpanel.add(new Player(new int[] { this.initPos[0], this.initPos[1] }, Color.BLUE, ZIndex.PLAYER, username,
-                false));
+                false, this.id));
 
         this.gpanel.hideAllWidgets();
         this.gpanel.showTaggedWidgets(WidgetTags.GAME_ELEMENTS);
@@ -286,6 +289,70 @@ public class App implements InteractableHandeler {
 
         // Update viewport
         this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
+    }
+
+    /**
+     * Gets the player informations from the server, and updates the player data
+     * according to that. Removes any players no longer connected, and adds new
+     * players.
+     * 
+     */
+    public void updatePlayerPositions() {
+        // Get the current players from the panel and their positions from the server
+        ArrayList<Player> players = this.gpanel.getWidgetsByClass(Player.class);
+        ArrayList<ClientStruct> serverPositions = client.updatePlayerPositions(
+                new ClientStruct(pos[0], pos[1], this.id, username));
+
+        // Track existing players by ID for quick lookup
+        HashMap<Integer, Player> existingPlayers = new HashMap<>();
+        for (Player player : players) {
+            existingPlayers.put(player.getId(), player);
+        }
+
+        // Culling distance calculation
+        int viewportWidth = windowSize[0];
+        int viewportHeight = windowSize[1];
+        int cullDistanceX = viewportWidth / 2;
+        int cullDistanceY = viewportHeight / 2;
+
+        // Update or add players
+        for (ClientStruct clientStruct : serverPositions) {
+            int clientId = clientStruct.getId();
+            int[] clientPos = new int[] { clientStruct.getX(), clientStruct.getY() };
+
+            // Cull clients outside the viewport
+            int distanceX = Math.abs(clientPos[0] - pos[0]);
+            int distanceY = Math.abs(clientPos[1] - pos[1]);
+            if (distanceX > cullDistanceX || distanceY > cullDistanceY) {
+                continue; // Skip rendering this player
+            }
+
+            if (existingPlayers.containsKey(clientId)) {
+                // Update the position of the existing player
+                Player player = existingPlayers.get(clientId);
+                player.setPos(clientPos);
+                existingPlayers.remove(clientId); // Mark as processed
+            } else {
+                // Add new player to the panel
+                Player newPlayer = new Player(
+                        clientPos,
+                        Color.RED,
+                        ZIndex.OTHER_PLAYERS,
+                        clientStruct.getName(),
+                        true,
+                        clientId);
+                this.gpanel.add(newPlayer);
+            }
+        }
+
+        // Remove players no longer reported by the server
+        for (Player remainingPlayer : existingPlayers.values()) {
+            // Exclude the local player
+            if (remainingPlayer.getId() == this.id) {
+                continue;
+            }
+            this.gpanel.remove(remainingPlayer);
+        }
     }
 
     /**
@@ -548,33 +615,16 @@ public class App implements InteractableHandeler {
          * 
          */
         private void update() {
+            gpanel.removeWidgetsOfClass(ConnectionWidget.class);
             if (movementEnabled) {
                 for (KeyEvent e : pressedKeys) {
                     move(e);
                 }
             }
 
-            gpanel.removeWidgetsOfClass(ConnectionWidget.class);
+            updatePlayerPositions();
 
-            ArrayList<ClientStruct> positions = client
-                    .updatePlayerPositions(new ClientStruct(pos[0], pos[1], username));
-            ArrayList<Renderable> players = new ArrayList<Renderable>();
-
-            // gpanel.removeWidgetsOfClass(Player.class);
-            gpanel.removeWidgetsWithTags(WidgetTags.ENEMY_PLAYER);
-
-            for (ClientStruct client : positions) {
-                int[] clientPosition = { client.getX(), client.getY() };
-
-                // Cull clients out of viewport
-                int distanceX = Math.abs(clientPosition[0] - pos[0]);
-                int distanceY = Math.abs(clientPosition[1] - pos[1]);
-                if (distanceX < windowSize[0] / 1.5 && distanceY < windowSize[1] / 1.5) {
-                    players.add(new Player(clientPosition, Color.RED, ZIndex.OTHER_PLAYERS, client.getName(), true));
-                }
-            }
-
-            gpanel.add(players);
+            updatePlayerPositions();
             gpanel.add(new ConnectionWidget());
         }
 
