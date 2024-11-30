@@ -133,7 +133,8 @@ public class App implements InteractableHandeler {
         printHeader();
 
         // ------ Initialize UI
-        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false, PROJECT_NAME);
+        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false, PROJECT_NAME,
+                new Color(229, 204, 255));
         this.gpanel.setIcon(ImageUtil.getImageFromFile("icon.png"));
         this.gpanel.setExitOperation(() -> {
             exitGame();
