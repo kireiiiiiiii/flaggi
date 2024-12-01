@@ -411,7 +411,7 @@ public class App implements InteractableHandeler {
                 }, () -> {
                     goToMenu();
                 }),
-                new Tree()));
+                new Tree(new int[] { 100, 100 })));
 
         // Add all the widgets
         this.gpanel.add(widgets);

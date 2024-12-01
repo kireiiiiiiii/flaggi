@@ -31,17 +31,28 @@ import java.awt.Graphics2D;
 import java.util.ArrayList;
 
 import flaggi.common.GPanel.Renderable;
+import flaggi.common.Sprite;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
-import flaggi.util.ImageUtil;
 
+/**
+ * Tree object.
+ * 
+ */
 public class Tree implements Renderable {
 
     private boolean visible;
+    private int[] position;
+    private Sprite sprite;
+
+    public Tree(int[] position) {
+        this.position = position;
+        this.sprite = new Sprite("tree");
+    }
 
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
-        g.drawImage(ImageUtil.getImageFromFile("tree.png"), 40 + origin[0], 40 + origin[1], focusCycleRootAncestor);
+        this.sprite.paint(g, this.position[0] + origin[0], this.position[1] + origin[1], focusCycleRootAncestor);
     }
 
     @Override
