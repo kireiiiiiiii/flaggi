@@ -82,7 +82,6 @@ public class Player implements Renderable {
         } else {
             this.sprite = new Sprite("blue_player_idle");
         }
-        this.sprite.scaleToWidth(50);
     }
 
     /////////////////
@@ -100,7 +99,9 @@ public class Player implements Renderable {
         this.sprite.paint(g, this.pos[0] + offset[0], this.pos[1] + offset[1], focusCycleRootAncestor);
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 12));
-        int[] pos = FontUtil.getCenteredPos(50, 50, g.getFontMetrics(), this.name);
+        int[] pos = FontUtil.getCenteredPos(this.sprite.getWidth(), 10 * 0, g.getFontMetrics(),
+                this.name);
+        pos[1] = (int) (this.sprite.getHeight() / 2.5);
         g.drawString(this.name, offset[0] + this.pos[0] + pos[0], offset[1] + this.pos[1] + pos[1] - 40);
 
     }

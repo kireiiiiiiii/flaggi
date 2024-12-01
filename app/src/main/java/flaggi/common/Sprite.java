@@ -40,6 +40,12 @@ import flaggi.util.ImageUtil;
 public class Sprite {
 
     /////////////////
+    // Constants
+    ////////////////
+
+    public static final int SPRITE_SCALING = 5; // Scaling from the sprite sheet dimensions to display size.
+
+    /////////////////
     // Variables
     ////////////////
 
@@ -57,6 +63,9 @@ public class Sprite {
      */
     public Sprite(String name) {
         this.sprite = ImageUtil.getImageFromFile("sprites" + File.separator + name + ".png");
+        this.sprite = ImageUtil.scaleImage(this.sprite, this.sprite.getWidth(null) * SPRITE_SCALING,
+                this.sprite.getHeight(null) * SPRITE_SCALING,
+                false);
     }
 
     /////////////////
@@ -92,7 +101,7 @@ public class Sprite {
      */
     public void setSize(int[] size) {
         int x = size[0], y = size[1];
-        this.sprite = ImageUtil.scaleImage(this.sprite, x, y);
+        this.sprite = ImageUtil.scaleImage(this.sprite, x, y, false);
     }
 
     /**
@@ -101,7 +110,7 @@ public class Sprite {
      * @param width - target width.
      */
     public void scaleToWidth(int width) {
-        this.sprite = ImageUtil.scaleToWidth(this.sprite, width);
+        this.sprite = ImageUtil.scaleToWidth(this.sprite, width, false);
     }
 
     /**
@@ -110,7 +119,15 @@ public class Sprite {
      * @param height - target height.
      */
     public void scaleToHeight(int height) {
-        this.sprite = ImageUtil.scaleToHeight(this.sprite, height);
+        this.sprite = ImageUtil.scaleToHeight(this.sprite, height, false);
+    }
+
+    public int getWidth() {
+        return this.sprite.getWidth(null);
+    }
+
+    public int getHeight() {
+        return this.sprite.getHeight(null);
     }
 
     // TODO - ANIMATIONS

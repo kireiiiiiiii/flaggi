@@ -112,7 +112,8 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         this.exitButtonBounds.setBounds(10, 10, buttonWidth / 3, buttonWidth / 3);
 
         // Render elements
-        g.drawImage(ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("logo.png"), 600), centerX - 300, centerY - 400,
+        g.drawImage(ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("logo.png"), 600, false), centerX - 300,
+                centerY - 400,
                 focusCycleRootAncestor);
 
         g.setColor(Color.RED);
