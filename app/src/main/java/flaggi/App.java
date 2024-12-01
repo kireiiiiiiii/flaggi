@@ -149,6 +149,10 @@ public class App implements InteractableHandeler {
     // Events
     ////////////////
 
+    /**
+     * Starts the game (not the app).
+     * 
+     */
     public void startGame() {
         // ------ Get username
         for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {

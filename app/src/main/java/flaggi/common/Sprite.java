@@ -122,10 +122,20 @@ public class Sprite {
         this.sprite = ImageUtil.scaleToHeight(this.sprite, height, false);
     }
 
+    /**
+     * Returns the texture width of the sprite texture.
+     * 
+     * @return - {@code int} value of the width.
+     */
     public int getWidth() {
         return this.sprite.getWidth(null);
     }
 
+    /**
+     * Returns the texture height of the sprite texture.
+     * 
+     * @return - {@code int} value of the height.
+     */
     public int getHeight() {
         return this.sprite.getHeight(null);
     }

@@ -41,14 +41,31 @@ import flaggi.constants.ZIndex;
  */
 public class Tree implements Renderable {
 
+    /////////////////
+    // Variables
+    ////////////////
+
     private boolean visible;
     private int[] position;
     private Sprite sprite;
 
+    /////////////////
+    // Constructor
+    ////////////////
+
+    /**
+     * Code default constructor.
+     * 
+     * @param position
+     */
     public Tree(int[] position) {
         this.position = position;
         this.sprite = new Sprite("tree");
     }
+
+    /////////////////
+    // Rendering
+    ////////////////
 
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {

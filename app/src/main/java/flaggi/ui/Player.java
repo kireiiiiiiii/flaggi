@@ -149,10 +149,21 @@ public class Player implements Renderable {
         this.pos = pos;
     }
 
+    /**
+     * Returns {@code true} if the player is an enemy. Otherwise, returns
+     * {@code false}.
+     * 
+     * @return - {@code boolean}.
+     */
     public boolean isEnemy() {
         return this.isEnemy;
     }
 
+    /**
+     * Returns the {@code ID} of this player, given by the server.
+     * 
+     * @return - {@code int} of the ID.
+     */
     public int getId() {
         return this.id;
     }
