@@ -59,6 +59,7 @@ import flaggi.ui.PauseMenu;
 import flaggi.ui.Player;
 import flaggi.ui.Tree;
 import flaggi.util.ImageUtil;
+import flaggi.util.NetUtil;
 import flaggi.util.ScreenUtil;
 
 /**
@@ -97,11 +98,11 @@ public class App implements InteractableHandeler {
      * Main method.
      * 
      * @param args
+     * @throws Exception
      */
-    public static void main(String[] args) {
-        Logger.clearLog();
-        Logger.addLog("App started");
-        SwingUtilities.invokeLater(App::new);
+    public static void main(String[] args) throws Exception {
+        // SwingUtilities.invokeLater(App::new);
+        System.out.println(NetUtil.getLatestReleaseTag("kireiiiiiiii", "Flaggi", null));
     }
 
     /**
@@ -109,6 +110,10 @@ public class App implements InteractableHandeler {
      * 
      */
     public App() {
+
+        // ------ Clear the log file, and start the 1st log entry.
+        Logger.clearLog();
+        Logger.addLog("App started");
 
         // ------ Initialize game
         try {
