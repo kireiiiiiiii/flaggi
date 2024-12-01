@@ -196,7 +196,7 @@ public class App implements InteractableHandeler {
         // ------ Initialize client & change UI
         this.client = new Client(username, serverAddress);
         this.id = this.client.getId();
-        this.gpanel.add(new Player(new int[] { this.initPos[0], this.initPos[1] }, Color.BLUE, ZIndex.PLAYER, username,
+        this.gpanel.add(new Player(new int[] { this.initPos[0], this.initPos[1] }, ZIndex.PLAYER, username,
                 false, this.id));
 
         this.gpanel.hideAllWidgets();
@@ -366,7 +366,6 @@ public class App implements InteractableHandeler {
                 // Add new player to the panel
                 Player newPlayer = new Player(
                         clientPos,
-                        Color.RED,
                         ZIndex.OTHER_PLAYERS,
                         clientStruct.getName(),
                         true,

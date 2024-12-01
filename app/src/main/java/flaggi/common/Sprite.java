@@ -1,6 +1,6 @@
 /*
  * Author: Matěj Šťastný
- * Date created: 11/4/2024
+ * Date created: 12/1/2024
  * Github link: https://github.com/kireiiiiiiii/Flaggi
  *
  *
@@ -83,6 +83,34 @@ public class Sprite {
      */
     public void paint(Graphics2D g, int x, int y, Container focusCycleRootAncestor) {
         g.drawImage(this.sprite, x, y, focusCycleRootAncestor);
+    }
+
+    /**
+     * Scales the sprite texture to match the target size.
+     * 
+     * @param size - target size.
+     */
+    public void setSize(int[] size) {
+        int x = size[0], y = size[1];
+        this.sprite = ImageUtil.scaleImage(this.sprite, x, y);
+    }
+
+    /**
+     * Scales the sprite texture to match the target width.
+     * 
+     * @param width - target width.
+     */
+    public void scaleToWidth(int width) {
+        this.sprite = ImageUtil.scaleToWidth(this.sprite, width);
+    }
+
+    /**
+     * Scales the sprite texture to match the target height.
+     * 
+     * @param height - target height.
+     */
+    public void scaleToHeight(int height) {
+        this.sprite = ImageUtil.scaleToHeight(this.sprite, height);
     }
 
     // TODO - ANIMATIONS
