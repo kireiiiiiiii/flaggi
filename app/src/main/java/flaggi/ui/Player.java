@@ -80,9 +80,17 @@ public class Player implements Renderable {
 
         // Set the sprite texture :3
         if (isEnemy) {
-            this.sprite.addAnimation(Arrays.asList("red_player_idle"), "idle");
+            this.sprite.addAnimation(Arrays.asList(
+                    "red_idle",
+                    "red_idle_lu",
+                    "red_idle",
+                    "red_idle_ru"), "idle");
         } else {
-            this.sprite.addAnimation(Arrays.asList("blue_player_idle"), "idle");
+            this.sprite.addAnimation(Arrays.asList(
+                    "blue_idle",
+                    "blue_idle_lu",
+                    "blue_idle",
+                    "blue_idle_ru"), "idle");
         }
         this.sprite.setAnimation("idle");
         this.sprite.setFps(2);

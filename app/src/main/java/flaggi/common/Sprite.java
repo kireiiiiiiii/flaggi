@@ -245,7 +245,7 @@ public class Sprite {
          */
         public void start() {
             Thread updaterThread = new Thread(() -> {
-                int intervalMillis = 1000 / fps;
+                int intervalMillis = fps == 0 ? 0 : 1000 / fps;
                 while (running) {
                     try {
                         Thread.sleep(intervalMillis);
@@ -277,13 +277,17 @@ public class Sprite {
         }
 
         /**
-         * Updates the frame index for the current animation.
+         * Updates the current frame of the animation, ensuring valid frame operations.
          */
         private void updateFrame() {
-            if (currentAnimation != null && animations.containsKey(currentAnimation)) {
-                List<Image> frames = animations.get(currentAnimation);
-                currentFrame = (currentFrame + 1) % frames.size();
+            List<Image> frames = animations.get(currentAnimation);
+
+            if (frames == null || frames.isEmpty()) {
+                System.err.println("Cannot update frame: animation '" + currentAnimation + "' has no frames.");
+                return;
             }
+
+            currentFrame = (currentFrame + 1) % frames.size();
         }
     }
 
