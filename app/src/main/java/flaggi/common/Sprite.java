@@ -117,6 +117,7 @@ public class Sprite {
 
     /**
      * Starts playing the current animation.
+     * 
      */
     public void play() {
         if (currentAnimation == null) {
@@ -130,6 +131,7 @@ public class Sprite {
 
     /**
      * Stops the animation playback.
+     * 
      */
     public void stop() {
         if (frameUpdater != null) {
@@ -236,12 +238,14 @@ public class Sprite {
 
     /**
      * A utility class to handle frame updates based on FPS.
+     * 
      */
     private class FrameUpdater {
         private boolean running = true;
 
         /**
          * Starts the updater.
+         * 
          */
         public void start() {
             Thread updaterThread = new Thread(() -> {
@@ -278,6 +282,7 @@ public class Sprite {
 
         /**
          * Updates the current frame of the animation, ensuring valid frame operations.
+         * 
          */
         private void updateFrame() {
             List<Image> frames = animations.get(currentAnimation);
