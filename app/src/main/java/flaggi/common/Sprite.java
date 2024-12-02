@@ -29,6 +29,7 @@ package flaggi.common;
 import java.awt.Container;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,7 +48,7 @@ public class Sprite {
     ////////////////
 
     public static final int SPRITE_SCALING = 5;
-    public static final String SPRITE_RESOURCE_DIR_PATH = "sprites/";
+    public static final String SPRITE_RESOURCE_DIR_PATH = "sprites" + File.separator;
 
     /////////////////
     // Variables
