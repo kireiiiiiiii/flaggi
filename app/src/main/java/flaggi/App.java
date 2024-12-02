@@ -72,6 +72,7 @@ public class App implements InteractableHandeler {
 
     public static final String PROJECT_NAME = "Flaggi";
     public static final String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi";
+    public static final String FILE_JAR_SEPARATOR = "/";
     public static final int TCP_PORT = 54321;
     public static final int FPS = 60;
 

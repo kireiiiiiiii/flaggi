@@ -29,12 +29,12 @@ package flaggi.common;
 import java.awt.Container;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import flaggi.App;
 import flaggi.util.ImageUtil;
 
 /**
@@ -48,7 +48,7 @@ public class Sprite {
     ////////////////
 
     public static final int SPRITE_SCALING = 5;
-    public static final String SPRITE_RESOURCE_DIR_PATH = "sprites" + File.separator;
+    public static final String SPRITE_RESOURCE_DIR_PATH = "sprites" + App.FILE_JAR_SEPARATOR;
 
     /////////////////
     // Variables
@@ -80,12 +80,12 @@ public class Sprite {
      * Adds a new animation with the given frames and name.
      * Frames are loaded from the specified file paths.
      *
-     * @param framePaths - List of file paths to the animation frames.
-     * @param name       - The name of the animation.
+     * @param frameName - List of file paths to the animation frames.
+     * @param name      - The name of the animation.
      */
-    public void addAnimation(List<String> framePaths, String name) {
+    public void addAnimation(List<String> frameName, String name) {
         List<Image> frames = new ArrayList<>();
-        for (String framePath : framePaths) {
+        for (String framePath : frameName) {
             framePath = SPRITE_RESOURCE_DIR_PATH + framePath + ".png";
             Image image = ImageUtil.getImageFromFile(framePath);
             if (image != null) {

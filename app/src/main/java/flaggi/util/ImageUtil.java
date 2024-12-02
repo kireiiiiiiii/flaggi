@@ -28,11 +28,13 @@ package flaggi.util;
 
 import java.awt.*;
 import java.awt.image.*;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
 import javax.imageio.ImageIO;
+
+import flaggi.App;
+import flaggi.common.Logger;
 
 /**
  * A utillity method class designed to handle images
@@ -52,7 +54,11 @@ public class ImageUtil {
      * @return a new {@code Image} object.
      */
     private static InputStream getImageInputStream(String filePath) {
-        return ImageUtil.class.getResourceAsStream(File.separator + filePath);
+        filePath = App.FILE_JAR_SEPARATOR + filePath;
+        InputStream resourceStream = ImageUtil.class.getResourceAsStream(filePath);
+        String exists = resourceStream.toString() != null ? "File exists." : "File does not exist.";
+        Logger.addLog("Accesed resource input stream at path: '" + filePath + "'. " + exists);
+        return resourceStream;
     }
 
     /**

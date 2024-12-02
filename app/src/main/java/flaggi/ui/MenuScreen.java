@@ -52,7 +52,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
     // Button bounding boxes
     private Rectangle nameFieldBounds, ipFieldBounds, startButtonBounds, exitButtonBounds;
-
+    private Image logo;
     private String nameUserInput = "", ipUserInput = "", errorMessage = "";
     private boolean isNameFieldFocused = false, isIpFieldFocused = false;
     private Runnable startButtonAction;
@@ -74,6 +74,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         this.startButtonAction = startAction;
         this.nameUserInput = name == null ? "" : name;
         this.ipUserInput = ip == null ? "" : ip;
+        this.logo = ImageUtil.getImageFromFile("logo.png");
 
         int fieldWidth = 200, fieldHeight = 30, buttonWidth = 100, buttonHeight = 40;
 
@@ -112,7 +113,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         this.exitButtonBounds.setBounds(10, 10, buttonWidth / 3, buttonWidth / 3);
 
         // Render elements
-        g.drawImage(ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("logo.png"), 600, false), centerX - 300,
+        g.drawImage(ImageUtil.scaleToWidth(this.logo, 600, false), centerX - 300,
                 centerY - 400,
                 focusCycleRootAncestor);
 
