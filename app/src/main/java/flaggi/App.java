@@ -59,7 +59,6 @@ import flaggi.ui.PauseMenu;
 import flaggi.ui.Player;
 import flaggi.ui.Tree;
 import flaggi.util.ImageUtil;
-import flaggi.util.NetUtil;
 import flaggi.util.ScreenUtil;
 
 /**
@@ -101,8 +100,7 @@ public class App implements InteractableHandeler {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        // SwingUtilities.invokeLater(App::new);
-        System.out.println(NetUtil.getLatestReleaseTag("kireiiiiiiii", "Flaggi", null));
+        SwingUtilities.invokeLater(App::new);
     }
 
     /**

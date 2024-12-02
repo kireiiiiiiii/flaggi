@@ -31,6 +31,7 @@ import java.awt.Container;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import flaggi.common.GPanel.Renderable;
 import flaggi.common.Sprite;
@@ -70,6 +71,7 @@ public class Player implements Renderable {
      *                players.
      */
     public Player(int[] pos, int zindex, String name, boolean isEnemy, int id) {
+        this.sprite = new Sprite();
         this.pos = pos;
         this.zindex = zindex;
         this.name = name;
@@ -78,10 +80,13 @@ public class Player implements Renderable {
 
         // Set the sprite texture :3
         if (isEnemy) {
-            this.sprite = new Sprite("red_player_idle");
+            this.sprite.addAnimation(Arrays.asList("red_player_idle"), "idle");
         } else {
-            this.sprite = new Sprite("blue_player_idle");
+            this.sprite.addAnimation(Arrays.asList("blue_player_idle"), "idle");
         }
+        this.sprite.setAnimation("idle");
+        this.sprite.setFps(2);
+        this.sprite.play();
     }
 
     /////////////////
@@ -94,14 +99,15 @@ public class Player implements Renderable {
             offset = new int[] { 0, 0 };
         }
 
-        // g.setColor(this.isEnemy ? Color.RED : Color.BLUE);
-        // g.fillRect(this.pos[0] + offset[0], this.pos[1] + offset[1], 50, 50);
-        this.sprite.paint(g, this.pos[0] + offset[0], this.pos[1] + offset[1], focusCycleRootAncestor);
+        // Render the player sprite
+        this.sprite.render(g, this.pos[0] + offset[0], this.pos[1] + offset[1], focusCycleRootAncestor);
+
+        // Render the nametag
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 12));
-        int[] pos = FontUtil.getCenteredPos(this.sprite.getWidth(), 10 * 0, g.getFontMetrics(),
+        int[] pos = FontUtil.getCenteredPos(55, 5, g.getFontMetrics(),
                 this.name);
-        pos[1] = (int) (this.sprite.getHeight() / 2.5);
+        pos[1] = 25;
         g.drawString(this.name, offset[0] + this.pos[0] + pos[0], offset[1] + this.pos[1] + pos[1] - 40);
 
     }

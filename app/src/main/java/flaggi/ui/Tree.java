@@ -29,6 +29,7 @@ package flaggi.ui;
 import java.awt.Container;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import flaggi.common.GPanel.Renderable;
 import flaggi.common.Sprite;
@@ -60,7 +61,9 @@ public class Tree implements Renderable {
      */
     public Tree(int[] position) {
         this.position = position;
-        this.sprite = new Sprite("tree");
+        this.sprite = new Sprite();
+        this.sprite.addAnimation(Arrays.asList("tree"), "tree");
+        this.sprite.setAnimation("tree");
     }
 
     /////////////////
@@ -69,7 +72,7 @@ public class Tree implements Renderable {
 
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
-        this.sprite.paint(g, this.position[0] + origin[0], this.position[1] + origin[1], focusCycleRootAncestor);
+        this.sprite.render(g, this.position[0] + origin[0], this.position[1] + origin[1], focusCycleRootAncestor);
     }
 
     @Override
