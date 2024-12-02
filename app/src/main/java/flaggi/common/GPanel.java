@@ -516,6 +516,29 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     }
 
     /**
+     * OS specific icon setter, that sets a different icon depeending on the OS.
+     * 
+     * @param winIcon   - icon for Window OS.
+     * @param macIcon   - icon for MacOS.
+     * @param linuxIcon - icon for Linux based OS.
+     * @param other     - other not common OS.
+     */
+    public void setIconOSDependend(Image winIcon, Image macIcon, Image linuxIcon, Image other) {
+        String os = System.getProperty("os.name").toLowerCase();
+        Image icon;
+        if (os.contains("win")) {
+            icon = winIcon;
+        } else if (os.contains("mac")) {
+            icon = macIcon;
+        } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+            icon = linuxIcon;
+        } else {
+            icon = other;
+        }
+        setIcon(icon);
+    }
+
+    /**
      * Sets an action meant to be performed when the JPanel window is closed.
      * 
      * @param operation - {@code Runnable} executed on window close.

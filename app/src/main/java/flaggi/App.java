@@ -139,7 +139,9 @@ public class App implements InteractableHandeler {
         // ------ Initialize UI
         this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false, PROJECT_NAME,
                 new Color(229, 204, 255));
-        this.gpanel.setIcon(ImageUtil.getImageFromFile("icon.png"));
+        this.gpanel.setIconOSDependend(ImageUtil.getImageFromFile("icon_win.png"),
+                ImageUtil.getImageFromFile("icon_mac.png"), ImageUtil.getImageFromFile("icon_win.png"),
+                ImageUtil.getImageFromFile("icon_win.png"));
         this.gpanel.setExitOperation(() -> {
             exitGame();
         });
