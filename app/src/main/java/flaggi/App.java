@@ -206,8 +206,7 @@ public class App implements InteractableHandeler {
         // ------ Initialize client & change UI
         this.client = new Client(username, serverAddress);
         this.id = this.client.getId();
-        this.gpanel.add(new Player(new int[] { this.initPos[0], this.initPos[1] }, ZIndex.PLAYER, username,
-                false, this.id));
+        this.gpanel.add(new Player(new int[] { this.initPos[0], this.initPos[1] }, ZIndex.PLAYER, username, this.id));
 
         this.gpanel.hideAllWidgets();
         this.gpanel.showTaggedWidgets(WidgetTags.GAME_ELEMENTS);
@@ -338,10 +337,16 @@ public class App implements InteractableHandeler {
      * 
      */
     public void updatePlayerPositions() {
+        String localAnimationFrame = null;
+        for (Player player : this.gpanel.getWidgetsByClass(Player.class)) {
+            if (!player.isEnemy()) {
+                localAnimationFrame = player.getAnimationFrame();
+            }
+        }
         // Get the current players from the panel and their positions from the server
         ArrayList<Player> players = this.gpanel.getWidgetsByClass(Player.class);
         ArrayList<ClientStruct> serverPositions = client.updatePlayerPositions(
-                new ClientStruct(pos[0], pos[1], this.id, username));
+                new ClientStruct(pos[0], pos[1], this.id, username, localAnimationFrame));
 
         // Track existing players by ID for quick lookup
         HashMap<Integer, Player> existingPlayers = new HashMap<>();
@@ -359,6 +364,7 @@ public class App implements InteractableHandeler {
         for (ClientStruct clientStruct : serverPositions) {
             int clientId = clientStruct.getId();
             int[] clientPos = new int[] { clientStruct.getX(), clientStruct.getY() };
+            String animationFrame = clientStruct.getAnimationFrame();
 
             // Cull clients outside the viewport
             int distanceX = Math.abs(clientPos[0] - pos[0]);
@@ -371,6 +377,7 @@ public class App implements InteractableHandeler {
                 // Update the position of the existing player
                 Player player = existingPlayers.get(clientId);
                 player.setPos(clientPos);
+                player.setAnimationFrame(animationFrame);
                 existingPlayers.remove(clientId); // Mark as processed
             } else {
                 // Add new player to the panel
@@ -378,7 +385,6 @@ public class App implements InteractableHandeler {
                         clientPos,
                         ZIndex.OTHER_PLAYERS,
                         clientStruct.getName(),
-                        true,
                         clientId);
                 this.gpanel.add(newPlayer);
             }

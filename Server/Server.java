@@ -44,10 +44,11 @@ public class Server {
 
     public static final int TCP_PORT = 54321;
     public static final int UDP_PORT = 54322;
+    public static String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi-server";
+
     private static final int CLIENT_TIMEOUT_SECONDS = 3;
     private static final List<Client> clients = new ArrayList<>();
     private static int maxClientID = 0;
-    private static String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi-server";
 
     /////////////////
     // Main
@@ -157,10 +158,11 @@ public class Server {
 
                 String message = new String(packet.getData(), 0, packet.getLength());
                 String[] parts = message.split(",");
-                if (parts.length >= 4) {
+                if (parts.length >= 5) {
                     int clientId = Integer.parseInt(parts[0]);
                     int x = Integer.parseInt(parts[1]);
                     int y = Integer.parseInt(parts[2]);
+                    String animationFrame = parts[4];
 
                     Client client;
                     synchronized (clients) {
@@ -169,6 +171,7 @@ public class Server {
 
                     if (client != null) {
                         client.setPosition(x, y);
+                        client.setAnimationFrame(animationFrame);
                         client.updateLastReceivedTime();
 
                         String playerData = getAllClientsData();
@@ -260,7 +263,8 @@ public class Server {
                 positions.append(client.getId()).append(",")
                         .append(client.getX()).append(",")
                         .append(client.getY()).append(",")
-                        .append(client.getDisplayName()).append(";");
+                        .append(client.getDisplayName()).append(",")
+                        .append(client.getAnimationFrame()).append(";");
             }
         }
         return positions.toString();
@@ -288,46 +292,6 @@ public class Server {
             e.printStackTrace();
         }
         return null;
-    }
-
-    /**
-     * Gets the program Application Data Folder path. If it doesn't exist, it will
-     * create one.
-     * 
-     * @return - {@code String} of the application data folder path.
-     */
-    private static String getApplicationDataFolder() {
-        String os = System.getProperty("os.name").toLowerCase();
-        String appDataFolder;
-
-        if (os.contains("win")) {
-            // Windows: Use %APPDATA%
-            appDataFolder = System.getenv("APPDATA");
-        } else if (os.contains("mac")) {
-            // macOS: Use ~/Library/Application Support/
-            appDataFolder = System.getProperty("user.home") + File.separator + "Library" + File.separator
-                    + "Application Support";
-        } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
-            // Linux/Unix: Use ~/.config/
-            appDataFolder = System.getProperty("user.home") + File.separator + ".config";
-        } else {
-            // Other: Use the directory of server jar.
-            appDataFolder = File.separator;
-        }
-
-        // Add the application's specific folder name
-        appDataFolder = appDataFolder + File.separator + DATA_DIRECTORY_NAME;
-
-        // Ensure the directory exists
-        File folder = new File(appDataFolder);
-        if (!folder.exists()) {
-            boolean created = folder.mkdirs();
-            if (!created) {
-                throw new RuntimeException("Failed to create application data folder at: " + appDataFolder);
-            }
-        }
-
-        return appDataFolder;
     }
 
     /**
@@ -367,6 +331,7 @@ public class Server {
         private final int id;
         private final String displayName;
         private final InetAddress inetAddress;
+        private String animationFrame;
         private int x;
         private int y;
         private long lastReceivedTime;
@@ -398,9 +363,17 @@ public class Server {
             return y;
         }
 
+        public String getAnimationFrame() {
+            return this.animationFrame;
+        }
+
         public void setPosition(int x, int y) {
             this.x = x;
             this.y = y;
+        }
+
+        public void setAnimationFrame(String animationFrame) {
+            this.animationFrame = animationFrame;
         }
 
         public long getLastReceivedTime() {

@@ -233,6 +233,16 @@ public class Sprite {
         return 0;
     }
 
+    /**
+     * Gets the current animation, and current frame.
+     * 
+     * @return - {@code String} in the form of
+     *         "current-animation-name:current-frame".
+     */
+    public String getAnimationFrame() {
+        return this.currentAnimation + ":" + currentFrame;
+    }
+
     /////////////////
     // FrameUpdater class
     ////////////////

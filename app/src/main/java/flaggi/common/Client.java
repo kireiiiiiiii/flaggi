@@ -127,7 +127,7 @@ public class Client {
 
         try {
             String message = clientId + "," + clientStruct.getX() + "," + clientStruct.getY() + ","
-                    + clientStruct.getName();
+                    + clientStruct.getName() + "," + clientStruct.getAnimationFrame();
             byte[] buffer = message.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, serverAddress, udpPort);
             udpSocket.send(packet);
@@ -228,15 +228,16 @@ public class Client {
         String[] playerData = data.split(";");
         for (String entry : playerData) {
             String[] parts = entry.split(",");
-            if (parts.length == 4) {
+            if (parts.length == 5) {
                 int clientID = Integer.parseInt(parts[0]);
                 int posX = Integer.parseInt(parts[1]);
                 int posY = Integer.parseInt(parts[2]);
                 String displayName = parts[3];
+                String animationFrame = parts[4];
 
                 // Exclude the local player
                 if (clientID != excludeID) {
-                    positions.add(new ClientStruct(posX, posY, clientID, displayName));
+                    positions.add(new ClientStruct(posX, posY, clientID, displayName, animationFrame));
                 }
             } else {
                 Logger.addLog("Recieved server message doesn't have 4 parts");
@@ -269,13 +270,14 @@ public class Client {
     public static class ClientStruct {
 
         private int x, y, id;
-        private String displayName;
+        private String displayName, animationFrame;
 
-        public ClientStruct(int x, int y, int id, String displayName) {
+        public ClientStruct(int x, int y, int id, String displayName, String animationName) {
             this.x = x;
             this.y = y;
             this.id = id;
             this.displayName = displayName;
+            this.animationFrame = animationName;
         }
 
         public int getX() {
@@ -286,12 +288,16 @@ public class Client {
             return this.y;
         }
 
+        public int getId() {
+            return this.id;
+        }
+
         public String getName() {
             return this.displayName;
         }
 
-        public int getId() {
-            return this.id;
+        public String getAnimationFrame() {
+            return this.animationFrame;
         }
 
         @Override
