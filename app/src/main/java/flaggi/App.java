@@ -120,7 +120,14 @@ public class App implements InteractableHandeler {
                     getApplicationDataFolder() + File.separator + "user-options.json", AppOptions.class);
         } catch (IOException e) {
             Logger.addLog("Error loading app options.", e);
+            new File(getApplicationDataFolder() + File.separator + "user-options.json").delete();
+            this.appOptions = new AdvancedVariable<AppOptions>(
+                    getApplicationDataFolder() + File.separator + "user-options.json");
             this.appOptions.set(getDefaultOptions());
+            try {
+                this.appOptions.save();
+            } catch (IOException e1) {
+            }
         }
         if (this.appOptions.get() == null) {
             this.appOptions.set(getDefaultOptions());
