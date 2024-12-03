@@ -24,17 +24,16 @@ dependencies {
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    // This dependency is used by the application.
-    implementation(libs.guava)
-
     //---- JSON file manipulation ----
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.1")
-    implementation ("com.fasterxml.jackson.core:jackson-databind:2.12.3")
-    implementation ("com.fasterxml.jackson.core:jackson-core:2.12.3")
-    implementation ("com.fasterxml.jackson.core:jackson-annotations:2.12.3")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.12.3")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.12.3")
 
     //---- JSON object for Github release fetching ----
     implementation("org.json:json:20230618")
+
+    // This dependency is used by the application.
+    implementation(libs.guava)
 }
 
 java {
