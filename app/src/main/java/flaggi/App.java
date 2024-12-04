@@ -211,9 +211,9 @@ public class App implements InteractableHandeler {
         }
 
         // ------ Set the skin name
-        String skinName = "default_blue";
+        String skinName = Player.DEFAULT_SKIN; // default skin
         if (username.equals("daarlin") || username.equals("owo")) {
-            skinName = "default_red";
+            skinName = "venom";
         }
 
         // ------ Initialize client & change UI

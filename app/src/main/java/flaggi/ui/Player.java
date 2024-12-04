@@ -49,8 +49,18 @@ import flaggi.util.FontUtil;
  */
 public class Player implements Renderable {
 
-    public static String playerSkinName;
-    private static Map<String, List<Image>> animations;
+    /////////////////
+    // Constants
+    ////////////////
+
+    public static final String DEFAULT_SKIN = "default_blue";
+    public static final String DEFAULT_ENEMY_SKIN = "default_red";
+
+    /////////////////
+    // Animation libraries
+    ////////////////
+
+    private static Map<String, List<Image>> playerAnimationsLibrary;
 
     /////////////////
     // Variables
@@ -59,7 +69,7 @@ public class Player implements Renderable {
     private int[] pos = new int[2];
     private boolean visible = true;
     private int zindex, id;
-    private String name, animationFrame;
+    private String name, animationFrame, localPlayerSkinName;
     private Sprite sprite;
 
     /////////////////
@@ -69,21 +79,22 @@ public class Player implements Renderable {
     /**
      * Default constructor.
      * 
-     * @param pos     - position of the player.
-     * @param zindex  - ZIndex of the player (different for local player, and enemy
-     *                players).
-     * @param name    - name of the player.
-     * @param isEnemy - is the player an enemy?
-     * @param id      - id of the player. Used to update the position of the
-     *                players.
+     * @param pos      - position of the player.
+     * @param zindex   - ZIndex of the player (different for local player, and enemy
+     *                 players).
+     * @param name     - name of the player.
+     * @param skinName - the name of the skin the player is using.
+     * @param isEnemy  - is the player an enemy?
+     * @param id       - id of the player. Used to update the position of the
+     *                 players.
      */
     public Player(int[] pos, int zindex, String name, String skinName, int id) {
         // ---- Use the default constructor, but with a null value
         this(pos, zindex, name, id, null);
 
         // ---- Set animation
-        playerSkinName = skinName;
-        this.sprite.setAnimation(playerSkinName + "_idle");
+        this.localPlayerSkinName = skinName;
+        this.sprite.setAnimation(localPlayerSkinName + "_idle");
         this.sprite.setFps(2);
         this.sprite.play();
     }
@@ -110,10 +121,10 @@ public class Player implements Renderable {
         this.id = id;
 
         // ---- Initialize skins
-        if (animations == null) {
+        if (playerAnimationsLibrary == null) {
             addAllPlayerAnimations();
         }
-        this.sprite.setAnimations(animations);
+        this.sprite.setAnimations(playerAnimationsLibrary);
     }
 
     /////////////////
@@ -130,7 +141,7 @@ public class Player implements Renderable {
 
         } else {
             // Enemy sprites
-            String[] parsedFrameData = parseAnimationFrame(animationFrame);
+            String[] parsedFrameData = parseAnimationFrame(this.animationFrame);
             if (parsedFrameData.length != 2) {
                 return;
             }
@@ -239,22 +250,30 @@ public class Player implements Renderable {
 
     /**
      * Parses the animation frame format {@code String} into an animation name
-     * value, and frame value.
+     * value, and frame value. If the skin data is the default skin, it will be
+     * changed to use the default enemy skin.
      * 
      * @param animationFrame - target message.
      * @return - {@code String} array, index 0 with animation name, index 1 with
      *         animation frame.
      */
-    public static String[] parseAnimationFrame(String animationFrame) {
-        return animationFrame.split(":");
+    private static String[] parseAnimationFrame(String animationFrame) {
+        String[] data = animationFrame.split(":");
+        if (data.length != 2) {
+            return new String[] { DEFAULT_ENEMY_SKIN + "_idle", "0" };
+        }
+        if (data[0].startsWith(DEFAULT_SKIN)) {
+            data[0] = DEFAULT_ENEMY_SKIN + data[0].substring(DEFAULT_SKIN.length());
+        }
+        return data;
     }
 
     /**
      * Add all the downloaded sprite animations.
      * 
      */
-    public static void addAllPlayerAnimations() {
-        animations = new HashMap<>();
+    private static void addAllPlayerAnimations() {
+        playerAnimationsLibrary = new HashMap<>();
         String[] skinTextures = FileUtil.listDirectoriesInJar("sprites/player");
 
         // Add idle animations
@@ -264,7 +283,7 @@ public class Player implements Renderable {
                     "player/" + skinName + "/l_leg_up",
                     "player/" + skinName + "/idle",
                     "player/" + skinName + "/r_leg_up");
-            animations.put(skinName + "_idle", Sprite.loadFrames(frameNames));
+            playerAnimationsLibrary.put(skinName + "_idle", Sprite.loadFrames(frameNames));
         }
     }
 }
