@@ -257,9 +257,9 @@ public class App implements InteractableHandeler {
      */
     public void togglePauseMenu() {
         if (this.paused) {
-            this.gpanel.showTaggedWidgets(WidgetTags.PAUSE_MENU);
-        } else {
             this.gpanel.hideTaggedWidgets(WidgetTags.PAUSE_MENU);
+        } else {
+            this.gpanel.showTaggedWidgets(WidgetTags.PAUSE_MENU);
         }
 
         this.paused = !paused;
