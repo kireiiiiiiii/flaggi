@@ -54,24 +54,18 @@ public class FileUtil {
         }
 
         List<String> directories = new ArrayList<>();
-
         try {
             Enumeration<URL> resources = FileUtil.class.getClassLoader().getResources(path);
-
             while (resources.hasMoreElements()) {
                 URL resource = resources.nextElement();
-
                 if ("jar".equals(resource.getProtocol())) {
                     JarURLConnection connection = (JarURLConnection) resource.openConnection();
                     try (JarFile jarFile = connection.getJarFile()) {
                         Enumeration<JarEntry> entries = jarFile.entries();
-
                         while (entries.hasMoreElements()) {
                             JarEntry entry = entries.nextElement();
                             String entryName = entry.getName();
-
                             if (entryName.startsWith(path) && entryName.endsWith("/") && !entryName.equals(path)) {
-                                System.out.println("Directory found: " + entryName);
                                 directories.add(formatDirName(path, entryName));
                             }
 
