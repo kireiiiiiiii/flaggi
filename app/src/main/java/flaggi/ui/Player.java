@@ -81,8 +81,6 @@ public class Player implements Renderable {
      * Default constructor.
      * 
      * @param pos      - position of the player.
-     * @param zindex   - ZIndex of the player (different for local player, and enemy
-     *                 players).
      * @param name     - name of the player.
      * @param skinName - the name of the skin the player is using.
      * @param isEnemy  - is the player an enemy?
@@ -104,8 +102,6 @@ public class Player implements Renderable {
      * Constructor for players with a specific animationFrame
      * 
      * @param pos     - position of the player.
-     * @param zindex  - ZIndex of the player (different for local player, and enemy
-     *                players).
      * @param name    - name of the player.
      * @param isEnemy - is the player an enemy?
      * @param id      - id of the player. Used to update the position of the
