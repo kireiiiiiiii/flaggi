@@ -240,7 +240,7 @@ public class Client {
                     positions.add(new ClientStruct(posX, posY, clientID, displayName, animationFrame));
                 }
             } else {
-                Logger.addLog("Recieved server message doesn't have 4 parts");
+                Logger.addLog("Recieved server message doesn't have 5 parts");
             }
         }
         return positions;
