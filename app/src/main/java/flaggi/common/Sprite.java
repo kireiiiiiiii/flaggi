@@ -102,18 +102,31 @@ public class Sprite {
     }
 
     /**
-     * Sets the current animation to be played.
+     * Sets the current animation to be played. Resets the frame back to 0.
      * 
      * @param name - The name of the animation.
      */
-    public void setAnimation(String name) {
+    public void setAnimation(String nameString) {
+        setAnimationNoReset(nameString);
+        this.currentFrame = 0;
+    }
+
+    /**
+     * Sets the current animation to be played. Continues at the frame of the last
+     * animation.
+     * 
+     * @param name - The name of the animation.
+     */
+    public void setAnimationNoReset(String name) {
         if (!animations.containsKey(name)) {
-            throw new IllegalArgumentException("Animation not found: " + name);
+            for (String animationName : animations.keySet()) {
+                System.out.println(animationName);
+            }
+            System.out.println("end");
+            throw new IllegalArgumentException("Animation not found: '" + name + "'");
         }
-        if (!name.equals(currentAnimation)) {
-            currentAnimation = name;
-            currentFrame = 0; // Reset to the first frame
-        }
+        currentAnimation = name;
+        // currentFrame = 0;
     }
 
     /**
