@@ -56,7 +56,7 @@ public class ImageUtil {
     private static InputStream getImageInputStream(String filePath) {
         filePath = App.FILE_JAR_SEPARATOR + filePath;
         InputStream resourceStream = ImageUtil.class.getResourceAsStream(filePath);
-        String exists = resourceStream.toString() != null ? "File exists." : "File does not exist.";
+        String exists = resourceStream != null ? "File exists." : "File does not exist.";
         Logger.addLog("Accesed resource input stream at path: '" + filePath + "'. " + exists);
         return resourceStream;
     }
