@@ -80,34 +80,20 @@ public class Sprite {
      * Adds a new animation with the given frames and name.
      * Frames are loaded from the specified file paths.
      *
-     * @param frameName - List of file paths to the animation frames.
-     * @param name      - The name of the animation.
+     * @param frameNames - List of file paths to the animation frames.
+     * @param name       - The name of the animation.
      */
-    public void addAnimation(List<String> frameName, String name) {
-        List<Image> frames = new ArrayList<>();
-        for (String framePath : frameName) {
-            framePath = SPRITE_RESOURCE_DIR_PATH + framePath + ".png";
-            Image image = ImageUtil.getImageFromFile(framePath);
-            if (image != null) {
-                image = ImageUtil.scaleImage(image,
-                        image.getWidth(null) * SPRITE_SCALING,
-                        image.getHeight(null) * SPRITE_SCALING,
-                        false);
-                frames.add(image);
-            } else {
-                Logger.addLog("Failed to load texture: '" + framePath + "'");
-            }
-        }
-        animations.put(name, frames);
+    public void addAnimation(List<String> frameNames, String name) {
+        animations.put(name, loadFrames(frameNames));
     }
 
     /**
      * Assigns the animation library directly.
      * 
-     * @param animations - animation library.
+     * @param animationSet - animation library.
      */
-    public void setAnimations(Map<String, List<Image>> animations) {
-        this.animations = animations;
+    public void setAnimations(Map<String, List<Image>> animationSet) {
+        animations = animationSet;
     }
 
     /**
@@ -279,6 +265,31 @@ public class Sprite {
             loadedAnimations += animationName + ", ";
         }
         return loadedAnimations.equals("") ? null : loadedAnimations;
+    }
+
+    /**
+     * Iterates trough a list of frame names, and makes a list of loaded images.
+     * Skips through frames that failed to load.
+     * 
+     * @param frameNames - {@code List<String>} of frame names.
+     * @return {@code List<Image>} of loaded images.
+     */
+    public static List<Image> loadFrames(List<String> frameNames) {
+        List<Image> frames = new ArrayList<>();
+        for (String frameName : frameNames) {
+            frameName = SPRITE_RESOURCE_DIR_PATH + frameName + ".png";
+            Image image = ImageUtil.getImageFromFile(frameName);
+            if (image != null) {
+                image = ImageUtil.scaleImage(image,
+                        image.getWidth(null) * SPRITE_SCALING,
+                        image.getHeight(null) * SPRITE_SCALING,
+                        false);
+                frames.add(image);
+            } else {
+                Logger.addLog("Failed to load texture: '" + frameName + "'");
+            }
+        }
+        return frames;
     }
 
     /////////////////

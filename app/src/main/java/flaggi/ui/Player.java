@@ -38,12 +38,10 @@ import java.util.List;
 import java.util.Map;
 
 import flaggi.common.GPanel.Renderable;
-import flaggi.common.Logger;
 import flaggi.common.Sprite;
 import flaggi.constants.WidgetTags;
 import flaggi.util.FileUtil;
 import flaggi.util.FontUtil;
-import flaggi.util.ImageUtil;
 
 /**
  * Player widget class.
@@ -51,7 +49,7 @@ import flaggi.util.ImageUtil;
  */
 public class Player implements Renderable {
 
-    public static final String CURRENT_SKIN = "default_blue";
+    public static final String SKIN_NAME = "default_blue";
     private static Map<String, List<Image>> animations;
 
     /////////////////
@@ -84,7 +82,7 @@ public class Player implements Renderable {
         this(pos, zindex, name, id, null);
 
         // ---- Set animation
-        this.sprite.setAnimation(CURRENT_SKIN + "_idle");
+        this.sprite.setAnimation(SKIN_NAME + "_idle");
         this.sprite.setFps(2);
         this.sprite.play();
     }
@@ -255,34 +253,17 @@ public class Player implements Renderable {
      * 
      */
     public static void addAllPlayerAnimations() {
-        animations = new HashMap<String, List<Image>>();
+        animations = new HashMap<>();
         String[] skinTextures = FileUtil.listDirectoriesInJar("sprites/player");
+
+        // Add idle animations
         for (String skinName : skinTextures) {
             List<String> frameNames = Arrays.asList(
                     "player/" + skinName + "/idle",
                     "player/" + skinName + "/l_leg_up",
                     "player/" + skinName + "/idle",
                     "player/" + skinName + "/r_leg_up");
-
-            List<Image> frames = new ArrayList<>();
-            for (String framePath : frameNames) {
-                framePath = Sprite.SPRITE_RESOURCE_DIR_PATH + framePath + ".png";
-                Image image = ImageUtil.getImageFromFile(framePath);
-                if (image != null) {
-                    image = ImageUtil.scaleImage(image,
-                            image.getWidth(null) * Sprite.SPRITE_SCALING,
-                            image.getHeight(null) * Sprite.SPRITE_SCALING,
-                            false);
-                    frames.add(image);
-                } else {
-                    Logger.addLog("Failed to load texture: '" + framePath + "'");
-                }
-            }
-            animations.put(skinName + "_idle", frames);
-            System.out.println("Added: '" + skinName + "_idle' skin with " + frames.size() + " frames.");
+            animations.put(skinName + "_idle", Sprite.loadFrames(frameNames));
         }
-        Logger.addLog("Loaded all player animations");
-        System.out.println("NYA");
     }
-
 }
