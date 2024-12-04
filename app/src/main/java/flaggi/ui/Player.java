@@ -30,19 +30,29 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import flaggi.common.GPanel.Renderable;
+import flaggi.common.Logger;
 import flaggi.common.Sprite;
 import flaggi.constants.WidgetTags;
+import flaggi.util.FileUtil;
 import flaggi.util.FontUtil;
+import flaggi.util.ImageUtil;
 
 /**
  * Player widget class.
  * 
  */
 public class Player implements Renderable {
+
+    public static final String CURRENT_SKIN = "default_blue";
+    private static Map<String, List<Image>> animations;
 
     /////////////////
     // Variables
@@ -70,29 +80,41 @@ public class Player implements Renderable {
      *                players.
      */
     public Player(int[] pos, int zindex, String name, int id) {
-        this.animationFrame = null;
+        // ---- Use the default constructor, but with a null value
+        this(pos, zindex, name, id, null);
+
+        // ---- Set animation
+        this.sprite.setAnimation(CURRENT_SKIN + "_idle");
+        this.sprite.setFps(2);
+        this.sprite.play();
+    }
+
+    /**
+     * Constructor for players with a specific animationFrame
+     * 
+     * @param pos     - position of the player.
+     * @param zindex  - ZIndex of the player (different for local player, and enemy
+     *                players).
+     * @param name    - name of the player.
+     * @param isEnemy - is the player an enemy?
+     * @param id      - id of the player. Used to update the position of the
+     *                players.
+     */
+    public Player(int[] pos, int zindex, String name, int id, String animationFrame) {
+
+        // ---- Set variables
         this.sprite = new Sprite();
+        this.animationFrame = animationFrame;
         this.pos = pos;
         this.zindex = zindex;
         this.name = name;
         this.id = id;
 
-        this.sprite.addAnimation(Arrays.asList(
-                "blue_idle",
-                "blue_idle_lu",
-                "blue_idle",
-                "blue_idle_ru"), "idle");
-
-        this.sprite.addAnimation(Arrays.asList(
-                "red_idle",
-                "red_idle_lu",
-                "red_idle",
-                "red_idle_ru"), "red_idle");
-
-        // Set the sprite texture :3
-        this.sprite.setAnimation("idle");
-        this.sprite.setFps(2);
-        this.sprite.play();
+        // ---- Initialize skins
+        if (animations == null) {
+            addAllPlayerAnimations();
+        }
+        this.sprite.setAnimations(animations);
     }
 
     /////////////////
@@ -101,6 +123,7 @@ public class Player implements Renderable {
 
     @Override
     public void render(Graphics2D g, int[] size, int[] offset, Container focusCycleRootAncestor) {
+
         // Render the player sprite
         if (this.animationFrame == null) {
             this.sprite.render(g, this.pos[0], this.pos[1], focusCycleRootAncestor);
@@ -108,8 +131,12 @@ public class Player implements Renderable {
 
         } else {
             // Enemy sprites
-            String animationName = parseAnimationFrame(this.animationFrame)[0];
-            int animationFrame = Integer.parseInt(parseAnimationFrame(this.animationFrame)[1]);
+            String[] parsedFrameData = parseAnimationFrame(animationFrame);
+            if (parsedFrameData.length != 2) {
+                return;
+            }
+            String animationName = parsedFrameData[0];
+            int animationFrame = Integer.parseInt(parsedFrameData[1]);
             this.sprite.render(g, this.pos[0] + offset[0], this.pos[1] + offset[1], focusCycleRootAncestor,
                     animationName, animationFrame);
         }
@@ -187,7 +214,7 @@ public class Player implements Renderable {
     }
 
     /**
-     * Gets the current animation frame to send to the server.
+     * Makes the current animation frame to send to the server.
      * 
      * @return - {@code String} in the form of
      *         "current-animation-name:current-frame".
@@ -203,9 +230,13 @@ public class Player implements Renderable {
      * @param animationFrame - {@code String} in the form of
      *                       "current-animation-name:current-frame".
      */
-    public void setAnimationFrame(String animationFrame) {
+    public void setAnimationFrameData(String animationFrame) {
         this.animationFrame = animationFrame;
     }
+
+    /////////////////
+    // Helper methods
+    ////////////////
 
     /**
      * Parses the animation frame format {@code String} into an animation name
@@ -218,4 +249,40 @@ public class Player implements Renderable {
     public static String[] parseAnimationFrame(String animationFrame) {
         return animationFrame.split(":");
     }
+
+    /**
+     * Add all the downloaded sprite animations.
+     * 
+     */
+    public static void addAllPlayerAnimations() {
+        animations = new HashMap<String, List<Image>>();
+        String[] skinTextures = FileUtil.listDirectoriesInJar("sprites/player");
+        for (String skinName : skinTextures) {
+            List<String> frameNames = Arrays.asList(
+                    "player/" + skinName + "/idle",
+                    "player/" + skinName + "/l_leg_up",
+                    "player/" + skinName + "/idle",
+                    "player/" + skinName + "/r_leg_up");
+
+            List<Image> frames = new ArrayList<>();
+            for (String framePath : frameNames) {
+                framePath = Sprite.SPRITE_RESOURCE_DIR_PATH + framePath + ".png";
+                Image image = ImageUtil.getImageFromFile(framePath);
+                if (image != null) {
+                    image = ImageUtil.scaleImage(image,
+                            image.getWidth(null) * Sprite.SPRITE_SCALING,
+                            image.getHeight(null) * Sprite.SPRITE_SCALING,
+                            false);
+                    frames.add(image);
+                } else {
+                    Logger.addLog("Failed to load texture: '" + framePath + "'");
+                }
+            }
+            animations.put(skinName + "_idle", frames);
+            System.out.println("Added: '" + skinName + "_idle' skin with " + frames.size() + " frames.");
+        }
+        Logger.addLog("Loaded all player animations");
+        System.out.println("NYA");
+    }
+
 }

@@ -54,7 +54,7 @@ public class Sprite {
     // Variables
     ////////////////
 
-    private final Map<String, List<Image>> animations;
+    private Map<String, List<Image>> animations;
     private String currentAnimation;
     private int currentFrame, fps;
     private FrameUpdater frameUpdater;
@@ -102,6 +102,15 @@ public class Sprite {
     }
 
     /**
+     * Assigns the animation library directly.
+     * 
+     * @param animations - animation library.
+     */
+    public void setAnimations(Map<String, List<Image>> animations) {
+        this.animations = animations;
+    }
+
+    /**
      * Sets the current animation to be played. Resets the frame back to 0.
      * 
      * @param name - The name of the animation.
@@ -119,11 +128,8 @@ public class Sprite {
      */
     public void setAnimationNoReset(String name) {
         if (!animations.containsKey(name)) {
-            for (String animationName : animations.keySet()) {
-                System.out.println(animationName);
-            }
-            System.out.println("end");
-            throw new IllegalArgumentException("Animation not found: '" + name + "'");
+            throw new IllegalArgumentException(
+                    "Animation not found: '" + name + "'. Loaded animations: " + getAnimationNames());
         }
         currentAnimation = name;
         // currentFrame = 0;
@@ -201,7 +207,8 @@ public class Sprite {
      */
     public void render(Graphics2D g, int x, int y, Container root, String animationName, int frame) {
         if (animationName == null || !animations.containsKey(animationName)) {
-            System.err.println("Invalid animation name: " + animationName);
+            System.err.println(
+                    "Invalid animation name: " + animationName + ". Loaded animations: " + getAnimationNames());
             return;
         }
 
@@ -254,6 +261,24 @@ public class Sprite {
      */
     public String getAnimationFrame() {
         return this.currentAnimation + ":" + currentFrame;
+    }
+
+    /////////////////
+    // Helper methods
+    ////////////////
+
+    /**
+     * Gets a {@code String} of all anu=imation names this sprite has, or
+     * {@code null} if there aren't any.
+     * 
+     * @return - {@code String} of all animation names.
+     */
+    private String getAnimationNames() {
+        String loadedAnimations = "";
+        for (String animationName : animations.keySet()) {
+            loadedAnimations += animationName + ", ";
+        }
+        return loadedAnimations.equals("") ? null : loadedAnimations;
     }
 
     /////////////////

@@ -384,7 +384,7 @@ public class App implements InteractableHandeler {
                 // Update the position of the existing player
                 Player player = existingPlayers.get(clientId);
                 player.setPos(clientPos);
-                player.setAnimationFrame(animationFrame);
+                player.setAnimationFrameData(animationFrame);
                 existingPlayers.remove(clientId); // Mark as processed
             } else {
                 // Add new player to the panel
@@ -392,7 +392,8 @@ public class App implements InteractableHandeler {
                         clientPos,
                         ZIndex.OTHER_PLAYERS,
                         clientStruct.getName(),
-                        clientId);
+                        clientId,
+                        animationFrame);
                 this.gpanel.add(newPlayer);
             }
         }
@@ -671,9 +672,6 @@ public class App implements InteractableHandeler {
             if (movementEnabled) {
                 move(pressedKeys);
             }
-
-            updatePlayerPositions();
-
             updatePlayerPositions();
             gpanel.add(new ConnectionWidget());
         }
