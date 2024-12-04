@@ -210,10 +210,17 @@ public class App implements InteractableHandeler {
             return;
         }
 
+        // ------ Set the skin name
+        String skinName = "default_blue";
+        if (username.equals("daarlin") || username.equals("owo")) {
+            skinName = "default_red";
+        }
+
         // ------ Initialize client & change UI
         this.client = new Client(username, serverAddress);
         this.id = this.client.getId();
-        this.gpanel.add(new Player(new int[] { this.initPos[0], this.initPos[1] }, ZIndex.PLAYER, username, this.id));
+        this.gpanel.add(
+                new Player(new int[] { this.initPos[0], this.initPos[1] }, ZIndex.PLAYER, username, skinName, this.id));
 
         this.gpanel.hideAllWidgets();
         this.gpanel.showTaggedWidgets(WidgetTags.GAME_ELEMENTS);

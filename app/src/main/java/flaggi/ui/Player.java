@@ -49,7 +49,7 @@ import flaggi.util.FontUtil;
  */
 public class Player implements Renderable {
 
-    public static final String SKIN_NAME = "default_blue";
+    public static String playerSkinName;
     private static Map<String, List<Image>> animations;
 
     /////////////////
@@ -77,12 +77,13 @@ public class Player implements Renderable {
      * @param id      - id of the player. Used to update the position of the
      *                players.
      */
-    public Player(int[] pos, int zindex, String name, int id) {
+    public Player(int[] pos, int zindex, String name, String skinName, int id) {
         // ---- Use the default constructor, but with a null value
         this(pos, zindex, name, id, null);
 
         // ---- Set animation
-        this.sprite.setAnimation(SKIN_NAME + "_idle");
+        playerSkinName = skinName;
+        this.sprite.setAnimation(playerSkinName + "_idle");
         this.sprite.setFps(2);
         this.sprite.play();
     }
