@@ -51,7 +51,6 @@ import flaggi.common.GPanel.InteractableHandeler;
 import flaggi.common.GPanel.Renderable;
 import flaggi.common.GPanel.Typable;
 import flaggi.constants.WidgetTags;
-import flaggi.constants.ZIndex;
 import flaggi.ui.Background;
 import flaggi.ui.ConnectionWidget;
 import flaggi.ui.MenuScreen;
@@ -87,7 +86,7 @@ public class App implements InteractableHandeler {
     private GameLoop gameLoop;
     private AdvancedVariable<AppOptions> appOptions;
     private ArrayList<KeyEvent> pressedKeys;
-    private int[] pos, initPos, windowSize;
+    private int[] pos, spawnPoint, windowSize;
     private boolean movementEnabled, paused;
 
     /////////////////
@@ -137,7 +136,7 @@ public class App implements InteractableHandeler {
         this.pos = new int[2];
         this.pos[0] = 0;
         this.pos[1] = 0;
-        this.initPos = new int[] { this.windowSize[0] / 2, this.windowSize[1] / 2 };
+        this.spawnPoint = new int[] { this.windowSize[0] / 2, this.windowSize[1] / 2 };
         this.movementEnabled = false;
         this.paused = false;
         this.pressedKeys = new ArrayList<KeyEvent>();
@@ -220,7 +219,7 @@ public class App implements InteractableHandeler {
         this.client = new Client(username, serverAddress);
         this.id = this.client.getId();
         this.gpanel.add(
-                new Player(new int[] { this.initPos[0], this.initPos[1] }, ZIndex.PLAYER, username, skinName, this.id));
+                new Player(new int[] { this.spawnPoint[0], this.spawnPoint[1] }, username, skinName, this.id));
 
         this.gpanel.hideAllWidgets();
         this.gpanel.showTaggedWidgets(WidgetTags.GAME_ELEMENTS);
@@ -280,7 +279,7 @@ public class App implements InteractableHandeler {
         // ------ Initialize UI
         this.gpanel.hideAllWidgets();
         this.gpanel.showTaggedWidgets(WidgetTags.MENU_ELEMENTS);
-        this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
+        this.gpanel.setPosition(new int[] { -this.pos[0] + spawnPoint[0], -this.pos[1] + spawnPoint[1] });
         Logger.addLog("Menu screen active.");
     }
 
@@ -341,7 +340,7 @@ public class App implements InteractableHandeler {
         this.pos[1] += deltaY;
 
         // Update the viewport
-        this.gpanel.setPosition(new int[] { -this.pos[0] + initPos[0], -this.pos[1] + initPos[1] });
+        this.gpanel.setPosition(new int[] { -this.pos[0] + spawnPoint[0], -this.pos[1] + spawnPoint[1] });
     }
 
     /**
@@ -397,7 +396,6 @@ public class App implements InteractableHandeler {
                 // Add new player to the panel
                 Player newPlayer = new Player(
                         clientPos,
-                        ZIndex.OTHER_PLAYERS,
                         clientStruct.getName(),
                         clientId,
                         animationFrame);

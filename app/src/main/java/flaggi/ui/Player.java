@@ -40,6 +40,7 @@ import java.util.Map;
 import flaggi.common.GPanel.Renderable;
 import flaggi.common.Sprite;
 import flaggi.constants.WidgetTags;
+import flaggi.constants.ZIndex;
 import flaggi.util.FileUtil;
 import flaggi.util.FontUtil;
 
@@ -68,7 +69,7 @@ public class Player implements Renderable {
 
     private int[] pos = new int[2];
     private boolean visible = true;
-    private int zindex, id;
+    private int id;
     private String name, animationFrame, localPlayerSkinName;
     private Sprite sprite;
 
@@ -88,9 +89,9 @@ public class Player implements Renderable {
      * @param id       - id of the player. Used to update the position of the
      *                 players.
      */
-    public Player(int[] pos, int zindex, String name, String skinName, int id) {
+    public Player(int[] pos, String name, String skinName, int id) {
         // ---- Use the default constructor, but with a null value
-        this(pos, zindex, name, id, null);
+        this(pos, name, id, null);
 
         // ---- Set animation
         this.localPlayerSkinName = skinName;
@@ -110,13 +111,12 @@ public class Player implements Renderable {
      * @param id      - id of the player. Used to update the position of the
      *                players.
      */
-    public Player(int[] pos, int zindex, String name, int id, String animationFrame) {
+    public Player(int[] pos, String name, int id, String animationFrame) {
 
         // ---- Set variables
         this.sprite = new Sprite();
         this.animationFrame = animationFrame;
         this.pos = pos;
-        this.zindex = zindex;
         this.name = name;
         this.id = id;
 
@@ -163,7 +163,7 @@ public class Player implements Renderable {
 
     @Override
     public int getZIndex() {
-        return this.zindex;
+        return this.isEnemy() ? ZIndex.OTHER_PLAYERS : ZIndex.PLAYER;
     }
 
     @Override
