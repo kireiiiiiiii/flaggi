@@ -124,6 +124,31 @@ public class Player implements Renderable {
     }
 
     /////////////////
+    // Static methods
+    ////////////////
+
+    /**
+     * Add all the downloaded sprite animations.
+     * 
+     */
+    private static void addAllPlayerAnimations() {
+        playerAnimationsLibrary = new HashMap<>();
+        String[] skinTextures = FileUtil.listDirectoriesInJar("sprites/player");
+
+        // Add idle animations
+        for (String skinName : skinTextures) {
+            List<String> frameNames;
+
+            frameNames = getAnimationList(skinName, Arrays.asList("idle_1", "idle_2"));
+            playerAnimationsLibrary.put(skinName + "_idle", Sprite.loadFrames(frameNames));
+
+            frameNames = getAnimationList(skinName, Arrays.asList("walk_side", "walk_side_l", "walk_side", "walk_side_r"));
+            playerAnimationsLibrary.put(skinName + "_walk_side", Sprite.loadFrames(frameNames));
+
+        }
+    }
+
+    /////////////////
     // Render methods
     ////////////////
 
@@ -143,15 +168,13 @@ public class Player implements Renderable {
             }
             String animationName = parsedFrameData[0];
             int animationFrame = Integer.parseInt(parsedFrameData[1]);
-            this.sprite.render(g, this.pos[0] + offset[0], this.pos[1] + offset[1], focusCycleRootAncestor,
-                    animationName, animationFrame);
+            this.sprite.render(g, this.pos[0] + offset[0], this.pos[1] + offset[1], focusCycleRootAncestor, animationName, animationFrame);
         }
 
         // Render the nametag
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 12));
-        int[] pos = FontUtil.getCenteredPos(55, 5, g.getFontMetrics(),
-                this.name);
+        int[] pos = FontUtil.getCenteredPos(55, 5, g.getFontMetrics(), this.name);
         pos[1] = 25;
         g.drawString(this.name, offset[0] + this.pos[0] + pos[0], offset[1] + this.pos[1] + pos[1] - 40);
 
@@ -265,21 +288,20 @@ public class Player implements Renderable {
     }
 
     /**
-     * Add all the downloaded sprite animations.
+     * Formats a list of animation names to be player sprite animations.
      * 
+     * @param animationName - name of the animation.
+     * @param skinName      - name of the skin the animation is for.
+     * @param frameNames    - frame names.
+     * @return List that can be passed into the sprite constructor.
      */
-    private static void addAllPlayerAnimations() {
-        playerAnimationsLibrary = new HashMap<>();
-        String[] skinTextures = FileUtil.listDirectoriesInJar("sprites/player");
-
-        // Add idle animations
-        for (String skinName : skinTextures) {
-            List<String> frameNames = Arrays.asList(
-                    "player/" + skinName + "/idle",
-                    "player/" + skinName + "/l_leg_up",
-                    "player/" + skinName + "/idle",
-                    "player/" + skinName + "/r_leg_up");
-            playerAnimationsLibrary.put(skinName + "_idle", Sprite.loadFrames(frameNames));
+    private static List<String> getAnimationList(String skinName, List<String> frameNames) {
+        List<String> framePaths = new ArrayList<String>();
+        for (String frameName : frameNames) {
+            String path = "player/" + skinName + "/" + frameName;
+            framePaths.add(path);
         }
+        return framePaths;
     }
+
 }
