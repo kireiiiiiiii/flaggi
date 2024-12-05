@@ -92,10 +92,7 @@ public class Client {
      * @param clientName - {@code String} of the client display name.
      */
     private void makeConnection(String clientName) {
-        try (
-                Socket socket = new Socket(serverAddress, TCP_PORT);
-                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+        try (Socket socket = new Socket(serverAddress, TCP_PORT); ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
             // ------ Send the client name to the server
             out.writeUTF(clientName);
@@ -126,8 +123,7 @@ public class Client {
         ArrayList<ClientStruct> playerPositions = new ArrayList<>();
 
         try {
-            String message = clientId + "," + clientStruct.getX() + "," + clientStruct.getY() + ","
-                    + clientStruct.getName() + "," + clientStruct.getAnimationFrame();
+            String message = clientId + "," + clientStruct.getX() + "," + clientStruct.getY() + "," + clientStruct.getName() + "," + clientStruct.getAnimationFrame();
             byte[] buffer = message.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, serverAddress, udpPort);
             udpSocket.send(packet);
@@ -148,6 +144,23 @@ public class Client {
     }
 
     /**
+     * Disconnects the player from the server.
+     * 
+     */
+    public void disconnect() {
+        String message = this.clientId + "," + "disconnect";
+        byte[] buffer = message.getBytes();
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, serverAddress, udpPort);
+        try {
+            udpSocket.send(packet);
+            Logger.addLog("Disconnected succesfuly from server.");
+        } catch (IOException e) {
+            Logger.addLog("IOExeption while sending disconnect message to server.", e);
+        }
+        udpSocket.close();
+    }
+
+    /**
      * Checks if there is a server running on a specific IP address and port by
      * trying to establish a connection and exchanging a test message.
      * 
@@ -162,8 +175,7 @@ public class Client {
 
             socket.setSoTimeout(5000);
 
-            try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                    ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+            try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
                 out.writeUTF("ping");
                 out.flush();

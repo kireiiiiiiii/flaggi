@@ -46,7 +46,7 @@ public class Server {
     public static final int UDP_PORT = 54322;
     public static String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi-server";
 
-    private static final int CLIENT_TIMEOUT_SECONDS = 3;
+    private static final int CLIENT_TIMEOUT_SECONDS = 10;
     private static final List<Client> clients = new ArrayList<>();
     private static int maxClientID = 0;
 
@@ -158,6 +158,18 @@ public class Server {
 
                 String message = new String(packet.getData(), 0, packet.getLength());
                 String[] parts = message.split(",");
+                if (parts[1].equals("disconnect")) {
+                    synchronized (clients) {
+                        for (Client client : clients) {
+                            if (client.getId() == Integer.parseInt(parts[0])) {
+                                log(CYAN, "Client '" + client.getDisplayName() + "' disconnected.");
+                                clients.remove(client);
+                                break;
+                            }
+                        }
+                    }
+                    continue;
+                }
                 if (parts.length >= 5) {
                     int clientId = Integer.parseInt(parts[0]);
                     int x = Integer.parseInt(parts[1]);
@@ -216,7 +228,7 @@ public class Server {
             long timeDifference = currentTime - client.getLastReceivedTime();
 
             if (timeDifference > CLIENT_TIMEOUT_SECONDS * 1000) {
-                log(CYAN, "Client '" + client.getDisplayName() + "' disconnected (Timed out).");
+                log(RED, "Client '" + client.getDisplayName() + "' disconnected (Timed out).");
                 iterator.remove();
             }
         }

@@ -234,6 +234,10 @@ public class App implements InteractableHandeler {
      * 
      */
     public void exitGame() {
+        if (this.gameLoop != null)
+            this.gameLoop.stop();
+        if (this.client != null)
+            this.client.disconnect();
         try {
             if (this.username != null && this.ip != null) {
                 this.appOptions.set(new AppOptions(this.username, this.ip));
@@ -265,11 +269,14 @@ public class App implements InteractableHandeler {
      * 
      */
     public void goToMenu() {
-        if (this.gameLoop != null) {
+        if (this.client != null)
+            this.client.disconnect();
+        if (this.gameLoop != null)
             this.gameLoop.stop();
-        }
         movementEnabled = false;
         paused = false;
+        this.gpanel.remove(this.localPlayer);
+        this.localPlayer = null;
         this.pos[0] = 0;
         this.pos[1] = 0;
 
