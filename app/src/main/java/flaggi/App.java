@@ -302,18 +302,36 @@ public class App implements InteractableHandeler {
             case KeyEvent.VK_LEFT:
             case KeyEvent.VK_A:
                 moveLeft = true;
-                this.localPlayer.setFacingRight(false);
-                this.localPlayer.switchAnimation("walk_side");
                 break;
             case KeyEvent.VK_RIGHT:
             case KeyEvent.VK_D:
-                this.localPlayer.setFacingRight(true);
-                this.localPlayer.switchAnimation("walk_side");
                 moveRight = true;
                 break;
             default:
                 break;
             }
+        }
+
+        // Decide on sprite direction
+        if (moveRight) {
+            this.localPlayer.setFacingRight(true);
+        } else if (moveLeft) {
+            this.localPlayer.setFacingRight(false);
+        }
+
+        // Switch correct walkig animations
+        if ((moveUp && moveLeft) || (moveUp && moveRight)) {
+            this.localPlayer.switchAnimation("walk_diagup");
+        } else if ((moveDown && moveLeft) || (moveDown && moveRight)) {
+            this.localPlayer.switchAnimation("idle"); // TODO ADD ANIMATIONS
+        } else if (moveUp) {
+            // TODO ADD ANIMATIONS
+        } else if (moveDown) {
+            // TODO ADD ANIMATIONS
+        } else if (moveLeft) {
+            this.localPlayer.switchAnimation("walk_side");
+        } else if (moveRight) {
+            this.localPlayer.switchAnimation("walk_side");
         }
 
         // Calculate horizontal and vertical movement distances.

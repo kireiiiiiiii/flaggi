@@ -145,6 +145,9 @@ public class Player implements Renderable {
             frameNames = getAnimationList(skinName, Arrays.asList("walk_side", "walk_side_l", "walk_side", "walk_side_r"));
             playerAnimationsLibrary.put(skinName + "_walk_side", Sprite.loadFrames(frameNames));
 
+            frameNames = getAnimationList(skinName, Arrays.asList("walk_diagup", "walk_diagup_l", "walk_diagup", "walk_diagup_r"));
+            playerAnimationsLibrary.put(skinName + "_walk_diagup", Sprite.loadFrames(frameNames));
+
         }
     }
 
