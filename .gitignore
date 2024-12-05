@@ -15,9 +15,7 @@ gradle/wrapper/gradle-wrapper.properties
 # macOS
 .DS_Store
 ._*
+*-alias
+
 # VSCode
 .vscode
-
-# @kireiiiiiiii
-Server/info.txt
-*-alias
