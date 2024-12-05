@@ -149,6 +149,7 @@ public class Sprite {
      * @param fps - Target frames per second.
      */
     public void setFps(int fps) {
+        this.currentFrame = 0;
         if (fps <= 0) {
             throw new IllegalArgumentException("FPS must be greater than 0");
         }
@@ -165,6 +166,26 @@ public class Sprite {
     /////////////////
     // Rendering
     ////////////////
+
+    /**
+     * Renders the current frame of the animation on a Graphics2D object.
+     *
+     * @param g    - The Graphics2D object.
+     * @param x    - X coordinate.
+     * @param y    - Y coordinate.
+     * @param root - The container for rendering context.
+     */
+    public void render(Graphics2D g, int x, int y, Container root, boolean invert) {
+        if (currentAnimation == null || !animations.containsKey(currentAnimation)) {
+            return;
+        }
+        List<Image> frames = animations.get(currentAnimation);
+        if (frames.isEmpty() || currentFrame >= frames.size()) {
+            return; // Invalid state
+        }
+        Image img = invert ? ImageUtil.flipImageVertically(frames.get(currentFrame)) : frames.get(currentFrame);
+        g.drawImage(img, x, y, root);
+    }
 
     /**
      * Renders the current frame of the animation on a Graphics2D object.

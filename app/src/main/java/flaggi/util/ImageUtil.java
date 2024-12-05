@@ -47,21 +47,6 @@ public class ImageUtil {
     ////////////////
 
     /**
-     * Gets the input stream of an image.
-     * 
-     * @param filePath - file name of the target image relative to the resources
-     *                 folder.
-     * @return a new {@code Image} object.
-     */
-    private static InputStream getImageInputStream(String filePath) {
-        filePath = App.FILE_JAR_SEPARATOR + filePath;
-        InputStream resourceStream = ImageUtil.class.getResourceAsStream(filePath);
-        String exists = resourceStream != null ? "File exists." : "File does not exist.";
-        Logger.addLog("Accesed resource input stream at path: '" + filePath + "'. " + exists);
-        return resourceStream;
-    }
-
-    /**
      * Loads an image from the resources folder and returns it as an Image object.
      * 
      * @param imageName - file name of the image relative to the resources folder.
@@ -200,6 +185,75 @@ public class ImageUtil {
         graphics2D.dispose();
 
         return scaledImage;
+    }
+
+    /**
+     * Vertically inverts an Image (flips it along the vertical axis).
+     *
+     * @param originalImage The original Image to be flipped.
+     * @return A new Image that is vertically flipped.
+     */
+    public static Image flipImageVertically(Image originalImage) {
+        if (originalImage == null) {
+            throw new IllegalArgumentException("The provided image cannot be null.");
+        }
+
+        // Convert to BufferedImage for manipulation
+        BufferedImage bufferedImage = toBufferedImage(originalImage);
+
+        // Create a new BufferedImage with the same dimensions
+        BufferedImage flippedImage = new BufferedImage(bufferedImage.getWidth(), bufferedImage.getHeight(), bufferedImage.getType());
+
+        Graphics2D g2d = flippedImage.createGraphics();
+
+        // Perform the vertical flip
+        g2d.drawImage(bufferedImage, 0, 0, bufferedImage.getWidth(), bufferedImage.getHeight(), // destination rectangle
+                bufferedImage.getWidth(), 0, 0, bufferedImage.getHeight(), // source rectangle (mirrored horizontally)
+                null);
+        g2d.dispose();
+
+        return flippedImage;
+    }
+
+    /////////////////
+    // Image scaling methods
+    ////////////////
+
+    /**
+     * Gets the input stream of an image.
+     * 
+     * @param filePath - file name of the target image relative to the resources
+     *                 folder.
+     * @return a new {@code Image} object.
+     */
+    private static InputStream getImageInputStream(String filePath) {
+        filePath = App.FILE_JAR_SEPARATOR + filePath;
+        InputStream resourceStream = ImageUtil.class.getResourceAsStream(filePath);
+        String exists = resourceStream != null ? "File exists." : "File does not exist.";
+        Logger.addLog("Accesed resource input stream at path: '" + filePath + "'. " + exists);
+        return resourceStream;
+    }
+
+    /**
+     * Converts an Image to a BufferedImage.
+     *
+     * @param img - The Image to convert.
+     * @return A BufferedImage representation of the input Image.
+     */
+    private static BufferedImage toBufferedImage(Image img) {
+        if (img instanceof BufferedImage) {
+            return (BufferedImage) img;
+        }
+
+        // Create a BufferedImage with the same width and height
+        BufferedImage bufferedImage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+
+        // Draw the Image onto the BufferedImage
+        Graphics2D g2d = bufferedImage.createGraphics();
+        g2d.drawImage(img, 0, 0, null);
+        g2d.dispose();
+
+        return bufferedImage;
     }
 
 }

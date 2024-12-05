@@ -68,7 +68,7 @@ public class Player implements Renderable {
     ////////////////
 
     private int[] pos = new int[2];
-    private boolean visible = true;
+    private boolean visible = true, inverted = false;
     private int id;
     private String name, animationFrame, localPlayerSkinName;
     private Sprite sprite;
@@ -157,7 +157,7 @@ public class Player implements Renderable {
 
         // Render the player sprite
         if (this.animationFrame == null) {
-            this.sprite.render(g, this.pos[0], this.pos[1], focusCycleRootAncestor);
+            this.sprite.render(g, this.pos[0], this.pos[1], focusCycleRootAncestor, this.inverted);
             offset = new int[] { 0, 0 };
 
         } else {
@@ -261,6 +261,37 @@ public class Player implements Renderable {
      */
     public void setAnimationFrameData(String animationFrame) {
         this.animationFrame = animationFrame;
+    }
+
+    /**
+     * Sets the invert value.
+     * 
+     * @param invert - {@code boolean}.
+     */
+    public void setFacingRight(boolean invert) {
+        this.inverted = invert;
+    }
+
+    /**
+     * Switches the player animation.
+     * 
+     * @param name - name of the player animation. (skin name not needed)
+     */
+    public void switchAnimation(String name) {
+        String animationName = this.localPlayerSkinName + "_" + name;
+        if (this.sprite.getAnimationFrame().split(":")[0].equals(animationName)) {
+            return;
+        }
+        this.sprite.setAnimation(animationName);
+        switch (name) {
+        case "idle":
+            this.sprite.setFps(2);
+            break;
+        case "walk_side":
+            this.sprite.setFps(4);
+        default:
+            break;
+        }
     }
 
     /////////////////

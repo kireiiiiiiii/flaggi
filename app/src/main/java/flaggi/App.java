@@ -86,6 +86,7 @@ public class App implements InteractableHandeler {
     private GameLoop gameLoop;
     private AdvancedVariable<AppOptions> appOptions;
     private ArrayList<KeyEvent> pressedKeys;
+    private Player localPlayer;
     private int[] pos, spawnPoint, windowSize;
     private boolean movementEnabled, paused;
 
@@ -115,13 +116,11 @@ public class App implements InteractableHandeler {
 
         // ------ Initialize game
         try {
-            this.appOptions = new AdvancedVariable<AppOptions>(
-                    getApplicationDataFolder() + File.separator + "user-options.json", AppOptions.class);
+            this.appOptions = new AdvancedVariable<AppOptions>(getApplicationDataFolder() + File.separator + "user-options.json", AppOptions.class);
         } catch (IOException e) {
             Logger.addLog("Error loading app options.", e);
             new File(getApplicationDataFolder() + File.separator + "user-options.json").delete();
-            this.appOptions = new AdvancedVariable<AppOptions>(
-                    getApplicationDataFolder() + File.separator + "user-options.json");
+            this.appOptions = new AdvancedVariable<AppOptions>(getApplicationDataFolder() + File.separator + "user-options.json");
             this.appOptions.set(getDefaultOptions());
             try {
                 this.appOptions.save();
@@ -143,11 +142,8 @@ public class App implements InteractableHandeler {
         printHeader();
 
         // ------ Initialize UI
-        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false, PROJECT_NAME,
-                new Color(229, 204, 255));
-        this.gpanel.setIconOSDependend(ImageUtil.getImageFromFile("icon_win.png"),
-                ImageUtil.getImageFromFile("icon_mac.png"), ImageUtil.getImageFromFile("icon_win.png"),
-                ImageUtil.getImageFromFile("icon_win.png"));
+        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false, PROJECT_NAME, new Color(229, 204, 255));
+        this.gpanel.setIconOSDependend(ImageUtil.getImageFromFile("icon_win.png"), ImageUtil.getImageFromFile("icon_mac.png"), ImageUtil.getImageFromFile("icon_win.png"), ImageUtil.getImageFromFile("icon_win.png"));
         this.gpanel.setExitOperation(() -> {
             exitGame();
         });
@@ -195,8 +191,7 @@ public class App implements InteractableHandeler {
         try {
             serverAddress = InetAddress.getByName(ip);
         } catch (UnknownHostException e) {
-            Logger.addLog("Unknown host exception when trying to get IP from a file.",
-                    e);
+            Logger.addLog("Unknown host exception when trying to get IP from a file.", e);
             return;
         }
         Logger.addLog("Selected ip: " + ip);
@@ -220,8 +215,8 @@ public class App implements InteractableHandeler {
         // ------ Initialize client & change UI
         this.client = new Client(username, serverAddress);
         this.id = this.client.getId();
-        this.gpanel.add(
-                new Player(new int[] { this.spawnPoint[0], this.spawnPoint[1] }, username, skinName, this.id));
+        this.localPlayer = new Player(new int[] { this.spawnPoint[0], this.spawnPoint[1] }, username, skinName, this.id);
+        this.gpanel.add(this.localPlayer);
 
         this.gpanel.hideAllWidgets();
         this.gpanel.showTaggedWidgets(WidgetTags.GAME_ELEMENTS);
@@ -296,24 +291,28 @@ public class App implements InteractableHandeler {
 
         for (KeyEvent e : events) {
             switch (e.getKeyCode()) {
-                case KeyEvent.VK_UP:
-                case KeyEvent.VK_W:
-                    moveUp = true;
-                    break;
-                case KeyEvent.VK_DOWN:
-                case KeyEvent.VK_S:
-                    moveDown = true;
-                    break;
-                case KeyEvent.VK_LEFT:
-                case KeyEvent.VK_A:
-                    moveLeft = true;
-                    break;
-                case KeyEvent.VK_RIGHT:
-                case KeyEvent.VK_D:
-                    moveRight = true;
-                    break;
-                default:
-                    break;
+            case KeyEvent.VK_UP:
+            case KeyEvent.VK_W:
+                moveUp = true;
+                break;
+            case KeyEvent.VK_DOWN:
+            case KeyEvent.VK_S:
+                moveDown = true;
+                break;
+            case KeyEvent.VK_LEFT:
+            case KeyEvent.VK_A:
+                moveLeft = true;
+                this.localPlayer.setFacingRight(false);
+                this.localPlayer.switchAnimation("walk_side");
+                break;
+            case KeyEvent.VK_RIGHT:
+            case KeyEvent.VK_D:
+                this.localPlayer.setFacingRight(true);
+                this.localPlayer.switchAnimation("walk_side");
+                moveRight = true;
+                break;
+            default:
+                break;
             }
         }
 
@@ -360,8 +359,7 @@ public class App implements InteractableHandeler {
         }
         // Get the current players from the panel and their positions from the server
         ArrayList<Player> players = this.gpanel.getWidgetsByClass(Player.class);
-        ArrayList<ClientStruct> serverPositions = client.updatePlayerPositions(
-                new ClientStruct(pos[0], pos[1], this.id, username, localAnimationFrame));
+        ArrayList<ClientStruct> serverPositions = client.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.id, username, localAnimationFrame));
 
         // Track existing players by ID for quick lookup
         HashMap<Integer, Player> existingPlayers = new HashMap<>();
@@ -396,11 +394,7 @@ public class App implements InteractableHandeler {
                 existingPlayers.remove(clientId); // Mark as processed
             } else {
                 // Add new player to the panel
-                Player newPlayer = new Player(
-                        clientPos,
-                        clientStruct.getName(),
-                        clientId,
-                        animationFrame);
+                Player newPlayer = new Player(clientPos, clientStruct.getName(), clientId, animationFrame);
                 this.gpanel.add(newPlayer);
             }
         }
@@ -431,17 +425,13 @@ public class App implements InteractableHandeler {
      * 
      */
     public void initializeWidgets() {
-        ArrayList<Renderable> widgets = new ArrayList<Renderable>(Arrays.asList(
-                new Background(),
-                new MenuScreen(() -> {
-                    startGame();
-                }, this.appOptions.get().name, this.appOptions.get().ip),
-                new PauseMenu(() -> {
-                    togglePauseMenu();
-                }, () -> {
-                    goToMenu();
-                }),
-                new Tree(new int[] { 100, 100 })));
+        ArrayList<Renderable> widgets = new ArrayList<Renderable>(Arrays.asList(new Background(), new MenuScreen(() -> {
+            startGame();
+        }, this.appOptions.get().name, this.appOptions.get().ip), new PauseMenu(() -> {
+            togglePauseMenu();
+        }, () -> {
+            goToMenu();
+        }), new Tree(new int[] { 100, 100 })));
 
         // Add all the widgets
         this.gpanel.add(widgets);
@@ -516,11 +506,11 @@ public class App implements InteractableHandeler {
 
         // Exceptions
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_ESCAPE:
-                togglePauseMenu();
-                return;
-            default:
-                break;
+        case KeyEvent.VK_ESCAPE:
+            togglePauseMenu();
+            return;
+        default:
+            break;
         }
 
     }
@@ -535,13 +525,7 @@ public class App implements InteractableHandeler {
      */
     private void printHeader() {
         System.out.println("\n" + //
-                " ______   __         ______     ______     ______     __    \n" +
-                "/\\  ___\\ /\\ \\       /\\  __ \\   /\\  ___\\   /\\  ___\\   /\\ \\   \n" +
-                "\\ \\  __\\ \\ \\ \\____  \\ \\  __ \\  \\ \\ \\__ \\  \\ \\ \\__ \\  \\ \\ \\  \n" +
-                " \\ \\_\\    \\ \\_____\\  \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_____\\  \\ \\_\\ \n" +
-                "  \\/_/     \\/_____/   \\/_/\\/_/   \\/_____/   \\/_____/   \\/_/ \n" +
-                "                                                            \n" +
-                "");
+                " ______   __         ______     ______     ______     __    \n" + "/\\  ___\\ /\\ \\       /\\  __ \\   /\\  ___\\   /\\  ___\\   /\\ \\   \n" + "\\ \\  __\\ \\ \\ \\____  \\ \\  __ \\  \\ \\ \\__ \\  \\ \\ \\__ \\  \\ \\ \\  \n" + " \\ \\_\\    \\ \\_____\\  \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_____\\  \\ \\_\\ \n" + "  \\/_/     \\/_____/   \\/_/\\/_/   \\/_____/   \\/_____/   \\/_/ \n" + "                                                            \n" + "");
     }
 
     /**
@@ -575,8 +559,7 @@ public class App implements InteractableHandeler {
             appDataFolder = System.getenv("APPDATA");
         } else if (os.contains("mac")) {
             // macOS: Use ~/Library/Application Support/
-            appDataFolder = System.getProperty("user.home") + File.separator + "Library" + File.separator
-                    + "Application Support";
+            appDataFolder = System.getProperty("user.home") + File.separator + "Library" + File.separator + "Application Support";
         } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
             // Linux/Unix: Use ~/.config/
             appDataFolder = System.getProperty("user.home") + File.separator + ".config";
@@ -678,6 +661,9 @@ public class App implements InteractableHandeler {
             gpanel.removeWidgetsOfClass(ConnectionWidget.class);
             if (movementEnabled) {
                 move(pressedKeys);
+            }
+            if (pressedKeys.isEmpty()) {
+                localPlayer.switchAnimation("idle");
             }
             updatePlayerPositions();
             gpanel.add(new ConnectionWidget());
