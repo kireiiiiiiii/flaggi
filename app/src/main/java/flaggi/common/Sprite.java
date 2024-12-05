@@ -217,7 +217,7 @@ public class Sprite {
      * @param root          - The container for rendering context.
      * @param animationName - The name of the animation set to render.
      */
-    public void render(Graphics2D g, int x, int y, Container root, String animationName, int frame) {
+    public void render(Graphics2D g, int x, int y, Container root, String animationName, int frame, boolean invert) {
         if (animationName == null || !animations.containsKey(animationName)) {
             System.err.println("Invalid animation name: " + animationName + ". Loaded animations: " + getAnimationNames());
             return;
@@ -229,7 +229,8 @@ public class Sprite {
         }
 
         frame = frame > frames.size() - 1 || frame < 0 ? frames.size() - 1 : frame;
-        g.drawImage(frames.get(frame), x, y, root);
+        Image img = invert ? ImageUtil.flipImageVertically(frames.get(frame)) : frames.get(frame);
+        g.drawImage(img, x, y, root);
     }
 
     /////////////////

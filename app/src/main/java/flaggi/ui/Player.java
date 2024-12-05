@@ -163,12 +163,10 @@ public class Player implements Renderable {
         } else {
             // Enemy sprites
             String[] parsedFrameData = parseAnimationFrame(this.animationFrame);
-            if (parsedFrameData.length != 2) {
-                return;
-            }
             String animationName = parsedFrameData[0];
             int animationFrame = Integer.parseInt(parsedFrameData[1]);
-            this.sprite.render(g, this.pos[0] + offset[0], this.pos[1] + offset[1], focusCycleRootAncestor, animationName, animationFrame);
+            boolean inverted = Boolean.parseBoolean(parsedFrameData[2]);
+            this.sprite.render(g, this.pos[0] + offset[0], this.pos[1] + offset[1], focusCycleRootAncestor, animationName, animationFrame, inverted);
         }
 
         // Render the nametag
@@ -249,7 +247,7 @@ public class Player implements Renderable {
      *         "current-animation-name:current-frame".
      */
     public String getAnimationFrame() {
-        return this.sprite.getAnimationFrame();
+        return this.sprite.getAnimationFrame() + ":" + this.inverted;
     }
 
     /**
@@ -309,8 +307,8 @@ public class Player implements Renderable {
      */
     private static String[] parseAnimationFrame(String animationFrame) {
         String[] data = animationFrame.split(":");
-        if (data.length != 2) {
-            return new String[] { DEFAULT_ENEMY_SKIN + "_idle", "0" };
+        if (data.length != 3) {
+            return new String[] { DEFAULT_ENEMY_SKIN + "_idle", "0", "false" };
         }
         if (data[0].startsWith(DEFAULT_SKIN)) {
             data[0] = DEFAULT_ENEMY_SKIN + data[0].substring(DEFAULT_SKIN.length());
