@@ -77,8 +77,8 @@ public class Sprite {
     ////////////////
 
     /**
-     * Adds a new animation with the given frames and name.
-     * Frames are loaded from the specified file paths.
+     * Adds a new animation with the given frames and name. Frames are loaded from
+     * the specified file paths.
      *
      * @param frameNames - List of file paths to the animation frames.
      * @param name       - The name of the animation.
@@ -114,11 +114,9 @@ public class Sprite {
      */
     public void setAnimationNoReset(String name) {
         if (!animations.containsKey(name)) {
-            throw new IllegalArgumentException(
-                    "Animation not found: '" + name + "'. Loaded animations: " + getAnimationNames());
+            throw new IllegalArgumentException("Animation not found: '" + name + "'. Loaded animations: " + getAnimationNames());
         }
         currentAnimation = name;
-        // currentFrame = 0;
     }
 
     /**
@@ -155,6 +153,13 @@ public class Sprite {
             throw new IllegalArgumentException("FPS must be greater than 0");
         }
         this.fps = fps;
+
+        // Restart the frame updater if it's currently running
+        if (frameUpdater != null && frameUpdater.isRunning()) {
+            frameUpdater.stop();
+            frameUpdater = new FrameUpdater();
+            frameUpdater.start();
+        }
     }
 
     /////////////////
@@ -181,9 +186,9 @@ public class Sprite {
     }
 
     /**
-     * Renders a specific animation's current frame on a Graphics2D object.
-     * If the provided animation name is invalid or the animation has no frames,
-     * nothing will be rendered.
+     * Renders a specific animation's current frame on a Graphics2D object. If the
+     * provided animation name is invalid or the animation has no frames, nothing
+     * will be rendered.
      *
      * @param g             - The Graphics2D object to render on.
      * @param x             - The x-coordinate for rendering.
@@ -193,8 +198,7 @@ public class Sprite {
      */
     public void render(Graphics2D g, int x, int y, Container root, String animationName, int frame) {
         if (animationName == null || !animations.containsKey(animationName)) {
-            System.err.println(
-                    "Invalid animation name: " + animationName + ". Loaded animations: " + getAnimationNames());
+            System.err.println("Invalid animation name: " + animationName + ". Loaded animations: " + getAnimationNames());
             return;
         }
 
@@ -280,10 +284,7 @@ public class Sprite {
             frameName = SPRITE_RESOURCE_DIR_PATH + frameName + ".png";
             Image image = ImageUtil.getImageFromFile(frameName);
             if (image != null) {
-                image = ImageUtil.scaleImage(image,
-                        image.getWidth(null) * SPRITE_SCALING,
-                        image.getHeight(null) * SPRITE_SCALING,
-                        false);
+                image = ImageUtil.scaleImage(image, image.getWidth(null) * SPRITE_SCALING, image.getHeight(null) * SPRITE_SCALING, false);
                 frames.add(image);
             } else {
                 Logger.addLog("Failed to load texture: '" + frameName + "'");
