@@ -519,12 +519,12 @@ public class App implements InteractableHandeler {
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        if (this.movementEnabled) {
+            shoot(e);
+        }
         for (Renderable r : gpanel.getInteractables()) {
             Interactable i = (Interactable) r;
             i.interact(e);
-        }
-        if (this.movementEnabled) {
-            shoot(e);
         }
     }
 
