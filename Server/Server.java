@@ -174,7 +174,9 @@ public class Server {
                     int clientId = Integer.parseInt(parts[0]);
                     int x = Integer.parseInt(parts[1]);
                     int y = Integer.parseInt(parts[2]);
-                    String animationFrame = parts[4];
+                    int health = Integer.parseInt(parts[3]);
+                    // Username is on parts[4]
+                    String animationFrame = parts[5];
 
                     Client client;
                     synchronized (clients) {
@@ -183,6 +185,7 @@ public class Server {
 
                     if (client != null) {
                         client.setPosition(x, y);
+                        client.setHealth(health);
                         client.setAnimationFrame(animationFrame);
                         client.updateLastReceivedTime();
 
@@ -275,6 +278,7 @@ public class Server {
                 positions.append(client.getId()).append(",")
                         .append(client.getX()).append(",")
                         .append(client.getY()).append(",")
+                        .append(client.getHealth()).append(",")
                         .append(client.getDisplayName()).append(",")
                         .append(client.getAnimationFrame()).append(";");
             }
@@ -344,8 +348,7 @@ public class Server {
         private final String displayName;
         private final InetAddress inetAddress;
         private String animationFrame;
-        private int x;
-        private int y;
+        private int x, y, health;
         private long lastReceivedTime;
 
         public Client(int id, String displayName, InetAddress inetAddress) {
@@ -373,6 +376,14 @@ public class Server {
 
         public int getY() {
             return y;
+        }
+
+        public int getHealth() {
+            return this.health;
+        }
+
+        public void setHealth(int health) {
+            this.health = health;
         }
 
         public String getAnimationFrame() {

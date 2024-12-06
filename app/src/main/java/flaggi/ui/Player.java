@@ -69,7 +69,7 @@ public class Player implements Renderable {
 
     private int[] pos = new int[2];
     private boolean visible = true, inverted = false;
-    private int id;
+    private int id, health;
     private String name, animationFrame, localPlayerSkinName;
     private Sprite sprite;
 
@@ -175,9 +175,10 @@ public class Player implements Renderable {
         // Render the nametag
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 12));
-        int[] pos = FontUtil.getCenteredPos(55, 5, g.getFontMetrics(), this.name);
+        String nameTagText = this.name + " | " + this.health;
+        int[] pos = FontUtil.getCenteredPos(55, 5, g.getFontMetrics(), nameTagText);
         pos[1] = 25;
-        g.drawString(this.name, offset[0] + this.pos[0] + pos[0], offset[1] + this.pos[1] + pos[1] - 40);
+        g.drawString(nameTagText, offset[0] + this.pos[0] + pos[0], offset[1] + this.pos[1] + pos[1] - 40);
 
     }
 
@@ -293,6 +294,10 @@ public class Player implements Renderable {
         default:
             break;
         }
+    }
+
+    public void setHealth(int health) {
+        this.health = health;
     }
 
     /////////////////

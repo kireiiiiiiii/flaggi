@@ -83,7 +83,7 @@ public class App implements InteractableHandeler {
 
     private Client client;
     private String username, ip;
-    private int id;
+    private int id, health;
     private GPanel gpanel;
     private GameLoop gameLoop;
     private AdvancedVariable<AppOptions> appOptions;
@@ -139,6 +139,7 @@ public class App implements InteractableHandeler {
         this.spawnPoint = new int[] { this.windowSize[0] / 2, this.windowSize[1] / 2 };
         this.movementEnabled = false;
         this.paused = false;
+        this.health = 69;
         this.pressedKeys = new ArrayList<KeyEvent>();
         printHeader();
 
@@ -392,7 +393,7 @@ public class App implements InteractableHandeler {
      * players.
      * 
      */
-    public void updatePlayerPositions() {
+    public void updatePlayerData() {
         String localAnimationFrame = null;
         for (Player player : this.gpanel.getWidgetsByClass(Player.class)) {
             if (!player.isEnemy()) {
@@ -401,7 +402,22 @@ public class App implements InteractableHandeler {
         }
         // Get the current players from the panel and their positions from the server
         ArrayList<Player> players = this.gpanel.getWidgetsByClass(Player.class);
-        ArrayList<ClientStruct> serverPositions = client.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.id, username, localAnimationFrame));
+        ArrayList<ClientStruct> serverPositions = client.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.id, this.health, this.username, localAnimationFrame));
+
+        // Update local player data
+        ClientStruct localPlayerStruct = null;
+        for (ClientStruct cs : serverPositions) { // Find the local player
+            if (cs.getId() == this.id) {
+                localPlayerStruct = cs;
+                serverPositions.remove(localPlayerStruct); // Remove local player for rendering
+                break;
+            }
+        }
+        if (localPlayerStruct != null) {
+            // Health
+            this.health = localPlayerStruct.getHealth();
+            this.localPlayer.setHealth(this.health);
+        }
 
         // Track existing players by ID for quick lookup
         HashMap<Integer, Player> existingPlayers = new HashMap<>();
@@ -419,6 +435,7 @@ public class App implements InteractableHandeler {
         for (ClientStruct clientStruct : serverPositions) {
             int clientId = clientStruct.getId();
             int[] clientPos = new int[] { clientStruct.getX(), clientStruct.getY() };
+            int health = clientStruct.getHealth();
             String animationFrame = clientStruct.getAnimationFrame();
 
             // Cull clients outside the viewport
@@ -432,6 +449,7 @@ public class App implements InteractableHandeler {
                 // Update the position of the existing player
                 Player player = existingPlayers.get(clientId);
                 player.setPos(clientPos);
+                player.setHealth(health);
                 player.setAnimationFrameData(animationFrame);
                 existingPlayers.remove(clientId); // Mark as processed
             } else {
@@ -721,7 +739,7 @@ public class App implements InteractableHandeler {
             if (pressedKeys.isEmpty()) {
                 localPlayer.switchAnimation("idle");
             }
-            updatePlayerPositions();
+            updatePlayerData();
             gpanel.add(new ConnectionWidget());
         }
 
