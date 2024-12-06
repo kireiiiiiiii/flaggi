@@ -34,7 +34,6 @@ import java.io.InputStream;
 import javax.imageio.ImageIO;
 
 import flaggi.App;
-import flaggi.common.Logger;
 
 /**
  * A utillity method class designed to handle images
@@ -230,7 +229,7 @@ public class ImageUtil {
         filePath = App.FILE_JAR_SEPARATOR + filePath;
         InputStream resourceStream = ImageUtil.class.getResourceAsStream(filePath);
         String exists = resourceStream != null ? "File exists." : "File does not exist.";
-        Logger.addLog("Accesed resource input stream at path: '" + filePath + "'. " + exists);
+        App.LOGGER.addLog("Accesed resource input stream at path: '" + filePath + "'. " + exists);
         return resourceStream;
     }
 

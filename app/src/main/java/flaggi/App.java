@@ -72,6 +72,7 @@ public class App implements InteractableHandeler {
     public static final String PROJECT_NAME = "Flaggi";
     public static final String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi";
     public static final String FILE_JAR_SEPARATOR = "/";
+    public static final Logger LOGGER = Logger.getLogger(getApplicationDataFolder() + File.separator + "logs" + File.separator + "app.log");
     public static final int TCP_PORT = 54321;
     public static final int FPS = 60;
 
@@ -111,14 +112,13 @@ public class App implements InteractableHandeler {
     public App() {
 
         // ------ Clear the log file, and start the 1st log entry.
-        Logger.clearLog();
-        Logger.addLog("App started");
+        LOGGER.addLog("App started");
 
         // ------ Initialize game
         try {
             this.appOptions = new AdvancedVariable<AppOptions>(getApplicationDataFolder() + File.separator + "user-options.json", AppOptions.class);
         } catch (IOException e) {
-            Logger.addLog("Error loading app options.", e);
+            LOGGER.addLog("Error loading app options.", e);
             new File(getApplicationDataFolder() + File.separator + "user-options.json").delete();
             this.appOptions = new AdvancedVariable<AppOptions>(getApplicationDataFolder() + File.separator + "user-options.json");
             this.appOptions.set(getDefaultOptions());
@@ -148,7 +148,7 @@ public class App implements InteractableHandeler {
             exitGame();
         });
         initializeWidgets();
-        Logger.addLog("UI window created");
+        LOGGER.addLog("UI window created");
         goToMenu();
 
     }
@@ -173,7 +173,7 @@ public class App implements InteractableHandeler {
             }
             return;
         }
-        Logger.addLog("User entered name '" + username + "'");
+        LOGGER.addLog("User entered name '" + username + "'");
 
         // ------ Get IP
         this.ip = "";
@@ -191,10 +191,10 @@ public class App implements InteractableHandeler {
         try {
             serverAddress = InetAddress.getByName(ip);
         } catch (UnknownHostException e) {
-            Logger.addLog("Unknown host exception when trying to get IP from a file.", e);
+            LOGGER.addLog("Unknown host exception when trying to get IP from a file.", e);
             return;
         }
-        Logger.addLog("Selected ip: " + ip);
+        LOGGER.addLog("Selected ip: " + ip);
 
         // ------ Check if server is running
         if (!Client.isServerRunning(serverAddress, TCP_PORT)) {
@@ -225,7 +225,7 @@ public class App implements InteractableHandeler {
         this.movementEnabled = true;
         this.gameLoop = new GameLoop(FPS);
         this.gameLoop.start();
-        Logger.addLog("Game loop started");
+        LOGGER.addLog("Game loop started");
 
     }
 
@@ -243,9 +243,9 @@ public class App implements InteractableHandeler {
                 this.appOptions.set(new AppOptions(this.username, this.ip));
             }
             this.appOptions.save();
-            Logger.addLog("Menu fields data saved succesfully.");
+            LOGGER.addLog("Menu fields data saved succesfully.");
         } catch (IOException e) {
-            Logger.addLog("Saving menu fields data not succesful.", e);
+            LOGGER.addLog("Saving menu fields data not succesful.", e);
         }
         System.exit(1);
     }
@@ -284,7 +284,7 @@ public class App implements InteractableHandeler {
         this.gpanel.hideAllWidgets();
         this.gpanel.showTaggedWidgets(WidgetTags.MENU_ELEMENTS);
         this.gpanel.setCameraPosition(new int[] { -this.pos[0] + spawnPoint[0], -this.pos[1] + spawnPoint[1] });
-        Logger.addLog("Menu screen active.");
+        LOGGER.addLog("Menu screen active.");
     }
 
     /**

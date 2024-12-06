@@ -309,7 +309,7 @@ public class Sprite {
                 image = ImageUtil.scaleImage(image, image.getWidth(null) * SPRITE_SCALING, image.getHeight(null) * SPRITE_SCALING, false);
                 frames.add(image);
             } else {
-                Logger.addLog("Failed to load texture: '" + frameName + "'");
+                App.LOGGER.addLog("Failed to load texture: '" + frameName + "'");
             }
         }
         return frames;
