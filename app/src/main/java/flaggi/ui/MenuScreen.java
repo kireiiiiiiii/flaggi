@@ -113,13 +113,13 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         this.exitButtonBounds.setBounds(10, 10, buttonWidth / 3, buttonWidth / 3);
 
         // Render elements
-        g.drawImage(ImageUtil.scaleToWidth(this.logo, 600, false), centerX - 300,
-                centerY - 400,
-                focusCycleRootAncestor);
+        g.drawImage(ImageUtil.scaleToWidth(this.logo, 600, false), centerX - 300, centerY - 400, focusCycleRootAncestor);
 
         g.setColor(Color.RED);
-        int[] errorPos = FontUtil.getCenteredPos(size[0], size[1], g.getFontMetrics(), this.errorMessage);
-        g.drawString(this.errorMessage, errorPos[0], errorPos[1] + 50);
+        synchronized (this.errorMessage) { // Acces the message sychronously, as it can be modified by the app
+            int[] errorPos = FontUtil.getCenteredPos(size[0], size[1], g.getFontMetrics(), this.errorMessage);
+            g.drawString(this.errorMessage, errorPos[0], errorPos[1] + 50);
+        }
 
         g.setColor(Color.LIGHT_GRAY);
         g.fillRect(nameFieldBounds.x, nameFieldBounds.y, nameFieldBounds.width, nameFieldBounds.height);
@@ -134,8 +134,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         g.setColor(Color.GREEN);
         g.fillRect(startButtonBounds.x, startButtonBounds.y, startButtonBounds.width, startButtonBounds.height);
         g.setColor(Color.BLACK);
-        g.drawString("Start", startButtonBounds.x + (buttonWidth / 2) - 20,
-                startButtonBounds.y + (buttonHeight / 2) + 5);
+        g.drawString("Start", startButtonBounds.x + (buttonWidth / 2) - 20, startButtonBounds.y + (buttonHeight / 2) + 5);
 
     }
 
@@ -216,7 +215,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
     }
 
     /////////////////
-    // Helpers
+    // Accesors & modifiers
     ////////////////
 
     /**
@@ -225,7 +224,19 @@ public class MenuScreen implements Renderable, Interactable, Typable {
      * @param errorMessage
      */
     public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
+        synchronized (this.errorMessage) {
+            this.errorMessage = errorMessage;
+        }
+    }
+
+    /**
+     * Clears the error message field.
+     * 
+     */
+    public void clearErrorMessage() {
+        synchronized (this.errorMessage) {
+            this.errorMessage = "";
+        }
     }
 
     /**

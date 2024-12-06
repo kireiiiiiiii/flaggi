@@ -269,6 +269,13 @@ public class App implements InteractableHandeler {
      * 
      */
     public void goToMenu() {
+
+        // ------ Clear the menu screen error message
+        for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+            m.clearErrorMessage();
+        }
+
+        // ------ Reset variables
         if (this.client != null)
             this.client.disconnect();
         if (this.gameLoop != null)
