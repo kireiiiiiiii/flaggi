@@ -30,8 +30,6 @@ package flaggi.common;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -51,15 +49,15 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 /**
- * <h2>GPanel</h2>
- * {@code GPanel} is a custom {@code JPanel} object that handles rendering of
- * graphical elements using an internal Renderer, running on a separate thread.
- * It integrates with a {@code JFrame} to manage window properties.
+ * <h2>GPanel</h2> {@code GPanel} is a custom {@code JPanel} object that handles
+ * rendering of graphical elements using an internal Renderer, running on a
+ * separate thread. It integrates with a {@code JFrame} to manage window
+ * properties.
  * </p>
  * <hr>
  * <br>
- * <h3>Constructor</h3>
- * {@code GPanel} will be upon costruction set with these values:
+ * <h3>Constructor</h3> {@code GPanel} will be upon costruction set with these
+ * values:
  * <ul>
  * <li><b>FPS</b> - interval, at which will the renderer calculate new
  * frames</li>
@@ -72,16 +70,14 @@ import javax.swing.SwingUtilities;
  * The {@code JFrame} will be put in the middle of the user screen by default.
  * It will also have the default icon, that can be changed separatly by using
  * the {@code setIcon()} method. If the project is being packaged, change the
- * style the icon is being accesed. The app
- * will be made visible, and the rendering prosess will start.
+ * style the icon is being accesed. The app will be made visible, and the
+ * rendering prosess will start.
  * </p>
  * <hr>
- * <h3>UI Elements</h3>
- * This class supports adding
- * renderable objects that are drawn in a layered order based on their
- * {@code z-index}. The higher the index, the more on top they are. The object
- * must implement the interface {@code Renderable}.
- * This is how the objects are added:
+ * <h3>UI Elements</h3> This class supports adding renderable objects that are
+ * drawn in a layered order based on their {@code z-index}. The higher the
+ * index, the more on top they are. The object must implement the interface
+ * {@code Renderable}. This is how the objects are added:
  * 
  * <pre>
  * <code>
@@ -91,20 +87,18 @@ import javax.swing.SwingUtilities;
  * 
  * </p>
  * <hr>
- * <h3>Rendering</h3>
- * The rendering loop can be controlled
- * with {@code start()} and {@code stop()} methods.
+ * <h3>Rendering</h3> The rendering loop can be controlled with {@code start()}
+ * and {@code stop()} methods.
  * </p>
- * The Renderer class inside GPanel controls the rendering loop, adjusting
- * its interval based on the provided frames-per-second value.
+ * The Renderer class inside GPanel controls the rendering loop, adjusting its
+ * interval based on the provided frames-per-second value.
  * </p>
  * <hr>
- * <h3>Action listeners</h3>
- * This class implements {@codeMouseListener} and {@code MouseMotionListener} to
- * handle mouse interaction events. This class also includes a public interface
- * {@code InteracableHandeler} that can be used on classes that handle these
- * events. Widgets that can be interacted with need to implement the
- * {@code Interactable} interface also contained in this class.
+ * <h3>Action listeners</h3> This class implements {@codeMouseListener} and
+ * {@code MouseMotionListener} to handle mouse interaction events. This class
+ * also includes a public interface {@code InteracableHandeler} that can be used
+ * on classes that handle these events. Widgets that can be interacted with need
+ * to implement the {@code Interactable} interface also contained in this class.
  * <hr>
  * 
  * @author Matěj Šťastný aka
@@ -132,8 +126,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * Standard constructor.
      * 
      * @param handeler               - {@code InteractableHandeler} object, that
-     *                               will handle
-     *                               panel interaction.
+     *                               will handle panel interaction.
      * @param fps                    - frames per second.
      * @param windowWidth            - window width.
      * @param windowHeight           - window height.
@@ -144,8 +137,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * @param loadingBackgroundColor - color of the {@code JFrame} displayed before
      *                               the {@code JPanel} is initialized.
      */
-    public GPanel(InteractableHandeler handeler, int fps, int windowWidth, int windowHeight, boolean resizable,
-            boolean fullscreen, String appTitle, Color loadingBackgroundColor) {
+    public GPanel(InteractableHandeler handeler, int fps, int windowWidth, int windowHeight, boolean resizable, String appTitle, Color loadingBackgroundColor) {
         // ---- Variable Initiliazition ----
         this.appFrame = new JFrame();
         this.appFrame.setBackground(loadingBackgroundColor);
@@ -160,11 +152,6 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         this.appFrame.setResizable(resizable);
         this.appFrame.setTitle(appTitle);
         this.appFrame.setLocationRelativeTo(null);
-        if (fullscreen) {
-            GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-            this.appFrame.setUndecorated(true);
-            device.setFullScreenWindow(this.appFrame);
-        }
         this.appFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.appFrame.setVisible(true);
         this.appFrame.add(this);
@@ -193,9 +180,8 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * @param fullscreen   - if the panel is fullscreen. Cannot be changed.
      * @param appTitle     - title of the window (name of the app).
      */
-    public GPanel(InteractableHandeler handeler, int fps, int windowWidth, int windowHeight, boolean resizable,
-            boolean fullscreen, String appTitle) {
-        this(handeler, fps, windowWidth, windowHeight, resizable, fullscreen, appTitle, Color.WHITE);
+    public GPanel(InteractableHandeler handeler, int fps, int windowWidth, int windowHeight, boolean resizable, String appTitle) {
+        this(handeler, fps, windowWidth, windowHeight, resizable, appTitle, Color.WHITE);
     }
 
     /////////////////
@@ -247,8 +233,8 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     }
 
     /*
-     * Size methods return the measurements of the owning {@JFrame} object.
-     * Methods return zero, if owner wasn't initialized (is {@code null}).
+     * Size methods return the measurements of the owning {@JFrame} object. Methods
+     * return zero, if owner wasn't initialized (is {@code null}).
      */
 
     @Override
@@ -428,7 +414,12 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         }
     }
 
-    public void setPosition(int[] playerPos) {
+    /**
+     * Sets the camera position. 0,0 is the standard position.
+     * 
+     * @param playerPos - {@code int[]} 2D position of the camera.
+     */
+    public void setCameraPosition(int[] playerPos) {
         this.playerPos = playerPos;
     }
 
@@ -640,8 +631,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * <b>This class has two contol methods: </b>
      * <ul>
      * <li>{@code start()} that starts the render loop in its own thread. The fps
-     * value
-     * can be changed while the loop is running, and the interval will be
+     * value can be changed while the loop is running, and the interval will be
      * automatically changed
      * <li>{@code stop()} that terminates the thread with the rendering loop.
      * <ul>
@@ -740,8 +730,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor);
 
         /**
-         * This method returns the Z-Index of the object. The Z-Index cannot be
-         * changed!
+         * This method returns the Z-Index of the object. The Z-Index cannot be changed!
          *
          * @return {@code int} value of the Z-Index.
          */
@@ -768,8 +757,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         public void show();
 
         /**
-         * Accesor for the tags of the element. Tags are used to filrer UI elements
-         * into
+         * Accesor for the tags of the element. Tags are used to filrer UI elements into
          * categories.
          *
          * @return - {@code ArrayList} of tags.

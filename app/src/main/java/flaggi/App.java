@@ -142,7 +142,7 @@ public class App implements InteractableHandeler {
         printHeader();
 
         // ------ Initialize UI
-        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, false, PROJECT_NAME, new Color(229, 204, 255));
+        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, PROJECT_NAME, new Color(229, 204, 255));
         this.gpanel.setIconOSDependend(ImageUtil.getImageFromFile("icon_win.png"), ImageUtil.getImageFromFile("icon_mac.png"), ImageUtil.getImageFromFile("icon_win.png"), ImageUtil.getImageFromFile("icon_win.png"));
         this.gpanel.setExitOperation(() -> {
             exitGame();
@@ -283,7 +283,7 @@ public class App implements InteractableHandeler {
         // ------ Initialize UI
         this.gpanel.hideAllWidgets();
         this.gpanel.showTaggedWidgets(WidgetTags.MENU_ELEMENTS);
-        this.gpanel.setPosition(new int[] { -this.pos[0] + spawnPoint[0], -this.pos[1] + spawnPoint[1] });
+        this.gpanel.setCameraPosition(new int[] { -this.pos[0] + spawnPoint[0], -this.pos[1] + spawnPoint[1] });
         Logger.addLog("Menu screen active.");
     }
 
@@ -366,7 +366,7 @@ public class App implements InteractableHandeler {
         this.pos[1] += deltaY;
 
         // Update the viewport
-        this.gpanel.setPosition(new int[] { -this.pos[0] + spawnPoint[0], -this.pos[1] + spawnPoint[1] });
+        this.gpanel.setCameraPosition(new int[] { -this.pos[0] + spawnPoint[0], -this.pos[1] + spawnPoint[1] });
     }
 
     /**
