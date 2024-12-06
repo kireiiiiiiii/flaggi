@@ -52,6 +52,7 @@ import flaggi.common.GPanel.Renderable;
 import flaggi.common.GPanel.Typable;
 import flaggi.constants.WidgetTags;
 import flaggi.ui.Background;
+import flaggi.ui.Bullet;
 import flaggi.ui.ConnectionWidget;
 import flaggi.ui.MenuScreen;
 import flaggi.ui.PauseMenu;
@@ -373,7 +374,16 @@ public class App implements InteractableHandeler {
         this.pos[1] += deltaY;
 
         // Update the viewport
-        this.gpanel.setCameraPosition(new int[] { -this.pos[0] + spawnPoint[0], -this.pos[1] + spawnPoint[1] });
+        this.gpanel.setCameraPosition(new int[] { -this.pos[0] + this.spawnPoint[0], -this.pos[1] + this.spawnPoint[1] });
+    }
+
+    /**
+     * Shoots a bullet from the player.
+     * 
+     * @param e - {@code MouseEvent} of the mouse click.
+     */
+    public void shoot(MouseEvent e) {
+        this.gpanel.add(new Bullet(this.pos, getMouseclickLocationRelativeToMap(e), 500, 5000));
     }
 
     /**
@@ -495,6 +505,9 @@ public class App implements InteractableHandeler {
             Interactable i = (Interactable) r;
             i.interact(e);
         }
+        if (this.movementEnabled) {
+            shoot(e);
+        }
     }
 
     @Override
@@ -574,6 +587,17 @@ public class App implements InteractableHandeler {
             return "Username too short.";
         }
         return null;
+    }
+
+    /**
+     * Calculates the mouse click position relative to the map (the position of the
+     * mouse clikc on the world map).
+     * 
+     * @param e - {@code MouseEvent} of the mouse click.
+     * @return 2D array of the mouse click position relative to the map.
+     */
+    private int[] getMouseclickLocationRelativeToMap(MouseEvent e) {
+        return new int[] { (e.getX() - this.gpanel.getWidth() / 2) + this.pos[0], e.getY() - (this.gpanel.getHeight() / 2) + this.pos[1] };
     }
 
     /**
