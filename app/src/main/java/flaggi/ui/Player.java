@@ -175,11 +175,33 @@ public class Player implements Renderable {
         // Render the nametag
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 12));
-        String nameTagText = this.name + " | " + this.health;
-        int[] pos = FontUtil.getCenteredPos(55, 5, g.getFontMetrics(), nameTagText);
-        pos[1] = 25;
-        g.drawString(nameTagText, offset[0] + this.pos[0] + pos[0], offset[1] + this.pos[1] + pos[1] - 40);
+        String nameTagText = this.name;
+        int[] namePos = FontUtil.getCenteredPos(55, 5, g.getFontMetrics(), nameTagText);
+        namePos[1] = -30;
+        g.drawString(nameTagText, offset[0] + this.pos[0] + namePos[0], offset[1] + this.pos[1] + namePos[1]);
 
+        // Render the health bar
+        int barWidth = 50;
+        int barHeight = 5;
+        int x = offset[0] + this.pos[0] - barWidth / 2 + 27;
+        int y = offset[1] + this.pos[1] - 20;
+
+        // Background of the health bar (gray)
+        g.setColor(Color.GRAY);
+        g.fillRect(x, y, barWidth, barHeight);
+
+        // Foreground of the health bar (red for health)
+        if (this.isEnemy()) {
+            g.setColor(Color.RED);
+        } else {
+            g.setColor(Color.BLUE);
+        }
+        int healthWidth = (int) ((this.health / 100.0) * barWidth);
+        g.fillRect(x, y, healthWidth, barHeight);
+
+        // Border for the health bar
+        g.setColor(Color.BLACK);
+        g.drawRect(x, y, barWidth, barHeight);
     }
 
     @Override
