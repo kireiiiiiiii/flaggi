@@ -131,8 +131,8 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         g.setFont(this.font);
 
         // Render error nessage
-        g.setColor(Color.RED);
         synchronized (this.errorMessage) { // Acces the message sychronously, as it can be modified by the app
+            g.setColor(this.errorMessage.equals("Connecting...") ? Color.GREEN : Color.RED);
             int[] errorPos = FontUtil.getCenteredPos(size[0], size[1], g.getFontMetrics(), this.errorMessage);
             g.drawString(this.errorMessage, errorPos[0], errorPos[1] + 90);
         }
@@ -201,6 +201,9 @@ public class MenuScreen implements Renderable, Interactable, Typable {
             return true;
         } else if (startButtonBounds.contains(e.getPoint())) {
             if (startButtonAction != null) {
+                synchronized (this.errorMessage) {
+                    this.errorMessage = "Connecting...";
+                }
                 startButtonAction.run();
             }
             return true;
