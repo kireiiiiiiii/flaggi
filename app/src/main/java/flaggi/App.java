@@ -113,6 +113,7 @@ public class App implements InteractableHandeler {
     public App() {
 
         // ------ Clear the log file, and start the 1st log entry.
+        LOGGER.clearLog();
         LOGGER.addLog("App started");
 
         // ------ Initialize game

@@ -28,8 +28,10 @@ package flaggi.ui;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.ArrayList;
 
+import flaggi.App;
 import flaggi.common.GPanel.Interactable;
 import flaggi.common.GPanel.Renderable;
 import flaggi.common.GPanel.Typable;
@@ -53,6 +55,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
     // Button bounding boxes
     private Rectangle nameFieldBounds, ipFieldBounds, startButtonBounds;
     private Image logo, background, textField, button;
+    private Font font;
     private String nameUserInput = "", ipUserInput = "", errorMessage = "";
     private boolean isNameFieldFocused = false, isIpFieldFocused = false;
     private Runnable startButtonAction;
@@ -74,6 +77,14 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         this.startButtonAction = startAction;
         this.nameUserInput = name == null ? "" : name;
         this.ipUserInput = ip == null ? "" : ip;
+        try {
+            this.font = FontUtil.loadFont("fonts/PixelifySans-VariableFont_wght.ttf").deriveFont(Font.PLAIN, 25);
+            System.out.println("yes");
+        } catch (IOException | FontFormatException e) {
+            App.LOGGER.addLog("Error loading font.", e);
+            System.out.println("no");
+            this.font = new Font("Arial", Font.PLAIN, 25);
+        }
         this.logo = ImageUtil.getImageFromFile("ui/logo.png");
         this.background = ImageUtil.getImageFromFile("ui/menu_screen.png");
         this.button = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/button.png"), 130, false);
@@ -109,31 +120,38 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         // Update bounding boxes for interactable elements
         this.nameFieldBounds.setBounds(centerX - fieldWidth / 2, centerY - 80, fieldWidth, fieldHeight);
         this.ipFieldBounds.setBounds(centerX - fieldWidth / 2, centerY, fieldWidth, fieldHeight);
-        this.startButtonBounds.setBounds(centerX - buttonWidth / 2, centerY + 90, buttonWidth, buttonHeight);
+        this.startButtonBounds.setBounds(centerX - buttonWidth / 2, centerY + 130, buttonWidth, buttonHeight);
 
         // Render elements
         this.background = ImageUtil.scaleToFit(this.background, size[0], size[1], false);
         g.drawImage(this.background, (size[0] - this.background.getWidth(null)) / 2, (size[1] - this.background.getHeight(null)) / 2, focusCycleRootAncestor);
         g.drawImage(ImageUtil.scaleToWidth(this.logo, 800, false), centerX - 400, centerY - 450, focusCycleRootAncestor);
 
+        // Set font
+        g.setFont(this.font);
+
+        // Render error nessage
         g.setColor(Color.RED);
         synchronized (this.errorMessage) { // Acces the message sychronously, as it can be modified by the app
             int[] errorPos = FontUtil.getCenteredPos(size[0], size[1], g.getFontMetrics(), this.errorMessage);
-            g.drawString(this.errorMessage, errorPos[0], errorPos[1] + 50);
+            g.drawString(this.errorMessage, errorPos[0], errorPos[1] + 90);
         }
 
         g.drawImage(this.textField, nameFieldBounds.x, nameFieldBounds.y, focusCycleRootAncestor);
         g.drawImage(this.textField, ipFieldBounds.x, ipFieldBounds.y, focusCycleRootAncestor);
 
-        g.setColor(isNameFieldFocused ? Color.BLUE : Color.BLACK);
-        g.drawString("Name: " + nameUserInput, nameFieldBounds.x + 5, nameFieldBounds.y + 20);
+        int[] textFieldTextPos = FontUtil.getCenteredPos(this.textField.getWidth(null), this.textField.getHeight(null), g.getFontMetrics(), "Dummy");
 
-        g.setColor(isIpFieldFocused ? Color.BLUE : Color.BLACK);
-        g.drawString("IP: " + ipUserInput, ipFieldBounds.x + 5, ipFieldBounds.y + 20);
+        g.setColor(isNameFieldFocused ? Color.BLUE : Color.WHITE);
+        g.drawString("Name: " + nameUserInput, nameFieldBounds.x + 20, nameFieldBounds.y + textFieldTextPos[1]);
+
+        g.setColor(isIpFieldFocused ? Color.BLUE : Color.WHITE);
+        g.drawString("IP: " + ipUserInput, ipFieldBounds.x + 20, ipFieldBounds.y + textFieldTextPos[1]);
 
         g.drawImage(this.button, startButtonBounds.x, startButtonBounds.y, focusCycleRootAncestor);
-        g.setColor(Color.BLACK);
-        g.drawString("Start", startButtonBounds.x + (buttonWidth / 2) - 20, startButtonBounds.y + (buttonHeight / 2) + 5);
+        g.setColor(Color.WHITE);
+        int[] startButtonTextPos = FontUtil.getCenteredPos(buttonWidth, buttonHeight, g.getFontMetrics(), "START");
+        g.drawString("START", startButtonBounds.x + startButtonTextPos[0], startButtonBounds.y + startButtonTextPos[1]);
 
     }
 

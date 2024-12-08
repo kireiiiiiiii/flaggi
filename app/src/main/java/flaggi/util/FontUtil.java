@@ -27,17 +27,46 @@
 
 package flaggi.util;
 
+import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.FontMetrics;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Utility class to controll font stuff.
  * 
  */
 public class FontUtil {
+
     /////////////////
-    // Measurment calculating methods
+    // Font file handeling methods
     ////////////////
 
+    /**
+     * Loads a font from the resources directory in the JAR.
+     *
+     * @param resourcePath - the relative path to the font file inside the resources
+     *                     - directory.
+     * @return The loaded Font object.
+     * @throws IOException         if there is an error reading the font file.
+     * @throws FontFormatException if the font file format is invalid.
+     */
+    public static Font loadFont(String resourcePath) throws IOException, FontFormatException {
+        // Load the font file as an InputStream from the resources directory
+        try (InputStream fontStream = FontUtil.class.getClassLoader().getResourceAsStream(resourcePath)) {
+            if (fontStream == null) {
+                throw new IOException("Font file not found: " + resourcePath);
+            }
+
+            // Create a Font object from the InputStream
+            return Font.createFont(Font.TRUETYPE_FONT, fontStream);
+        }
+    }
+
+    /////////////////
+    // Text position methods
+    ////////////////
     /**
      * Calculates the centered position of a text in a {@code JPanel}, and return a
      * position that can be taken as input to the {@code drawString()} method.
@@ -49,8 +78,7 @@ public class FontUtil {
      * @param fm     - {@code FontMetric} of the target font.
      * @param text   - target text.
      * @return an {@code int} array of lenght 2, where index 0 represents {@code x},
-     *         and index 1
-     *         represents {@code y} positions.
+     *         and index 1 represents {@code y} positions.
      * 
      */
     public static int[] getCenteredPos(int width, int height, FontMetrics fm, String text) {
