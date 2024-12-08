@@ -300,13 +300,15 @@ public class App implements InteractableHandeler {
     /**
      * Moves the player.
      * 
-     * @param events - {@code List<KeyEvent>} of the pressed keys.
+     * @param inputEvents - {@code List<KeyEvent>} of the pressed keys.
      */
-    public void move(List<KeyEvent> events) {
+    public void move(List<KeyEvent> inputEvents) {
         int step = 8;
         boolean moveUp = false, moveDown = false, moveLeft = false, moveRight = false;
+        List<KeyEvent> events = new ArrayList<>();
+        events.addAll(inputEvents);
 
-        for (KeyEvent e : events) {
+        for (KeyEvent e : inputEvents) {
             switch (e.getKeyCode()) {
             case KeyEvent.VK_UP:
             case KeyEvent.VK_W:
