@@ -45,5 +45,6 @@ public class ZIndex {
     public static final int OTHER_PLAYERS = 10;
     public static final int ENVIRONMENT_TOP = 12;
     public static final int ENVIRONMENT_BOTTOM = 9;
+    public static final int HUD = 18;
 
 }

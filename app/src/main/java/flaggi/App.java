@@ -54,6 +54,7 @@ import flaggi.constants.WidgetTags;
 import flaggi.ui.Background;
 import flaggi.ui.Bullet;
 import flaggi.ui.ConnectionWidget;
+import flaggi.ui.HUD;
 import flaggi.ui.MenuScreen;
 import flaggi.ui.PauseMenu;
 import flaggi.ui.Player;
@@ -416,10 +417,16 @@ public class App implements InteractableHandeler {
                 break;
             }
         }
+
+        // ---- LOCAL PLAYER DATA SET
+
         if (localPlayerStruct != null) {
             // Health
             this.health = localPlayerStruct.getHealth();
             this.localPlayer.setHealth(this.health);
+            for (HUD hud : this.gpanel.getWidgetsByClass(HUD.class)) {
+                hud.setHealth((int) health);
+            }
         }
 
         // Track existing players by ID for quick lookup
@@ -494,7 +501,7 @@ public class App implements InteractableHandeler {
             togglePauseMenu();
         }, () -> {
             goToMenu();
-        }), new Tree(new int[] { 100, 100 })));
+        }), new Tree(new int[] { 100, 100 }), new HUD()));
 
         // Add all the widgets
         this.gpanel.add(widgets);
