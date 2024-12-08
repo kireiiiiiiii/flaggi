@@ -52,6 +52,12 @@ tasks.named<Test>("test") {
     useJUnitPlatform()
 }
 
+tasks.processResources {
+    from("LICENSES") {
+        into("licenses")
+    }
+}
+
 tasks.shadowJar {
     mergeServiceFiles()
     archiveClassifier.set("")
