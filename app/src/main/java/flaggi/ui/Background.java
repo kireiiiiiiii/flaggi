@@ -53,7 +53,7 @@ public class Background implements Renderable {
 
     @Override
     public void render(Graphics2D g, int[] size, int[] offset, Container focusCycleRootAncestor) {
-        g.setColor(new Color(229, 204, 255));
+        g.setColor(new Color(153, 192, 255));
         g.fillRect(0, 0, size[0], size[1]);
     }
 

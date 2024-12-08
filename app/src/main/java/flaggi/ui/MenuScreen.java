@@ -51,8 +51,8 @@ public class MenuScreen implements Renderable, Interactable, Typable {
     private boolean visible;
 
     // Button bounding boxes
-    private Rectangle nameFieldBounds, ipFieldBounds, startButtonBounds, exitButtonBounds;
-    private Image logo;
+    private Rectangle nameFieldBounds, ipFieldBounds, startButtonBounds;
+    private Image logo, background, textField, button;
     private String nameUserInput = "", ipUserInput = "", errorMessage = "";
     private boolean isNameFieldFocused = false, isIpFieldFocused = false;
     private Runnable startButtonAction;
@@ -74,16 +74,16 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         this.startButtonAction = startAction;
         this.nameUserInput = name == null ? "" : name;
         this.ipUserInput = ip == null ? "" : ip;
-        this.logo = ImageUtil.getImageFromFile("logo.png");
-
-        int fieldWidth = 200, fieldHeight = 30, buttonWidth = 100, buttonHeight = 40;
+        this.logo = ImageUtil.getImageFromFile("ui/logo.png");
+        this.background = ImageUtil.getImageFromFile("ui/menu_screen.png");
+        this.button = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/button.png"), 130, false);
+        this.textField = ImageUtil.scaleToHeight(ImageUtil.getImageFromFile("ui/text_field.png"), 60, false);
 
         // Initialize rectangles with dummy values, they will be updated during
         // rendering
-        this.nameFieldBounds = new Rectangle(0, 0, fieldWidth, fieldHeight);
-        this.ipFieldBounds = new Rectangle(0, 0, fieldWidth, fieldHeight);
-        this.startButtonBounds = new Rectangle(0, 0, buttonWidth, buttonHeight);
-        this.exitButtonBounds = new Rectangle(0, 0, buttonWidth, buttonWidth);
+        this.nameFieldBounds = new Rectangle(0, 0, this.textField.getWidth(null), this.textField.getHeight(null));
+        this.ipFieldBounds = (Rectangle) this.nameFieldBounds.clone();
+        this.startButtonBounds = new Rectangle(0, 0, this.button.getWidth(null), this.button.getHeight(null));
     }
 
     /////////////////
@@ -107,13 +107,14 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         int centerY = windowHeight / 2;
 
         // Update bounding boxes for interactable elements
-        this.nameFieldBounds.setBounds(centerX - fieldWidth / 2, centerY - 60, fieldWidth, fieldHeight);
+        this.nameFieldBounds.setBounds(centerX - fieldWidth / 2, centerY - 80, fieldWidth, fieldHeight);
         this.ipFieldBounds.setBounds(centerX - fieldWidth / 2, centerY, fieldWidth, fieldHeight);
-        this.startButtonBounds.setBounds(centerX - buttonWidth / 2, centerY + 80, buttonWidth, buttonHeight);
-        this.exitButtonBounds.setBounds(10, 10, buttonWidth / 3, buttonWidth / 3);
+        this.startButtonBounds.setBounds(centerX - buttonWidth / 2, centerY + 90, buttonWidth, buttonHeight);
 
         // Render elements
-        g.drawImage(ImageUtil.scaleToWidth(this.logo, 600, false), centerX - 300, centerY - 400, focusCycleRootAncestor);
+        this.background = ImageUtil.scaleToFit(this.background, size[0], size[1], false);
+        g.drawImage(this.background, (size[0] - this.background.getWidth(null)) / 2, (size[1] - this.background.getHeight(null)) / 2, focusCycleRootAncestor);
+        g.drawImage(ImageUtil.scaleToWidth(this.logo, 800, false), centerX - 400, centerY - 450, focusCycleRootAncestor);
 
         g.setColor(Color.RED);
         synchronized (this.errorMessage) { // Acces the message sychronously, as it can be modified by the app
@@ -121,9 +122,8 @@ public class MenuScreen implements Renderable, Interactable, Typable {
             g.drawString(this.errorMessage, errorPos[0], errorPos[1] + 50);
         }
 
-        g.setColor(Color.LIGHT_GRAY);
-        g.fillRect(nameFieldBounds.x, nameFieldBounds.y, nameFieldBounds.width, nameFieldBounds.height);
-        g.fillRect(ipFieldBounds.x, ipFieldBounds.y, ipFieldBounds.width, ipFieldBounds.height);
+        g.drawImage(this.textField, nameFieldBounds.x, nameFieldBounds.y, focusCycleRootAncestor);
+        g.drawImage(this.textField, ipFieldBounds.x, ipFieldBounds.y, focusCycleRootAncestor);
 
         g.setColor(isNameFieldFocused ? Color.BLUE : Color.BLACK);
         g.drawString("Name: " + nameUserInput, nameFieldBounds.x + 5, nameFieldBounds.y + 20);
@@ -131,8 +131,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         g.setColor(isIpFieldFocused ? Color.BLUE : Color.BLACK);
         g.drawString("IP: " + ipUserInput, ipFieldBounds.x + 5, ipFieldBounds.y + 20);
 
-        g.setColor(Color.GREEN);
-        g.fillRect(startButtonBounds.x, startButtonBounds.y, startButtonBounds.width, startButtonBounds.height);
+        g.drawImage(this.button, startButtonBounds.x, startButtonBounds.y, focusCycleRootAncestor);
         g.setColor(Color.BLACK);
         g.drawString("Start", startButtonBounds.x + (buttonWidth / 2) - 20, startButtonBounds.y + (buttonHeight / 2) + 5);
 
