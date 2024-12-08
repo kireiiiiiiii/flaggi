@@ -28,7 +28,7 @@ jpackage \
   --name "$APP_NAME" \
   --type dmg \
   --dest "$BUILD_DIR" \
-  --icon app/src/main/resources/icon-mac.icns \
+  --icon app/src/main/resources/icons/icon-mac.icns \
   --app-version 1.0
 
 echo "DMG created at $BUILD_DIR/$APP_NAME.dmg"

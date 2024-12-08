@@ -31,7 +31,7 @@ jpackage \
   --win-menu \
   --win-dir-chooser \
   --win-shortcut \
-  --icon app/src/main/resources/icon-win.ico \
+  --icon app/src/main/resources/icons/icon-win.ico \
   --app-version 1.0
 
 echo "EXE created at $BUILD_DIR/$APP_NAME.exe"
