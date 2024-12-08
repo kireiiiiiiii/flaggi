@@ -137,6 +137,31 @@ public class ImageUtil {
     }
 
     /**
+     * Scales the image to fit the desired dimensions. If the image has a bigger
+     * width difference, it will scale to fit, it has a bigger height difference, it
+     * will scale to height.
+     * 
+     * @param image            - target image.
+     * @param height           - desired height.
+     * @param width            - desired width.
+     * @param useSmoothScaling - {@code true} to enable smooth scaling;
+     * @return
+     */
+    public static Image scaleToFit(Image image, int width, int height, boolean useSmoothScaling) {
+        int originalWidth = image.getWidth(null);
+        int originalHeight = image.getHeight(null);
+
+        int differenceWidth = Math.abs(originalHeight - height);
+        int differenceHeight = Math.abs(originalWidth - width);
+
+        if (differenceWidth > differenceHeight) { // Scale by width
+            return scaleToWidth(image, width, useSmoothScaling);
+        } else { // Scale by height
+            return scaleToHeight(image, height, useSmoothScaling);
+        }
+    }
+
+    /**
      * Scales an {@code Image} object to a desired width, while leaving the original
      * height of the image.
      * 
