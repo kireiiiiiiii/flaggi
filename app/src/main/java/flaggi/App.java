@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.SwingUtilities;
 
@@ -89,6 +90,7 @@ public class App implements InteractableHandeler {
     private GameLoop gameLoop;
     private AdvancedVariable<AppOptions> appOptions;
     private ArrayList<KeyEvent> pressedKeys;
+    private ArrayList<Bullet> quedBullets;
     private Player localPlayer;
     private int[] pos, spawnPoint, windowSize;
     private boolean movementEnabled, paused;
@@ -143,6 +145,7 @@ public class App implements InteractableHandeler {
         this.paused = false;
         this.health = 69;
         this.pressedKeys = new ArrayList<KeyEvent>();
+        this.quedBullets = new ArrayList<Bullet>();
         printHeader();
 
         // ------ Initialize UI
@@ -166,6 +169,7 @@ public class App implements InteractableHandeler {
      * 
      */
     public void startGame() {
+
         // ------ Get username
         for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
             this.username = m.getName();
@@ -388,7 +392,13 @@ public class App implements InteractableHandeler {
      * @param e - {@code MouseEvent} of the mouse click.
      */
     public void shoot(MouseEvent e) {
-        this.gpanel.add(new Bullet(this.pos, getMouseclickLocationRelativeToMap(e), 500, 5000));
+        Bullet b = new Bullet(this.pos, getMouseclickLocationRelativeToMap(e), 500, 1000);
+        Runnable afterDecay = () -> {
+            this.gpanel.remove(b);
+        };
+        b.setAfterDecayRunnable(afterDecay);
+        this.quedBullets.add(b);
+        this.gpanel.add(b);
     }
 
     /**
@@ -404,11 +414,14 @@ public class App implements InteractableHandeler {
                 localAnimationFrame = player.getAnimationFrame();
             }
         }
+
         // Get the current players from the panel and their positions from the server
         ArrayList<Player> players = this.gpanel.getWidgetsByClass(Player.class);
-        ArrayList<ClientStruct> serverPositions = client.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.id, this.health, this.username, localAnimationFrame));
+        DataStruct struct = client.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.id, this.health, this.username, localAnimationFrame, getPlayerObjectDataString(true)));
+        List<ClientStruct> serverPositions = struct.list;
+        System.out.println(serverPositions.size());
 
-        // Update local player data
+        // Get the local player, and remove it from the rendering list
         ClientStruct localPlayerStruct = null;
         for (ClientStruct cs : serverPositions) { // Find the local player
             if (cs.getId() == this.id) {
@@ -423,10 +436,12 @@ public class App implements InteractableHandeler {
         if (localPlayerStruct != null) {
             // Health
             this.health = localPlayerStruct.getHealth();
+            System.out.println(this.health); // TODO
             this.localPlayer.setHealth(this.health);
             for (HUD hud : this.gpanel.getWidgetsByClass(HUD.class)) {
                 hud.setHealth((int) health);
             }
+
         }
 
         // Track existing players by ID for quick lookup
@@ -436,8 +451,8 @@ public class App implements InteractableHandeler {
         }
 
         // Culling distance calculation
-        int viewportWidth = windowSize[0];
-        int viewportHeight = windowSize[1];
+        int viewportWidth = windowSize[0] + 100; // Add 100 so the player wont dissapear at the edge of the screen
+        int viewportHeight = windowSize[1] + 100;
         int cullDistanceX = viewportWidth / 2;
         int cullDistanceY = viewportHeight / 2;
 
@@ -452,7 +467,7 @@ public class App implements InteractableHandeler {
             int distanceX = Math.abs(clientPos[0] - pos[0]);
             int distanceY = Math.abs(clientPos[1] - pos[1]);
             if (distanceX > cullDistanceX || distanceY > cullDistanceY) {
-                continue; // Skip rendering this player
+                continue;
             }
 
             if (existingPlayers.containsKey(clientId)) {
@@ -480,17 +495,6 @@ public class App implements InteractableHandeler {
     }
 
     /**
-     * Updates the local position of this player.
-     * 
-     * @param x - new X value.
-     * @param y - new Y value.
-     */
-    public void updateLocalPosition(int x, int y) {
-        pos[0] = x;
-        pos[1] = y;
-    }
-
-    /**
      * Initializes all new widgets and adds them to the gpanel.
      * 
      */
@@ -505,6 +509,58 @@ public class App implements InteractableHandeler {
 
         // Add all the widgets
         this.gpanel.add(widgets);
+    }
+
+    /**
+     * Updates the positions of the player objects.
+     * 
+     * @param playerObjectData - enemy created object data.
+     */
+    public void updatePlayerObjects(String playerObjectData, ClientStruct client) {
+
+        String[] splitData = playerObjectData.split("/");
+        String newObjectData = splitData[0];
+        String oldObjectData = splitData[1];
+
+        // ---- Add new objects
+        String[] newObjects = newObjectData.split(",");
+        for (String object : newObjects) {
+            String[] objectData = object.split(":");
+            if (objectData.length != 6) {
+                continue;
+            }
+
+            int bulletNum = Integer.parseInt(objectData[1]);
+            int[] initPos = Arrays.stream(objectData[2].split(",")).mapToInt(Integer::parseInt).toArray();
+            int[] targetPos = Arrays.stream(objectData[3].split(",")).mapToInt(Integer::parseInt).toArray();
+            int decayTime = Integer.parseInt(objectData[4]);
+            int initVelocity = Integer.parseInt(objectData[5]);
+
+            System.out.println("Bullet added");
+
+            Bullet b = new Bullet(initPos, targetPos, initVelocity, decayTime, bulletNum, client.getId());
+            this.gpanel.add(b);
+        }
+
+        // ---- Old object data to remove
+        Map<Bullet, String> bullets = new HashMap<>();
+        for (Bullet b : this.gpanel.getWidgetsByClass(Bullet.class)) {
+            bullets.put(b, b.getObjectId()[0] + "-" + b.getObjectId()[1]);
+        }
+        String[] oldObjects = oldObjectData.split(":");
+        for (String object : oldObjects) {
+            for (Bullet b : bullets.keySet()) {
+                if (object.equals(bullets.get(b))) {
+                    System.out.println("Bullet removed");
+                    bullets.remove(b);
+                }
+            }
+        }
+
+        for (Bullet b : bullets.keySet()) {
+            this.gpanel.remove(b);
+        }
+
     }
 
     /////////////////
@@ -597,8 +653,7 @@ public class App implements InteractableHandeler {
      * 
      */
     private void printHeader() {
-        System.out.println("\n" + //
-                " ______   __         ______     ______     ______     __    \n" + "/\\  ___\\ /\\ \\       /\\  __ \\   /\\  ___\\   /\\  ___\\   /\\ \\   \n" + "\\ \\  __\\ \\ \\ \\____  \\ \\  __ \\  \\ \\ \\__ \\  \\ \\ \\__ \\  \\ \\ \\  \n" + " \\ \\_\\    \\ \\_____\\  \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_____\\  \\ \\_\\ \n" + "  \\/_/     \\/_____/   \\/_/\\/_/   \\/_____/   \\/_____/   \\/_/ \n" + "                                                            \n" + "");
+        System.out.println("\n" + " ______   __         ______     ______     ______     __    \n" + "/\\  ___\\ /\\ \\       /\\  __ \\   /\\  ___\\   /\\  ___\\   /\\ \\   \n" + "\\ \\  __\\ \\ \\ \\____  \\ \\  __ \\  \\ \\ \\__ \\  \\ \\ \\__ \\  \\ \\ \\  \n" + " \\ \\_\\    \\ \\_____\\  \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_____\\  \\ \\_\\ \n" + "  \\/_/     \\/_____/   \\/_/\\/_/   \\/_____/   \\/_____/   \\/_/ \n" + "                                                            \n" + "");
     }
 
     /**
@@ -674,6 +729,45 @@ public class App implements InteractableHandeler {
      */
     private AppOptions getDefaultOptions() {
         return new AppOptions("", "");
+    }
+
+    /**
+     * Converts all player created objects into a {@code String} that can be send
+     * over the server.
+     * 
+     * @param markDataAsSend - if {@code true}, data from the qued list will be
+     *                       cleared.
+     * @return - {@code String} data.
+     */
+    private String getPlayerObjectDataString(boolean markDataAsSend) {
+        ArrayList<Bullet> bullets;
+
+        synchronized (this.quedBullets) {
+            if (markDataAsSend) {
+                if (this.quedBullets instanceof ArrayList<?>) {
+                    bullets = new ArrayList<>((ArrayList<Bullet>) this.quedBullets);
+                    this.quedBullets.clear();
+                } else {
+                    LOGGER.addLog("Error while casting the qued bullet list. ");
+                    this.quedBullets.clear();
+                    bullets = new ArrayList<Bullet>();
+                }
+            } else {
+                bullets = this.quedBullets;
+            }
+        }
+
+        StringBuilder data = new StringBuilder();
+        for (Bullet b : bullets) {
+            data.append(b.toString()).append(",");
+        }
+
+        // Remove trailing comma
+        if (data.length() > 0) {
+            data.setLength(data.length() - 1);
+        }
+
+        return data.toString();
     }
 
     /////////////////
@@ -762,4 +856,15 @@ public class App implements InteractableHandeler {
             targetFPS = value;
         }
     }
+
+    public static class DataStruct {
+        public List<ClientStruct> list;
+        public String objectData;
+
+        public DataStruct(List<ClientStruct> list, String objectData) {
+            this.list = list;
+            this.objectData = objectData;
+        }
+    }
+
 }

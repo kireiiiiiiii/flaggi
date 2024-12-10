@@ -38,9 +38,11 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 
 import flaggi.App;
+import flaggi.App.DataStruct;
 
 /**
  * Client class for communicating with the server.
@@ -124,12 +126,14 @@ public class Client {
      *                     of this player.
      * @return {@code ArrayList} of positions of other players.
      */
-    public ArrayList<ClientStruct> updatePlayerPositions(ClientStruct clientStruct) {
+    public DataStruct updatePlayerPositions(ClientStruct clientStruct) {
 
         ArrayList<ClientStruct> playerPositions = new ArrayList<>();
+        String objectData = "";
 
         try {
             String message = clientStruct.toString();
+            // System.out.println("SD: " + message); // TODO
             byte[] buffer = message.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, serverAddress, udpPort);
             udpSocket.send(packet);
@@ -140,13 +144,20 @@ public class Client {
             udpSocket.receive(receivePacket);
 
             String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
-            playerPositions = parsePositions(data);
+            // System.out.println(data); // TODO
+            // System.out.println(data.indexOf("|")); // TODO
+            String[] splitData = new String[] { data.substring(0, data.indexOf("|")), data.substring(data.indexOf("|")) };
+            // System.out.println(Arrays.toString(splitData)); // TODO
+            String playerData = splitData[0];
+            objectData = splitData[1];
+            // System.out.println("RD: " + playerData); // TODO
+            playerPositions = parsePositions(playerData);
 
         } catch (IOException e) {
             App.LOGGER.addLog("IOException caught while sending/receiving position data to/from the server", e);
         }
 
-        return playerPositions;
+        return new DataStruct(playerPositions, objectData);
     }
 
     /**
@@ -253,8 +264,7 @@ public class Client {
                 int health = Integer.parseInt(parts[3]);
                 String displayName = parts[4];
                 String animationFrame = parts[5];
-
-                positions.add(new ClientStruct(posX, posY, clientID, health, displayName, animationFrame));
+                positions.add(new ClientStruct(posX, posY, clientID, health, displayName, animationFrame, ""));
             } else {
                 App.LOGGER.addLog("Recieved server message doesn't have 6 parts");
             }
@@ -286,15 +296,16 @@ public class Client {
     public static class ClientStruct {
 
         private int x, y, id, health;
-        private String displayName, animationFrame;
+        private String displayName, animationFrame, playerObjectData;
 
-        public ClientStruct(int x, int y, int id, int health, String displayName, String animationName) {
+        public ClientStruct(int x, int y, int id, int health, String displayName, String animationName, String playerObjectData) {
             this.x = x;
             this.y = y;
             this.id = id;
             this.health = health;
             this.displayName = displayName;
             this.animationFrame = animationName;
+            this.playerObjectData = playerObjectData;
         }
 
         public int getX() {
@@ -321,9 +332,13 @@ public class Client {
             return this.animationFrame;
         }
 
+        public String getPlayerObjectData() {
+            return this.playerObjectData;
+        }
+
         @Override
         public String toString() {
-            return this.id + "," + this.x + "," + this.y + "," + this.health + "," + this.displayName + "," + this.animationFrame;
+            return this.id + "," + this.x + "," + this.y + "," + this.health + "," + this.displayName + "," + this.animationFrame + "," + this.playerObjectData;
         }
 
     }

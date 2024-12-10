@@ -28,6 +28,7 @@ import java.net.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Iterator;
@@ -48,7 +49,14 @@ public class Server {
 
     private static final int CLIENT_TIMEOUT_SECONDS = 10;
     private static final List<Client> clients = new ArrayList<>();
+
     private static int maxClientID = 0;
+
+    /////////////////
+    // Variables
+    ////////////////
+
+    private static List<Bullet> newPlayerObjects;
 
     /////////////////
     // Main
@@ -87,8 +95,8 @@ public class Server {
     }
 
     /**
-     * Starts the TCP listener that listens for new clients, assigns them their
-     * IDs, and gives them the UDP port to send data to.
+     * Starts the TCP listener that listens for new clients, assigns them their IDs,
+     * and gives them the UDP port to send data to.
      * 
      * @param serverSocket - TCP port
      */
@@ -97,8 +105,7 @@ public class Server {
             try (Socket clientSocket = serverSocket.accept()) {
                 clientSocket.setSoTimeout(500);
 
-                try (ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-                        ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream())) {
+                try (ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream())) {
 
                     String initialMessage = in.readUTF();
 
@@ -137,8 +144,8 @@ public class Server {
     }
 
     /**
-     * Starts the UDP listener for the clients to send their position data to.
-     * Now also responds to heartbeat messages from clients to confirm connectivity.
+     * Starts the UDP listener for the clients to send their position data to. Now
+     * also responds to heartbeat messages from clients to confirm connectivity.
      */
     private static void startUDPListener() {
         try (DatagramSocket udpSocket = new DatagramSocket(UDP_PORT)) {
@@ -146,61 +153,69 @@ public class Server {
             byte[] buffer = new byte[1024];
             udpSocket.setSoTimeout(CLIENT_TIMEOUT_SECONDS * 1000);
 
+            // ---- Variables
+            newPlayerObjects = new ArrayList<>();
+
             while (true) {
+                boolean timedOut = false;
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 try {
                     udpSocket.receive(packet);
                 } catch (SocketTimeoutException e) {
-                    checkForDisconnectedClients();
-                    refreshIDNumberIfNoUsers();
-                    continue;
+                    timedOut = true;
                 }
 
-                String message = new String(packet.getData(), 0, packet.getLength());
-                String[] parts = message.split(",");
-                if (parts[1].equals("disconnect")) {
-                    synchronized (clients) {
-                        for (Client client : clients) {
-                            if (client.getId() == Integer.parseInt(parts[0])) {
-                                log(CYAN, "Client '" + client.getDisplayName() + "' disconnected.");
-                                clients.remove(client);
-                                break;
+                if (!timedOut) {
+                    String message = new String(packet.getData(), 0, packet.getLength());
+                    String[] parts = message.split(",");
+                    if (parts[1].equals("disconnect")) {
+                        synchronized (clients) {
+                            for (Client client : clients) {
+                                if (client.getId() == Integer.parseInt(parts[0])) {
+                                    log(CYAN, "Client '" + client.getDisplayName() + "' disconnected.");
+                                    clients.remove(client);
+                                    break;
+                                }
                             }
                         }
+                        continue;
                     }
-                    continue;
-                }
-                if (parts.length >= 5) {
-                    int clientId = Integer.parseInt(parts[0]);
-                    int x = Integer.parseInt(parts[1]);
-                    int y = Integer.parseInt(parts[2]);
-                    int health = Integer.parseInt(parts[3]);
-                    // Username is on parts[4]
-                    String animationFrame = parts[5];
+                    if (parts.length >= 6) {
+                        int clientId = Integer.parseInt(parts[0]);
+                        int x = Integer.parseInt(parts[1]);
+                        int y = Integer.parseInt(parts[2]);
+                        int health = Integer.parseInt(parts[3]);
+                        // Username is on parts[4]
+                        String animationFrame = parts[5];
+                        String playerObjectData = (parts.length < 7) ? null : parts[6];
 
-                    Client client;
-                    synchronized (clients) {
-                        client = getClient(clientId);
-                    }
+                        Client client;
+                        synchronized (clients) {
+                            client = getClient(clientId);
+                        }
 
-                    if (client != null) {
-                        client.setPosition(x, y);
-                        client.setHealth(health);
-                        client.setAnimationFrame(animationFrame);
-                        client.updateLastReceivedTime();
+                        if (client != null) {
+                            client.setPosition(x, y);
+                            client.setHealth(health);
+                            client.setAnimationFrame(animationFrame);
+                            client.updateLastReceivedTime();
+                            if (playerObjectData != null) {
+                                handlePlayerObjectData(playerObjectData, client);
+                            }
 
-                        String playerData = getAllClientsData();
-                        byte[] responseBuffer = playerData.getBytes();
-                        DatagramPacket responsePacket = new DatagramPacket(
-                                responseBuffer, responseBuffer.length, client.getInetAddress(), packet.getPort());
+                            String sendMessage = getAllClientsData();
+                            System.out.println(sendMessage); // TODO DEBUG
+                            byte[] responseBuffer = sendMessage.getBytes();
+                            DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length, client.getInetAddress(), packet.getPort());
 
-                        udpSocket.send(responsePacket);
+                            udpSocket.send(responsePacket);
 
+                        } else {
+                            log(RED, "Client not found with ID: " + clientId);
+                        }
                     } else {
-                        log(RED, "Client not found with ID: " + clientId);
+                        log(RED, "Received message doesn't have at least 6 parts: " + Arrays.toString(parts));
                     }
-                } else {
-                    log(RED, "Received message doesn't have enough parts");
                 }
 
                 checkForDisconnectedClients();
@@ -210,12 +225,86 @@ public class Server {
             }
         } catch (IOException e) {
             log(RED, "Error in UDP listener: " + e.getMessage());
+            System.exit(0);
         }
     }
 
     /////////////////
     // Helper methods
     ////////////////
+
+    /**
+     * Gets the {@code String} of player object data to send to server.
+     * 
+     * @return - data.
+     */
+    private static String getAllPlayerObjectData() {
+        StringBuilder data = new StringBuilder();
+        synchronized (newPlayerObjects) {
+            for (Bullet bullet : newPlayerObjects) {
+                data.append(bullet.toString()).append("+");
+            }
+            newPlayerObjects.clear();
+
+            // Remove trailing comma
+            if (data.length() > 0) {
+                data.setLength(data.length() - 1);
+            }
+        }
+
+        data.append("/");
+
+        synchronized (clients) {
+            for (Client client : clients) {
+                List<Bullet> playerObject = client.getPlayerObjects();
+                for (Bullet object : playerObject) {
+                    data.append(client.id).append("-").append(object.getBulletId()).append(",");
+                }
+                // Remove trailing comma
+                if (data.length() > 0) {
+                    data.setLength(data.length() - 1);
+                }
+            }
+        }
+        // System.out.println(data.toString()); // TODO DELETE
+        return data.toString();
+    }
+
+    /**
+     * Adds all new bullets reported by the client.
+     * 
+     * @param dataString - recipe for the bullet.
+     * @param client     - owning client.
+     */
+    private static void handlePlayerObjectData(String dataString, Client client) {
+        Bullet b = dataToBullet(dataString, client);
+        synchronized (newPlayerObjects) {
+            newPlayerObjects.add(b);
+        }
+        client.addPlayerObject(b);
+    }
+
+    /**
+     * Coverts bullet creation data into a bullet object
+     * 
+     * @param data
+     * @return
+     */
+    private static Bullet dataToBullet(String data, Client client) {
+        String[] parsedData = data.split(":");
+        if (parsedData.length != 6) {
+            log(RED, "Invalid data format for creating a bullet object: " + Arrays.toString(parsedData));
+            return null;
+        }
+        int bulletNum = Integer.parseInt(parsedData[1]);
+        String[] initPosData = parsedData[2].split("&");
+        String[] targetPosData = parsedData[2].split("&");
+        int[] initPos = new int[] { Integer.parseInt(initPosData[0]), Integer.parseInt(initPosData[1]) };
+        int[] targetPos = new int[] { Integer.parseInt(targetPosData[0]), Integer.parseInt(targetPosData[1]) };
+        int decayTime = Integer.parseInt(parsedData[4]);
+        int initVelocity = Integer.parseInt(parsedData[5]);
+        return new Bullet(initPos, targetPos, initVelocity, decayTime, client.getId(), bulletNum);
+    }
 
     /**
      * Checks, if any clients reached the timeout limit => disconnected. If so,
@@ -275,14 +364,11 @@ public class Server {
         StringBuilder positions = new StringBuilder();
         synchronized (clients) {
             for (Client client : clients) {
-                positions.append(client.getId()).append(",")
-                        .append(client.getX()).append(",")
-                        .append(client.getY()).append(",")
-                        .append(client.getHealth()).append(",")
-                        .append(client.getDisplayName()).append(",")
-                        .append(client.getAnimationFrame()).append(";");
+                positions.append(client.getId()).append(",").append(client.getX()).append(",").append(client.getY()).append(",").append(client.getHealth()).append(",").append(client.getDisplayName()).append(",").append(client.getAnimationFrame()).append(";");
             }
         }
+        positions.append("|").append(getAllPlayerObjectData());
+        // System.out.println(positions.toString()); // TODO
         return positions.toString();
     }
 
@@ -350,8 +436,10 @@ public class Server {
         private String animationFrame;
         private int x, y, health;
         private long lastReceivedTime;
+        private List<Bullet> playerObjects;
 
         public Client(int id, String displayName, InetAddress inetAddress) {
+            this.playerObjects = new ArrayList<Bullet>();
             this.id = id;
             this.displayName = displayName;
             this.inetAddress = inetAddress;
@@ -406,6 +494,138 @@ public class Server {
         public void updateLastReceivedTime() {
             this.lastReceivedTime = System.currentTimeMillis();
         }
+
+        public List<Bullet> getPlayerObjects() {
+            return this.playerObjects;
+        }
+
+        public void addPlayerObject(Bullet bullet) {
+            this.playerObjects.add(bullet);
+        }
+
+        public void removePlayerObject(Bullet bullet) {
+            this.playerObjects.remove(bullet);
+        }
+
+    }
+
+    /**
+     * Bullet class, as an player created object.
+     * 
+     */
+    public static class Bullet implements Runnable {
+
+        // Init variables
+        private int bulletNum, decayTime;
+        private int[] initPos, targetPos;
+
+        // Other variables
+        private double[] position, direction;
+        private int velocity;
+        private boolean running;
+        private Thread decayUpdateThread;
+        private Runnable afterDecay;
+
+        /**
+         * Bullet constructor.
+         *
+         * @param initialPosition - Initial position of the bullet [x, y].
+         * @param targetPosition  - Target position the bullet heads to [x, y].
+         * @param velocity        - Velocity in points per second.
+         * @param decayTime       - Time (in ms) after which the bullet disappears.
+         */
+        public Bullet(int[] initialPosition, int[] targetPosition, int velocity, int decayTime, int playerId, int bulletNum) {
+            this.position = new double[] { initialPosition[0], initialPosition[1] };
+
+            this.afterDecay = () -> {
+                synchronized (clients) {
+                    clients.get(playerId).removePlayerObject(this);
+                }
+            };
+
+            this.bulletNum = bulletNum;
+            this.decayTime = decayTime;
+            this.initPos = initialPosition;
+            this.targetPos = targetPosition;
+
+            this.velocity = velocity;
+            this.decayTime = decayTime;
+            this.running = true;
+
+            // Calculate normalized direction vector
+            double dx = targetPosition[0] - initialPosition[0];
+            double dy = targetPosition[1] - initialPosition[1];
+            double magnitude = Math.sqrt(dx * dx + dy * dy);
+            this.direction = new double[] { dx / magnitude, dy / magnitude };
+
+            // Start the movement thread
+            this.decayUpdateThread = new Thread(this, "Bullet decay update thread");
+            this.decayUpdateThread.start();
+        }
+
+        /////////////////
+        // Helpers
+        ////////////////
+
+        /**
+         * Accesor for the bullet number.
+         * 
+         * @return
+         */
+        public int getBulletId() {
+            return bulletNum;
+        }
+
+        @Override
+        public String toString() {
+            return "bullet:" + bulletNum + ":" + initPos[0] + "&" + initPos[1] + ":" + targetPos[0] + "&" + targetPos[1] + ":" + decayTime + ":" + velocity;
+        }
+
+        /////////////////
+        // Movement Logic
+        ////////////////
+
+        /**
+         * Thread for updating the bullet's position and handling its lifecycle.
+         */
+        @Override
+        public void run() {
+            long startTime = System.currentTimeMillis();
+            long lastUpdate = System.currentTimeMillis();
+
+            while (running) {
+                long currentTime = System.currentTimeMillis();
+                long elapsedTime = currentTime - lastUpdate;
+
+                // Update position based on velocity and elapsed time
+                if (elapsedTime > 0) {
+                    double delta = (elapsedTime / 1000.0) * this.velocity; // Distance to move in this time slice
+                    this.position[0] += this.direction[0] * delta;
+                    this.position[1] += this.direction[1] * delta;
+                    lastUpdate = currentTime;
+                }
+
+                // Check for decay
+                if (currentTime - startTime >= this.decayTime) {
+                    this.afterDecay.run();
+                    this.running = false;
+                }
+
+                try {
+                    Thread.sleep(16);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        /**
+         * Stops the bullet thread.
+         */
+        public void stop() {
+            this.running = false;
+        }
+
     }
 
 }

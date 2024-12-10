@@ -41,9 +41,12 @@ import flaggi.constants.ZIndex;
  */
 public class Bullet implements Renderable, Runnable {
 
+    private static int BULLET_COUNT = 0;
+
     /////////////////
     // Variables
     ////////////////
+
     private boolean visible;
     private double[] position; // Current position [x, y] as doubles for precise movement
     private double[] direction; // Normalized direction vector [dx, dy]
@@ -51,12 +54,29 @@ public class Bullet implements Renderable, Runnable {
     private int velocity;
     private int decayTime; // Time in milliseconds
     private boolean running;
-
-    private Thread thread;
+    private Thread decayUpdateThread;
+    private Runnable afterDecay;
+    private String toStringMsg;
+    private int[] objectId;
 
     /////////////////
     // Constructor
     ////////////////
+
+    /**
+     * Constructor for enemy plater objects.
+     * 
+     * @param initialPosition - Initial position of the bullet [x, y].
+     * @param targetPosition  - Target position the bullet heads to [x, y].
+     * @param velocity        - Velocity in points per second.
+     * @param decayTime       - Time (in ms) after which the bullet disappears.
+     * @param bulletId        - given ID of the bullet.
+     * @param clientId        - client ID of the owner.
+     */
+    public Bullet(int[] initialPosition, int[] targetPosition, int velocity, int decayTime, int bulletId, int clientId) {
+        this(initialPosition, targetPosition, velocity, decayTime);
+        this.objectId = new int[] { bulletId, clientId };
+    }
 
     /**
      * Bullet constructor.
@@ -67,6 +87,8 @@ public class Bullet implements Renderable, Runnable {
      * @param decayTime       - Time (in ms) after which the bullet disappears.
      */
     public Bullet(int[] initialPosition, int[] targetPosition, int velocity, int decayTime) {
+        this.toStringMsg = "bullet:" + BULLET_COUNT + ":" + initialPosition[0] + "&" + initialPosition[1] + ":" + targetPosition[0] + "&" + targetPosition[1] + ":" + decayTime + ":" + velocity;
+        BULLET_COUNT++;
         this.position = new double[] { initialPosition[0], initialPosition[1] };
         this.velocity = velocity;
         this.decayTime = decayTime;
@@ -75,6 +97,7 @@ public class Bullet implements Renderable, Runnable {
         this.sprite.setAnimation("bullet");
         this.visible = true;
         this.running = true;
+        this.objectId = new int[] { -1, -1 };
 
         // Calculate normalized direction vector
         double dx = targetPosition[0] - initialPosition[0];
@@ -83,8 +106,8 @@ public class Bullet implements Renderable, Runnable {
         this.direction = new double[] { dx / magnitude, dy / magnitude };
 
         // Start the movement thread
-        this.thread = new Thread(this);
-        this.thread.start();
+        this.decayUpdateThread = new Thread(this, "Bullet update thread for bullet: " + this.toStringMsg.split(":")[1]);
+        this.decayUpdateThread.start();
     }
 
     /////////////////
@@ -125,6 +148,34 @@ public class Bullet implements Renderable, Runnable {
     }
 
     /////////////////
+    // Helpers
+    ////////////////
+
+    /**
+     * Sets the after decay runnable, ran after the bullet decays. Used for removing
+     * the bullet from the player bullet list in App.
+     * 
+     * @param afterDecay - {@code Runnable} to be ran after decay.
+     */
+    public void setAfterDecayRunnable(Runnable afterDecay) {
+        this.afterDecay = afterDecay;
+    }
+
+    @Override
+    public String toString() {
+        return this.toStringMsg;
+    }
+
+    /**
+     * Returns the player object ID in list [bulletId, clientId].
+     * 
+     * @return - player object ID.
+     */
+    public int[] getObjectId() {
+        return this.objectId;
+    }
+
+    /////////////////
     // Movement Logic
     ////////////////
 
@@ -150,6 +201,7 @@ public class Bullet implements Renderable, Runnable {
 
             // Check for decay
             if (currentTime - startTime >= this.decayTime) {
+                this.afterDecay.run();
                 this.running = false;
                 this.visible = false;
             }
