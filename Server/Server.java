@@ -204,7 +204,6 @@ public class Server {
                             }
 
                             String sendMessage = getAllClientsData(clientId);
-                            // System.out.println(sendMessage); // TODO DEBUG
                             byte[] responseBuffer = sendMessage.getBytes();
                             DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length, client.getInetAddress(), packet.getPort());
 
@@ -253,7 +252,6 @@ public class Server {
                 data.setLength(data.length() - 1);
             }
         }
-        System.out.println("BEFORE: " + data.toString()); // TODO DEBUG
         data.append("/");
 
         synchronized (clients) {
@@ -262,14 +260,8 @@ public class Server {
                 for (Bullet object : playerObject) {
                     data.append(client.id).append("-").append(object.getBulletId()).append(",");
                 }
-                // // Remove trailing comma
-                // if (data.length() > 0 && data.charAt(data.length() - 1) != '/') { // Dont
-                // remove if no data
-                // data.setLength(data.length() - 1);
-                // }
             }
         }
-        System.out.println("AFTER: " + data.toString()); // TODO DELETE
         return data.toString();
     }
 
@@ -300,7 +292,6 @@ public class Server {
             return null;
         }
         int bulletNum = Integer.parseInt(parsedData[1]);
-        System.out.println("Created bullet: " + bulletNum); // TODO DEBUG
         String[] initPosData = parsedData[2].split("&");
         String[] targetPosData = parsedData[3].split("&");
         int[] initPos = new int[] { Integer.parseInt(initPosData[0]), Integer.parseInt(initPosData[1]) };
@@ -372,7 +363,6 @@ public class Server {
             }
         }
         positions.append("|").append(getAllPlayerObjectData(id));
-        // System.out.println(positions.toString()); // TODO
         return positions.toString();
     }
 
@@ -556,10 +546,8 @@ public class Server {
 
             this.playerId = playerId;
             this.bulletNum = bulletNum;
-            this.decayTime = decayTime;
             this.initPos = initialPosition;
             this.targetPos = targetPosition;
-
             this.velocity = velocity;
             this.decayTime = decayTime;
             this.running = true;

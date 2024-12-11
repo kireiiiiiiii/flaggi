@@ -74,7 +74,7 @@ public class Bullet implements Renderable, Runnable {
      * @param clientId        - client ID of the owner.
      */
     public Bullet(int[] initialPosition, int[] targetPosition, int velocity, int decayTime, String bulletId) {
-        this(initialPosition, targetPosition, velocity, decayTime);
+        this(initialPosition, targetPosition, velocity, decayTime, -1);
         this.bulletId = bulletId;
         BULLET_COUNT--;
     }
@@ -87,9 +87,9 @@ public class Bullet implements Renderable, Runnable {
      * @param velocity        - Velocity in points per second.
      * @param decayTime       - Time (in ms) after which the bullet disappears.
      */
-    public Bullet(int[] initialPosition, int[] targetPosition, int velocity, int decayTime) {
+    public Bullet(int[] initialPosition, int[] targetPosition, int velocity, int decayTime, int clientId) {
         this.toStringMsg = "bullet:" + BULLET_COUNT + ":" + initialPosition[0] + "&" + initialPosition[1] + ":" + targetPosition[0] + "&" + targetPosition[1] + ":" + decayTime + ":" + velocity;
-        BULLET_COUNT++;
+        this.bulletId = clientId + "-" + BULLET_COUNT;
         this.position = new double[] { initialPosition[0], initialPosition[1] };
         this.velocity = velocity;
         this.decayTime = decayTime;
@@ -98,7 +98,6 @@ public class Bullet implements Renderable, Runnable {
         this.sprite.setAnimation("bullet");
         this.visible = true;
         this.running = true;
-        this.bulletId = "";
 
         // Calculate normalized direction vector
         double dx = targetPosition[0] - initialPosition[0];
@@ -109,6 +108,9 @@ public class Bullet implements Renderable, Runnable {
         // Start the movement thread
         this.decayUpdateThread = new Thread(this, "Bullet update thread for bullet: " + this.toStringMsg.split(":")[1]);
         this.decayUpdateThread.start();
+
+        // Update the bullet count
+        BULLET_COUNT++;
     }
 
     /////////////////

@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.SwingUtilities;
 
@@ -90,7 +89,7 @@ public class App implements InteractableHandeler {
     private GameLoop gameLoop;
     private AdvancedVariable<AppOptions> appOptions;
     private ArrayList<KeyEvent> pressedKeys;
-    private ArrayList<Bullet> quedBullets;
+    private ArrayList<Bullet> quedPlayerObjects;
     private Player localPlayer;
     private int[] pos, spawnPoint, windowSize;
     private boolean movementEnabled, paused;
@@ -132,6 +131,7 @@ public class App implements InteractableHandeler {
             } catch (IOException e1) {
             }
         }
+
         if (this.appOptions.get() == null) {
             this.appOptions.set(getDefaultOptions());
         }
@@ -145,7 +145,7 @@ public class App implements InteractableHandeler {
         this.paused = false;
         this.health = 69;
         this.pressedKeys = new ArrayList<KeyEvent>();
-        this.quedBullets = new ArrayList<Bullet>();
+        this.quedPlayerObjects = new ArrayList<Bullet>();
         printHeader();
 
         // ------ Initialize UI
@@ -392,13 +392,12 @@ public class App implements InteractableHandeler {
      * @param e - {@code MouseEvent} of the mouse click.
      */
     public void shoot(MouseEvent e) {
-        Bullet b = new Bullet(this.pos, getMouseclickLocationRelativeToMap(e), 500, 1000);
+        Bullet b = new Bullet(this.pos, getMouseclickLocationRelativeToMap(e), 500, 1000, this.id);
         Runnable afterDecay = () -> {
             this.gpanel.remove(b);
         };
         b.setAfterDecayRunnable(afterDecay);
-        this.quedBullets.add(b);
-        // this.gpanel.add(b);
+        this.quedPlayerObjects.add(b);
     }
 
     /**
@@ -444,7 +443,6 @@ public class App implements InteractableHandeler {
         }
 
         // --- PLAYER OBJECT HANDELING
-        // System.out.println(playerObjectData); // TODO
         updatePlayerObjects(playerObjectData);
 
         // Track existing players by ID for quick lookup
@@ -521,35 +519,28 @@ public class App implements InteractableHandeler {
      */
     public void updatePlayerObjects(String playerObjectData) {
 
-        System.out.println("ko: " + playerObjectData);
-
         String newObjectData;
         String oldObjectData;
 
         if (playerObjectData.startsWith("/") && playerObjectData.length() > 1) {
             newObjectData = null;
             oldObjectData = playerObjectData.substring(1);
-            // System.out.println("Sol 1");
         } else if (playerObjectData.length() <= 1) {
             newObjectData = null;
             oldObjectData = null;
-            // System.out.println("Sol 2");
         } else if (playerObjectData.endsWith("/")) {
             String[] splitData = playerObjectData.split("/");
             newObjectData = splitData.length > 0 ? splitData[0] : null;
             oldObjectData = null;
-            // System.out.println("Sol 3");
         } else {
             String[] splitData = playerObjectData.split("/");
             newObjectData = splitData.length > 0 ? splitData[0] : null;
             oldObjectData = splitData.length > 1 ? splitData[1] : null;
-            // System.out.println("Sol 4");
         }
 
         // ---- Add new objects
         if (newObjectData != null) { // If empty just dont do anything
             String[] newObjects = newObjectData.split(",");
-            System.out.println("NW: " + Arrays.toString(newObjects)); // TODO
             for (String object : newObjects) {
                 String[] objectData = object.split(":");
                 if (objectData.length != 6) {
@@ -560,13 +551,10 @@ public class App implements InteractableHandeler {
                 int[] initPos = Arrays.stream(objectData[2].split("&")).mapToInt(Integer::parseInt).toArray();
                 int[] targetPos = Arrays.stream(objectData[3].split("&")).mapToInt(Integer::parseInt).toArray();
                 int decayTime = Integer.parseInt(objectData[4]);
-                // System.out.println("OD: " + Arrays.toString(objectData)); // TODO
                 int initVelocity = Integer.parseInt(objectData[5]);
 
                 Bullet b = new Bullet(initPos, targetPos, initVelocity, decayTime, bulletId);
                 this.gpanel.add(b);
-                // System.out.println(objectData[2] + " " + objectData[3]); // TODO
-                System.out.println("New bullet added: " + initPos[0] + " " + initPos[1] + " " + targetPos[0] + " " + targetPos[1] + " " + initVelocity + " " + decayTime); // TODO
             }
         }
 
@@ -574,7 +562,6 @@ public class App implements InteractableHandeler {
 
         if (oldObjectData != null) { // If empty remove all
             String[] oldObjects = oldObjectData.split(",");
-            // System.out.println("OOD: " + oldObjectData); // TODO
             for (String object : oldObjects) {
                 synchronized (bullets) {
                     List<Bullet> bulletsToRemove = new ArrayList<>();
@@ -592,10 +579,7 @@ public class App implements InteractableHandeler {
         }
 
         for (Bullet b : bullets) {
-            if (!b.getObjectId().equals("")) {
-                System.out.println("Removed: " + b.getObjectId()); // TODO
-                this.gpanel.remove(b);
-            }
+            this.gpanel.remove(b);
         }
 
     }
@@ -779,18 +763,18 @@ public class App implements InteractableHandeler {
     private String getPlayerObjectDataString(boolean markDataAsSend) {
         ArrayList<Bullet> bullets;
 
-        synchronized (this.quedBullets) {
+        synchronized (this.quedPlayerObjects) {
             if (markDataAsSend) {
-                if (this.quedBullets instanceof ArrayList<?>) {
-                    bullets = new ArrayList<>((ArrayList<Bullet>) this.quedBullets);
-                    this.quedBullets.clear();
+                if (this.quedPlayerObjects instanceof ArrayList<?>) {
+                    bullets = new ArrayList<>((ArrayList<Bullet>) this.quedPlayerObjects);
+                    this.quedPlayerObjects.clear();
                 } else {
                     LOGGER.addLog("Error while casting the qued bullet list. ");
-                    this.quedBullets.clear();
+                    this.quedPlayerObjects.clear();
                     bullets = new ArrayList<Bullet>();
                 }
             } else {
-                bullets = this.quedBullets;
+                bullets = this.quedPlayerObjects;
             }
         }
 
