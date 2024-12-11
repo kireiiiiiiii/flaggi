@@ -56,7 +56,7 @@ public class Server {
     // Variables
     ////////////////
 
-    private static List<Bullet> newPlayerObjects;
+    private static List<Bullet> existingPlayerObjects;
 
     /////////////////
     // Main
@@ -154,7 +154,7 @@ public class Server {
             udpSocket.setSoTimeout(CLIENT_TIMEOUT_SECONDS * 1000);
 
             // ---- Variables
-            newPlayerObjects = new ArrayList<>();
+            existingPlayerObjects = new ArrayList<>();
 
             while (true) {
                 boolean timedOut = false;
@@ -203,8 +203,8 @@ public class Server {
                                 handlePlayerObjectData(playerObjectData, client);
                             }
 
-                            String sendMessage = getAllClientsData();
-                            System.out.println(sendMessage); // TODO DEBUG
+                            String sendMessage = getAllClientsData(clientId);
+                            // System.out.println(sendMessage); // TODO DEBUG
                             byte[] responseBuffer = sendMessage.getBytes();
                             DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length, client.getInetAddress(), packet.getPort());
 
@@ -238,20 +238,22 @@ public class Server {
      * 
      * @return - data.
      */
-    private static String getAllPlayerObjectData() {
+    private static String getAllPlayerObjectData(int id) {
         StringBuilder data = new StringBuilder();
-        synchronized (newPlayerObjects) {
-            for (Bullet bullet : newPlayerObjects) {
-                data.append(bullet.toString()).append("+");
+        synchronized (existingPlayerObjects) {
+            for (Bullet bullet : existingPlayerObjects) {
+                if (!bullet.wasSendTo(id)) {
+                    data.append(bullet.toString()).append("+");
+                }
+                bullet.addId(id);
             }
-            newPlayerObjects.clear();
 
-            // Remove trailing comma
-            if (data.length() > 0) {
+            // Remove trailing
+            if (data.length() > 0 && data.charAt(data.length() - 1) == '+') {
                 data.setLength(data.length() - 1);
             }
         }
-
+        System.out.println("BEFORE: " + data.toString()); // TODO DEBUG
         data.append("/");
 
         synchronized (clients) {
@@ -260,13 +262,14 @@ public class Server {
                 for (Bullet object : playerObject) {
                     data.append(client.id).append("-").append(object.getBulletId()).append(",");
                 }
-                // Remove trailing comma
-                if (data.length() > 0) {
-                    data.setLength(data.length() - 1);
-                }
+                // // Remove trailing comma
+                // if (data.length() > 0 && data.charAt(data.length() - 1) != '/') { // Dont
+                // remove if no data
+                // data.setLength(data.length() - 1);
+                // }
             }
         }
-        // System.out.println(data.toString()); // TODO DELETE
+        System.out.println("AFTER: " + data.toString()); // TODO DELETE
         return data.toString();
     }
 
@@ -277,9 +280,9 @@ public class Server {
      * @param client     - owning client.
      */
     private static void handlePlayerObjectData(String dataString, Client client) {
-        Bullet b = dataToBullet(dataString, client);
-        synchronized (newPlayerObjects) {
-            newPlayerObjects.add(b);
+        Bullet b = dataToBullet(dataString, client.getId());
+        synchronized (existingPlayerObjects) {
+            existingPlayerObjects.add(b);
         }
         client.addPlayerObject(b);
     }
@@ -290,20 +293,21 @@ public class Server {
      * @param data
      * @return
      */
-    private static Bullet dataToBullet(String data, Client client) {
+    private static Bullet dataToBullet(String data, int clientId) {
         String[] parsedData = data.split(":");
         if (parsedData.length != 6) {
             log(RED, "Invalid data format for creating a bullet object: " + Arrays.toString(parsedData));
             return null;
         }
         int bulletNum = Integer.parseInt(parsedData[1]);
+        System.out.println("Created bullet: " + bulletNum); // TODO DEBUG
         String[] initPosData = parsedData[2].split("&");
-        String[] targetPosData = parsedData[2].split("&");
+        String[] targetPosData = parsedData[3].split("&");
         int[] initPos = new int[] { Integer.parseInt(initPosData[0]), Integer.parseInt(initPosData[1]) };
         int[] targetPos = new int[] { Integer.parseInt(targetPosData[0]), Integer.parseInt(targetPosData[1]) };
         int decayTime = Integer.parseInt(parsedData[4]);
         int initVelocity = Integer.parseInt(parsedData[5]);
-        return new Bullet(initPos, targetPos, initVelocity, decayTime, client.getId(), bulletNum);
+        return new Bullet(initPos, targetPos, initVelocity, decayTime, clientId, bulletNum);
     }
 
     /**
@@ -360,14 +364,14 @@ public class Server {
      * 
      * @return - a {@code String} of all client positions.
      */
-    private static String getAllClientsData() {
+    private static String getAllClientsData(int id) {
         StringBuilder positions = new StringBuilder();
         synchronized (clients) {
             for (Client client : clients) {
                 positions.append(client.getId()).append(",").append(client.getX()).append(",").append(client.getY()).append(",").append(client.getHealth()).append(",").append(client.getDisplayName()).append(",").append(client.getAnimationFrame()).append(";");
             }
         }
-        positions.append("|").append(getAllPlayerObjectData());
+        positions.append("|").append(getAllPlayerObjectData(id));
         // System.out.println(positions.toString()); // TODO
         return positions.toString();
     }
@@ -516,8 +520,9 @@ public class Server {
     public static class Bullet implements Runnable {
 
         // Init variables
-        private int bulletNum, decayTime;
+        private int bulletNum, playerId, decayTime;
         private int[] initPos, targetPos;
+        private List<Integer> sendCliens;
 
         // Other variables
         private double[] position, direction;
@@ -539,10 +544,17 @@ public class Server {
 
             this.afterDecay = () -> {
                 synchronized (clients) {
-                    clients.get(playerId).removePlayerObject(this);
+                    for (Client c : clients) {
+                        if (c.getId() == this.playerId) {
+                            c.removePlayerObject(this);
+                            return;
+                        }
+                    }
                 }
+                existingPlayerObjects.remove(this);
             };
 
+            this.playerId = playerId;
             this.bulletNum = bulletNum;
             this.decayTime = decayTime;
             this.initPos = initialPosition;
@@ -551,6 +563,8 @@ public class Server {
             this.velocity = velocity;
             this.decayTime = decayTime;
             this.running = true;
+
+            this.sendCliens = new ArrayList<Integer>();
 
             // Calculate normalized direction vector
             double dx = targetPosition[0] - initialPosition[0];
@@ -576,9 +590,17 @@ public class Server {
             return bulletNum;
         }
 
+        public void addId(int id) {
+            this.sendCliens.add(id);
+        }
+
+        public boolean wasSendTo(int id) {
+            return this.sendCliens.contains(id);
+        }
+
         @Override
         public String toString() {
-            return "bullet:" + bulletNum + ":" + initPos[0] + "&" + initPos[1] + ":" + targetPos[0] + "&" + targetPos[1] + ":" + decayTime + ":" + velocity;
+            return "bullet:" + playerId + "-" + bulletNum + ":" + initPos[0] + "&" + initPos[1] + ":" + targetPos[0] + "&" + targetPos[1] + ":" + decayTime + ":" + velocity;
         }
 
         /////////////////

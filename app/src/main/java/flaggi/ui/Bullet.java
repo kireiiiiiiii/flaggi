@@ -57,7 +57,7 @@ public class Bullet implements Renderable, Runnable {
     private Thread decayUpdateThread;
     private Runnable afterDecay;
     private String toStringMsg;
-    private int[] objectId;
+    private String bulletId;
 
     /////////////////
     // Constructor
@@ -73,9 +73,10 @@ public class Bullet implements Renderable, Runnable {
      * @param bulletId        - given ID of the bullet.
      * @param clientId        - client ID of the owner.
      */
-    public Bullet(int[] initialPosition, int[] targetPosition, int velocity, int decayTime, int bulletId, int clientId) {
+    public Bullet(int[] initialPosition, int[] targetPosition, int velocity, int decayTime, String bulletId) {
         this(initialPosition, targetPosition, velocity, decayTime);
-        this.objectId = new int[] { bulletId, clientId };
+        this.bulletId = bulletId;
+        BULLET_COUNT--;
     }
 
     /**
@@ -97,7 +98,7 @@ public class Bullet implements Renderable, Runnable {
         this.sprite.setAnimation("bullet");
         this.visible = true;
         this.running = true;
-        this.objectId = new int[] { -1, -1 };
+        this.bulletId = "";
 
         // Calculate normalized direction vector
         double dx = targetPosition[0] - initialPosition[0];
@@ -171,8 +172,8 @@ public class Bullet implements Renderable, Runnable {
      * 
      * @return - player object ID.
      */
-    public int[] getObjectId() {
-        return this.objectId;
+    public String getObjectId() {
+        return this.bulletId;
     }
 
     /////////////////
@@ -201,7 +202,9 @@ public class Bullet implements Renderable, Runnable {
 
             // Check for decay
             if (currentTime - startTime >= this.decayTime) {
-                this.afterDecay.run();
+                if (this.afterDecay != null) {
+                    this.afterDecay.run();
+                }
                 this.running = false;
                 this.visible = false;
             }

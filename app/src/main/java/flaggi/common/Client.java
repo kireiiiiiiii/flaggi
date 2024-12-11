@@ -38,7 +38,6 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 
 import flaggi.App;
@@ -146,7 +145,7 @@ public class Client {
             String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
             // System.out.println(data); // TODO
             // System.out.println(data.indexOf("|")); // TODO
-            String[] splitData = new String[] { data.substring(0, data.indexOf("|")), data.substring(data.indexOf("|")) };
+            String[] splitData = new String[] { data.substring(0, data.indexOf("|")), data.substring(data.indexOf("|") + 1) };
             // System.out.println(Arrays.toString(splitData)); // TODO
             String playerData = splitData[0];
             objectData = splitData[1];

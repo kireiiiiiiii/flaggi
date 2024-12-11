@@ -398,7 +398,7 @@ public class App implements InteractableHandeler {
         };
         b.setAfterDecayRunnable(afterDecay);
         this.quedBullets.add(b);
-        this.gpanel.add(b);
+        // this.gpanel.add(b);
     }
 
     /**
@@ -419,7 +419,7 @@ public class App implements InteractableHandeler {
         ArrayList<Player> players = this.gpanel.getWidgetsByClass(Player.class);
         DataStruct struct = client.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.id, this.health, this.username, localAnimationFrame, getPlayerObjectDataString(true)));
         List<ClientStruct> serverPositions = struct.list;
-        System.out.println(serverPositions.size());
+        String playerObjectData = struct.objectData;
 
         // Get the local player, and remove it from the rendering list
         ClientStruct localPlayerStruct = null;
@@ -436,13 +436,16 @@ public class App implements InteractableHandeler {
         if (localPlayerStruct != null) {
             // Health
             this.health = localPlayerStruct.getHealth();
-            System.out.println(this.health); // TODO
             this.localPlayer.setHealth(this.health);
             for (HUD hud : this.gpanel.getWidgetsByClass(HUD.class)) {
                 hud.setHealth((int) health);
             }
 
         }
+
+        // --- PLAYER OBJECT HANDELING
+        // System.out.println(playerObjectData); // TODO
+        updatePlayerObjects(playerObjectData);
 
         // Track existing players by ID for quick lookup
         HashMap<Integer, Player> existingPlayers = new HashMap<>();
@@ -516,49 +519,83 @@ public class App implements InteractableHandeler {
      * 
      * @param playerObjectData - enemy created object data.
      */
-    public void updatePlayerObjects(String playerObjectData, ClientStruct client) {
+    public void updatePlayerObjects(String playerObjectData) {
 
-        String[] splitData = playerObjectData.split("/");
-        String newObjectData = splitData[0];
-        String oldObjectData = splitData[1];
+        System.out.println("ko: " + playerObjectData);
+
+        String newObjectData;
+        String oldObjectData;
+
+        if (playerObjectData.startsWith("/") && playerObjectData.length() > 1) {
+            newObjectData = null;
+            oldObjectData = playerObjectData.substring(1);
+            // System.out.println("Sol 1");
+        } else if (playerObjectData.length() <= 1) {
+            newObjectData = null;
+            oldObjectData = null;
+            // System.out.println("Sol 2");
+        } else if (playerObjectData.endsWith("/")) {
+            String[] splitData = playerObjectData.split("/");
+            newObjectData = splitData.length > 0 ? splitData[0] : null;
+            oldObjectData = null;
+            // System.out.println("Sol 3");
+        } else {
+            String[] splitData = playerObjectData.split("/");
+            newObjectData = splitData.length > 0 ? splitData[0] : null;
+            oldObjectData = splitData.length > 1 ? splitData[1] : null;
+            // System.out.println("Sol 4");
+        }
 
         // ---- Add new objects
-        String[] newObjects = newObjectData.split(",");
-        for (String object : newObjects) {
-            String[] objectData = object.split(":");
-            if (objectData.length != 6) {
-                continue;
-            }
-
-            int bulletNum = Integer.parseInt(objectData[1]);
-            int[] initPos = Arrays.stream(objectData[2].split(",")).mapToInt(Integer::parseInt).toArray();
-            int[] targetPos = Arrays.stream(objectData[3].split(",")).mapToInt(Integer::parseInt).toArray();
-            int decayTime = Integer.parseInt(objectData[4]);
-            int initVelocity = Integer.parseInt(objectData[5]);
-
-            System.out.println("Bullet added");
-
-            Bullet b = new Bullet(initPos, targetPos, initVelocity, decayTime, bulletNum, client.getId());
-            this.gpanel.add(b);
-        }
-
-        // ---- Old object data to remove
-        Map<Bullet, String> bullets = new HashMap<>();
-        for (Bullet b : this.gpanel.getWidgetsByClass(Bullet.class)) {
-            bullets.put(b, b.getObjectId()[0] + "-" + b.getObjectId()[1]);
-        }
-        String[] oldObjects = oldObjectData.split(":");
-        for (String object : oldObjects) {
-            for (Bullet b : bullets.keySet()) {
-                if (object.equals(bullets.get(b))) {
-                    System.out.println("Bullet removed");
-                    bullets.remove(b);
+        if (newObjectData != null) { // If empty just dont do anything
+            String[] newObjects = newObjectData.split(",");
+            System.out.println("NW: " + Arrays.toString(newObjects)); // TODO
+            for (String object : newObjects) {
+                String[] objectData = object.split(":");
+                if (objectData.length != 6) {
+                    continue;
                 }
+
+                String bulletId = objectData[1];
+                int[] initPos = Arrays.stream(objectData[2].split("&")).mapToInt(Integer::parseInt).toArray();
+                int[] targetPos = Arrays.stream(objectData[3].split("&")).mapToInt(Integer::parseInt).toArray();
+                int decayTime = Integer.parseInt(objectData[4]);
+                // System.out.println("OD: " + Arrays.toString(objectData)); // TODO
+                int initVelocity = Integer.parseInt(objectData[5]);
+
+                Bullet b = new Bullet(initPos, targetPos, initVelocity, decayTime, bulletId);
+                this.gpanel.add(b);
+                // System.out.println(objectData[2] + " " + objectData[3]); // TODO
+                System.out.println("New bullet added: " + initPos[0] + " " + initPos[1] + " " + targetPos[0] + " " + targetPos[1] + " " + initVelocity + " " + decayTime); // TODO
             }
         }
 
-        for (Bullet b : bullets.keySet()) {
-            this.gpanel.remove(b);
+        List<Bullet> bullets = this.gpanel.getWidgetsByClass(Bullet.class);
+
+        if (oldObjectData != null) { // If empty remove all
+            String[] oldObjects = oldObjectData.split(",");
+            // System.out.println("OOD: " + oldObjectData); // TODO
+            for (String object : oldObjects) {
+                synchronized (bullets) {
+                    List<Bullet> bulletsToRemove = new ArrayList<>();
+                    for (Bullet b : bullets) {
+                        if (object.equals(b.getObjectId())) {
+                            bulletsToRemove.add(b); // Collect bullets to remove
+                        }
+                    }
+                    for (Bullet b : bulletsToRemove) {
+                        bullets.remove(b); // Remove them after iteration
+                    }
+                }
+
+            }
+        }
+
+        for (Bullet b : bullets) {
+            if (!b.getObjectId().equals("")) {
+                System.out.println("Removed: " + b.getObjectId()); // TODO
+                this.gpanel.remove(b);
+            }
         }
 
     }
