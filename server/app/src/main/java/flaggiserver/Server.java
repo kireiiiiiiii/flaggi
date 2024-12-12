@@ -577,10 +577,12 @@ public class Server {
 
             this.afterDecay = () -> {
                 synchronized (clients) {
-                    for (Client c : clients) {
+                    Iterator<Client> iterator = clients.iterator();
+                    while (iterator.hasNext()) {
+                        Client c = iterator.next();
                         if (c.getId() == this.playerId) {
                             c.removePlayerObject(this);
-                            return;
+                            break;
                         }
                     }
                 }
