@@ -1,15 +1,25 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"path": ".",
+			"name": "Flaggi",
+			"settings": {
+                "files.exclude": {
+                    "client": true,
+					"server": true,
+                }
+            }
 		},
 		{
-			"path": "client"
+			"path": "client",
+			"name": "Client",
 		},
 		{
-			"path": "server"
+			"path": "server",
+			"name": "Server",
 		}
 	],
+
 	"settings": {
 		"java.debug.settings.onBuildFailureProceed": true,
 		"java.format.settings.url": ".vscode/java-formatter.xml",
