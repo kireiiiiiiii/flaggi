@@ -26,12 +26,16 @@
 
 package flaggi.ui;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import flaggi.common.GPanel.Renderable;
+import flaggi.App;
 import flaggi.common.Sprite;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
@@ -120,6 +124,12 @@ public class Bullet implements Renderable, Runnable {
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
         this.sprite.render(g, (int) this.position[0] + origin[0], (int) this.position[1] + origin[1], focusCycleRootAncestor);
+        if (App.SHOW_HITBOXES) {
+            g.setColor(Color.RED);
+            g.setStroke(new BasicStroke(1));
+            Rectangle r = new Rectangle((int) (position[0] + origin[0]), (int) (position[1] + origin[1]), 5, 5);
+            g.draw(r);
+        }
     }
 
     @Override

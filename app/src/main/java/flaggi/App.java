@@ -78,6 +78,7 @@ public class App implements InteractableHandeler {
     public static final Logger LOGGER = Logger.getLogger(getApplicationDataFolder() + File.separator + "logs" + File.separator + "app.log");
     public static final int TCP_PORT = 54321;
     public static final int FPS = 60;
+    public static final boolean SHOW_HITBOXES = true;
 
     /////////////////
     // Variables

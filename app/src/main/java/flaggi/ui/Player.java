@@ -26,11 +26,13 @@
 
 package flaggi.ui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 
 import flaggi.common.GPanel.Renderable;
+import flaggi.App;
 import flaggi.common.Sprite;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
@@ -159,12 +162,11 @@ public class Player implements Renderable {
     public void render(Graphics2D g, int[] size, int[] offset, Container focusCycleRootAncestor) {
 
         // Render the player sprite
-        if (this.animationFrame == null) {
+        if (!isEnemy()) {
             this.sprite.render(g, this.pos[0], this.pos[1], focusCycleRootAncestor, this.inverted);
             offset = new int[] { 0, 0 };
 
         } else {
-            // Enemy sprites
             String[] parsedFrameData = parseAnimationFrame(this.animationFrame);
             String animationName = parsedFrameData[0];
             int animationFrame = Integer.parseInt(parsedFrameData[1]);
@@ -202,6 +204,20 @@ public class Player implements Renderable {
         // Border for the health bar
         g.setColor(Color.BLACK);
         g.drawRect(x, y, barWidth, barHeight);
+
+        // ---- Hitboxes if turned on
+        if (App.SHOW_HITBOXES) {
+            g.setStroke(new BasicStroke(1));
+            g.setColor(Color.RED);
+            Rectangle r;
+            if (!isEnemy()) {
+                r = new Rectangle(this.pos[0] + 7, this.pos[1] + 7, 53, 93);
+            } else {
+                r = new Rectangle(this.pos[0] + 7 + offset[0], this.pos[1] + 7 + offset[1], 53, 93);
+            }
+            g.draw(r);
+        }
+
     }
 
     @Override
