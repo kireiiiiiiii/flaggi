@@ -53,7 +53,7 @@ tasks.named<Test>("test") {
 }
 
 tasks.processResources {
-    from("LICENSES") {
+    from("../LICENSES") {
         into("licenses")
     }
 }
