@@ -748,17 +748,35 @@ public class Server {
                     while (bulletIterator.hasNext()) {
                         Bullet b = bulletIterator.next();
                         Rectangle bulletHitbox = new Rectangle((int) b.position[0], (int) b.position[1], 5, 5);
+
                         synchronized (clients) {
                             for (Client c : clients) {
                                 Rectangle playerHitbox = new Rectangle(c.getX() + 7, c.getY() + 7, 53, 93);
+
                                 if (bulletHitbox.intersects(playerHitbox)) {
                                     if (b.getOwningPlaterId() != c.id) {
-                                        bulletIterator.remove();
-                                        if (c.getHealth() - 10 < 1) {
-                                            c.setHealth(0);
-                                            deadPlayers.add(c.id);
+
+                                        // Remove the bullet from the player who owns it
+                                        for (Client c1 : clients) {
+                                            if (c1.getId() == b.playerId) {
+                                                c1.removePlayerObject(b);
+                                            }
                                         }
-                                        c.setHealth(c.getHealth() - 10);
+
+                                        bulletIterator.remove();
+
+                                        // Update client health
+                                        int newHealth = c.getHealth() - 10;
+                                        c.setHealth(Math.max(newHealth, 0));
+
+                                        // Mark the client as dead if health reaches 0
+                                        if (newHealth < 1) {
+                                            synchronized (deadPlayers) {
+                                                deadPlayers.add(c.id);
+                                            }
+                                        }
+
+                                        // Stop checking other clients for this bullet
                                         break;
                                     }
                                 }
