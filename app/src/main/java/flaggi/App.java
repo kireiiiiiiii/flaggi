@@ -145,7 +145,6 @@ public class App implements InteractableHandeler {
         this.spawnPoint = new int[] { this.windowSize[0] / 2, this.windowSize[1] / 2 };
         this.movementEnabled = false;
         this.paused = false;
-        this.health = -1;
         this.pressedKeys = new ArrayList<KeyEvent>();
         this.quedPlayerObjects = new ArrayList<Bullet>();
         printHeader();
@@ -171,6 +170,9 @@ public class App implements InteractableHandeler {
      * 
      */
     public void startGame() {
+
+        // ---- Set variables
+        this.health = -1;
 
         // ------ Get username
         for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
