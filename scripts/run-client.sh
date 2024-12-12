@@ -6,11 +6,12 @@ set -e
 # Determine project root directory based on script location
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
-JAR_FILE="$PROJECT_ROOT/app/build/libs/Flaggi.jar"
+CLIENT_DIR="$PROJECT_ROOT/client"
+JAR_FILE="$CLIENT_DIR/app/build/libs/Flaggi.jar"
 
 # Step 1: Build the JAR
 echo "Building the client JAR..."
-cd "$PROJECT_ROOT"
+cd "$CLIENT_DIR"
 ./gradlew shadowjar
 
 # Step 2: Run the JAR

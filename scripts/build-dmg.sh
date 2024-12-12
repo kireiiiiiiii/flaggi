@@ -3,12 +3,12 @@
 # Exit on errors
 set -e
 
-# Navigate to the root directory of the project
-cd "$(dirname "$0")/.."
+# Navigate to the client directory
+cd "$(dirname "$0")/../client"
 
 # Define paths
 APP_NAME="Flaggi"
-JAR_PATH="app/build/libs/Flaggi.jar"
+INPUT_PATH="app/build/libs"
 BUILD_DIR="app/build/mac"
 SHADOWJAR_TASK="shadowJar"
 
@@ -23,8 +23,8 @@ mkdir -p "$BUILD_DIR"
 # Step 3: Use jpackage to create the DMG
 echo "Creating DMG..."
 jpackage \
-  --input app/build/libs \
-  --main-jar Flaggi.jar \
+  --input "$INPUT_PATH" \
+  --main-jar "$APP_NAME.jar" \
   --name "$APP_NAME" \
   --type dmg \
   --dest "$BUILD_DIR" \
