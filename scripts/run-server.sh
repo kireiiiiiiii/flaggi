@@ -17,10 +17,10 @@ echo "Setting up build directories..."
 mkdir -p "$CLASSES_DIR"
 mkdir -p "$(dirname "$JAR_FILE")"
 
-# Step 2: Compile the server code
+# Step 2: Compile all server Java files
 echo "Compiling the server application..."
 cd "$SERVER_DIR"
-javac -d "$CLASSES_DIR" Server.java
+find . -name "*.java" -print0 | xargs -0 javac -d "$CLASSES_DIR"
 
 # Step 3: Create the JAR
 if [ -f "$MANIFEST_FILE" ]; then
