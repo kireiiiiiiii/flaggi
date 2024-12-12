@@ -280,4 +280,28 @@ public class ImageUtil {
         return bufferedImage;
     }
 
+    /////////////////
+    // Image cropping
+    ////////////////
+
+    /**
+     * Cropps the image.
+     * 
+     * @param image
+     * @param startX
+     * @param startY
+     * @param endX
+     * @param endY
+     * @return
+     */
+    public static BufferedImage cropImage(Image image, int startX, int startY, int width, int height) {
+        BufferedImage buffImage = (BufferedImage) image;
+        BufferedImage img = buffImage.getSubimage(startX, startY, width, height);
+        BufferedImage copyOfImage = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics g = copyOfImage.createGraphics();
+        g.drawImage(img, 0, 0, null);
+        g.dispose();
+        return copyOfImage;
+    }
+
 }
