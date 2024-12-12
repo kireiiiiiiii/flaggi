@@ -285,14 +285,15 @@ public class ImageUtil {
     ////////////////
 
     /**
-     * Cropps the image.
+     * Crops the image to desired dimension. The entered following param dimensions
+     * are relative to 0,0 being the upper left corner of the image.
      * 
-     * @param image
-     * @param startX
-     * @param startY
-     * @param endX
-     * @param endY
-     * @return
+     * @param image  - target image.
+     * @param startX - starting x coordinate of the crop.
+     * @param startY - starting y coordinate of the crop.
+     * @param endX   - ending x coordinate of the crop.
+     * @param endY   - ending y coordinate of the crop.
+     * @return a new {@code Image} object reference of the cropped image.
      */
     public static BufferedImage cropImage(Image image, int startX, int startY, int width, int height) {
         BufferedImage buffImage = (BufferedImage) image;
