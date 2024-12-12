@@ -1,6 +1,7 @@
 /*
  * Author: Matěj Šťastný
  * Date created: 11/4/2024
+ * Github link: https://github.com/kireiiiiiiii/Flaggi
  *
  *
  *
@@ -25,8 +26,18 @@
 
 package flaggiserver;
 
-import java.io.*;
-import java.net.*;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -34,7 +45,8 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Iterator;
-import java.awt.Rectangle;
+
+import flaggiserver.common.Rectangle;
 
 /**
  * Server class for the LAN Game application.
