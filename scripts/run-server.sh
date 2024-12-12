@@ -6,35 +6,19 @@ set -e
 # Determine project root directory based on script location
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
-SERVER_DIR="$PROJECT_ROOT/server"
-BUILD_DIR="$SERVER_DIR/build"
-CLASSES_DIR="$BUILD_DIR/classes"
-JAR_FILE="$BUILD_DIR/libs/Server.jar"
-MANIFEST_FILE="$SERVER_DIR/MANIFEST.MF"
+CLIENT_DIR="$PROJECT_ROOT/server"
+JAR_FILE="$CLIENT_DIR/app/build/libs/Flaggi-server.jar"
 
-# Step 1: Prepare build directories
-echo "Setting up build directories..."
-mkdir -p "$CLASSES_DIR"
-mkdir -p "$(dirname "$JAR_FILE")"
+# Step 1: Build the JAR
+echo "Building the client JAR..."
+cd "$CLIENT_DIR"
+./gradlew shadowjar
 
-# Step 2: Compile all server Java files
-echo "Compiling the server application..."
-cd "$SERVER_DIR"
-find . -name "*.java" -print0 | xargs -0 javac -d "$CLASSES_DIR"
-
-# Step 3: Create the JAR
-if [ -f "$MANIFEST_FILE" ]; then
-    echo "Packaging the server JAR..."
-    jar cfm "$JAR_FILE" "$MANIFEST_FILE" -C "$CLASSES_DIR" .
-else
-    echo "Error: Manifest file not found at $MANIFEST_FILE"
-    exit 1
-fi
-
-# Step 4: Run the server JAR
+# Step 2: Run the JAR
 if [ -f "$JAR_FILE" ]; then
-    echo "Running the server application..."
-    java -jar "$JAR_FILE"
+    echo "Running the client application..."
+    cd "$(dirname "$JAR_FILE")"
+    java -jar "$(basename "$JAR_FILE")"
 else
     echo "Error: JAR file not found at $JAR_FILE"
     exit 1

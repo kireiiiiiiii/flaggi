@@ -2,7 +2,7 @@
 // VARIABLES ///
 ////////////////
 
-val mainClassName = "flaggi-server.Server"
+val mainClassName = "flaggiserver.Server"
 val projectName = "Flaggi-server"
 
 ///////////////////

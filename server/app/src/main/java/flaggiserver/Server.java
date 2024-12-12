@@ -23,6 +23,8 @@
  *
  */
 
+package flaggiserver;
+
 import java.io.*;
 import java.net.*;
 import java.time.LocalDateTime;
