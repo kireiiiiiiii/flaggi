@@ -26,12 +26,9 @@
 
 package flaggi.ui;
 
-import java.awt.Color;
 import java.awt.Container;
-import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Shape;
 import java.util.ArrayList;
 
 import flaggi.common.GPanel.Renderable;
@@ -59,12 +56,15 @@ public class HUD implements Renderable {
     ////////////////
 
     /**
-     * Default constructor for the HUD.
+     * Default constructor for the player HUD widget.
      * 
      */
     public HUD() {
+        // ---- Default variable values
         this.visible = false;
         this.health = 0;
+
+        // ---- Textures
         this.healthTexture = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/spray-hp.png"), 100, false);
         this.healthFillTexture = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/spray-hp-fill.png"), 100, false);
     }
@@ -127,7 +127,7 @@ public class HUD implements Renderable {
     /**
      * Sets the health data for the widget to render.
      * 
-     * @param health - new data.
+     * @param health - new health value.
      */
     public void setHealth(float health) {
         this.health = health;
