@@ -46,6 +46,7 @@ import flaggi.common.Client;
 import flaggi.common.GPanel;
 import flaggi.common.Logger;
 import flaggi.common.Client.ClientStruct;
+import flaggi.common.Client.RecievedServerDataStruct;
 import flaggi.common.GPanel.Interactable;
 import flaggi.common.GPanel.InteractableHandeler;
 import flaggi.common.GPanel.Renderable;
@@ -245,7 +246,7 @@ public class App implements InteractableHandeler {
         if (this.gameLoop != null)
             this.gameLoop.stop();
         if (this.client != null)
-            this.client.disconnect();
+            this.client.disconnectFromServer();
         try {
             if (this.username != null && this.ip != null) {
                 this.appOptions.set(new AppOptions(this.username, this.ip));
@@ -285,7 +286,7 @@ public class App implements InteractableHandeler {
 
         // ------ Reset variables
         if (this.client != null)
-            this.client.disconnect();
+            this.client.disconnectFromServer();
         if (this.gameLoop != null)
             this.gameLoop.stop();
         movementEnabled = false;
@@ -416,9 +417,9 @@ public class App implements InteractableHandeler {
 
         // Get the current players from the panel and their positions from the server
         ArrayList<Player> players = this.gpanel.getWidgetsByClass(Player.class);
-        DataStruct struct = client.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.id, this.health, this.username, localAnimationFrame, getPlayerObjectDataString(true)));
-        List<ClientStruct> serverPositions = struct.list;
-        String playerObjectData = struct.objectData;
+        RecievedServerDataStruct struct = client.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.id, this.health, this.username, localAnimationFrame, getPlayerObjectDataString(true)));
+        List<ClientStruct> serverPositions = struct.connectedClientsList;
+        String playerObjectData = struct.playerObjectData;
 
         // Get the local player, and remove it from the rendering list
         ClientStruct localPlayerStruct = null;
@@ -875,16 +876,6 @@ public class App implements InteractableHandeler {
          */
         public void setFps(int value) {
             targetFPS = value;
-        }
-    }
-
-    public static class DataStruct {
-        public List<ClientStruct> list;
-        public String objectData;
-
-        public DataStruct(List<ClientStruct> list, String objectData) {
-            this.list = list;
-            this.objectData = objectData;
         }
     }
 

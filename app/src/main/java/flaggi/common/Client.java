@@ -39,9 +39,9 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
 import flaggi.App;
-import flaggi.App.DataStruct;
 
 /**
  * Client class for communicating with the server.
@@ -94,30 +94,6 @@ public class Client {
     ////////////////
 
     /**
-     * Makes the initial connection with the server through TCP.
-     * 
-     * @param clientName - {@code String} of the client display name.
-     */
-    private void makeConnection(String clientName) {
-        try (Socket socket = new Socket(serverAddress, TCP_PORT); ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
-
-            // ------ Send the client name to the server
-            out.writeUTF(clientName);
-            out.flush();
-
-            // ------ Receive the assigned client ID and UDP port from the server
-            clientId = in.readInt();
-            App.LOGGER.addLog("Received client ID '" + clientId + "' from server.");
-
-            udpPort = in.readInt();
-            App.LOGGER.addLog("Received UDP port '" + udpPort + "' for updates from server.");
-
-        } catch (IOException e) {
-            App.LOGGER.addLog("IOException caught while sending data to server", e);
-        }
-    }
-
-    /**
      * Updates the position of this player on the server and gets all the positions
      * of other players from the server. This method is called every frame.
      * 
@@ -125,14 +101,13 @@ public class Client {
      *                     of this player.
      * @return {@code ArrayList} of positions of other players.
      */
-    public DataStruct updatePlayerPositions(ClientStruct clientStruct) {
+    public RecievedServerDataStruct updatePlayerPositions(ClientStruct clientStruct) {
 
         ArrayList<ClientStruct> playerPositions = new ArrayList<>();
         String objectData = "";
 
         try {
             String message = clientStruct.toString();
-            // System.out.println("SD: " + message); // TODO
             byte[] buffer = message.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, serverAddress, udpPort);
             udpSocket.send(packet);
@@ -143,27 +118,23 @@ public class Client {
             udpSocket.receive(receivePacket);
 
             String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
-            // System.out.println(data); // TODO
-            // System.out.println(data.indexOf("|")); // TODO
             String[] splitData = new String[] { data.substring(0, data.indexOf("|")), data.substring(data.indexOf("|") + 1) };
-            // System.out.println(Arrays.toString(splitData)); // TODO
             String playerData = splitData[0];
             objectData = splitData[1];
-            // System.out.println("RD: " + playerData); // TODO
             playerPositions = parsePositions(playerData);
 
         } catch (IOException e) {
             App.LOGGER.addLog("IOException caught while sending/receiving position data to/from the server", e);
         }
 
-        return new DataStruct(playerPositions, objectData);
+        return new RecievedServerDataStruct(playerPositions, objectData);
     }
 
     /**
      * Disconnects the player from the server.
      * 
      */
-    public void disconnect() {
+    public void disconnectFromServer() {
         String message = this.clientId + "," + "disconnect";
         byte[] buffer = message.getBytes();
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length, serverAddress, udpPort);
@@ -245,6 +216,30 @@ public class Client {
     ////////////////
 
     /**
+     * Makes the initial connection with the server through TCP.
+     * 
+     * @param clientName - {@code String} of the client display name.
+     */
+    private void makeConnection(String clientName) {
+        try (Socket socket = new Socket(serverAddress, TCP_PORT); ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+
+            // ------ Send the client name to the server
+            out.writeUTF(clientName);
+            out.flush();
+
+            // ------ Receive the assigned client ID and UDP port from the server
+            clientId = in.readInt();
+            App.LOGGER.addLog("Received client ID '" + clientId + "' from server.");
+
+            udpPort = in.readInt();
+            App.LOGGER.addLog("Received UDP port '" + udpPort + "' for updates from server.");
+
+        } catch (IOException e) {
+            App.LOGGER.addLog("IOException caught while sending data to server", e);
+        }
+    }
+
+    /**
      * Parses the string of player positions and converts them to an
      * {@code ArrayList} of position arrays.
      * 
@@ -289,14 +284,26 @@ public class Client {
     ////////////////
 
     /**
-     * Client variable structure.
+     * A read only structure class for a client.
      * 
      */
     public static class ClientStruct {
 
+        // ---- Struct variables
         private int x, y, id, health;
         private String displayName, animationFrame, playerObjectData;
 
+        /**
+         * Default constructor
+         * 
+         * @param x                - X position of the client.
+         * @param y                - Y position of the client.
+         * @param id               - ID of the client given by the server.
+         * @param health           - current health of the client.
+         * @param displayName      - display name of the client.
+         * @param animationName    - animation frame data.
+         * @param playerObjectData - player objects data.
+         */
         public ClientStruct(int x, int y, int id, int health, String displayName, String animationName, String playerObjectData) {
             this.x = x;
             this.y = y;
@@ -307,37 +314,103 @@ public class Client {
             this.playerObjectData = playerObjectData;
         }
 
+        /**
+         * Accesor for the X coordinate of the client.
+         * 
+         * @return X coordinate of the client.
+         */
         public int getX() {
             return this.x;
         }
 
+        /**
+         * Accesor for the Y coordinate of the client.
+         * 
+         * @return Y coordinate of the client.
+         */
         public int getY() {
             return this.y;
         }
 
+        /**
+         * Accesor for the ID of the client.
+         * 
+         * @return id of the client.
+         */
         public int getId() {
             return this.id;
         }
 
+        /**
+         * Accesor for the health of the client.
+         * 
+         * @return health of the client.
+         */
         public int getHealth() {
             return this.health;
         }
 
+        /**
+         * Accesor for the display name of the client.
+         * 
+         * @return display name of the client.
+         */
         public String getName() {
             return this.displayName;
         }
 
+        /**
+         * Accesor for the animation frame of the client.
+         * 
+         * @return animation frame data.
+         */
         public String getAnimationFrame() {
             return this.animationFrame;
         }
 
+        /**
+         * Accesor for the player objects data of the client.
+         * 
+         * @return player objects data.
+         */
         public String getPlayerObjectData() {
             return this.playerObjectData;
         }
 
+        /**
+         * To String method used to get the data {@code String} to send to server.
+         * 
+         */
         @Override
         public String toString() {
             return this.id + "," + this.x + "," + this.y + "," + this.health + "," + this.displayName + "," + this.animationFrame + "," + this.playerObjectData;
+        }
+
+    }
+
+    /////////////////
+    /// Recieved server data struct
+    ////////////////
+
+    /**
+     * Struct class to hold the data recieved from the server.
+     * 
+     */
+    public static class RecievedServerDataStruct {
+
+        // ---- Struct variables
+        public List<ClientStruct> connectedClientsList;
+        public String playerObjectData;
+
+        /**
+         * Default constructor.
+         * 
+         * @param list       - list of connected clients given by the server.
+         * @param objectData - data {@code String} with all player created object data.
+         */
+        public RecievedServerDataStruct(List<ClientStruct> list, String objectData) {
+            this.connectedClientsList = list;
+            this.playerObjectData = objectData;
         }
 
     }
