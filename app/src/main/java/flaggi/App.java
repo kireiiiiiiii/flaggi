@@ -145,7 +145,7 @@ public class App implements InteractableHandeler {
         this.spawnPoint = new int[] { this.windowSize[0] / 2, this.windowSize[1] / 2 };
         this.movementEnabled = false;
         this.paused = false;
-        this.health = 69;
+        this.health = -1;
         this.pressedKeys = new ArrayList<KeyEvent>();
         this.quedPlayerObjects = new ArrayList<Bullet>();
         printHeader();
@@ -419,6 +419,13 @@ public class App implements InteractableHandeler {
         // Get the current players from the panel and their positions from the server
         ArrayList<Player> players = this.gpanel.getWidgetsByClass(Player.class);
         RecievedServerDataStruct struct = client.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.id, this.health, this.username, localAnimationFrame, getPlayerObjectDataString(true)));
+
+        // ---- Handle special cases
+        if (struct.isDead) {
+            die();
+            return;
+        }
+
         List<ClientStruct> serverPositions = struct.connectedClientsList;
         String playerObjectData = struct.playerObjectData;
 
@@ -495,6 +502,14 @@ public class App implements InteractableHandeler {
             }
             this.gpanel.remove(remainingPlayer);
         }
+    }
+
+    /**
+     * Method executed when player dies.
+     * 
+     */
+    public void die() {
+        goToMenu();
     }
 
     /**

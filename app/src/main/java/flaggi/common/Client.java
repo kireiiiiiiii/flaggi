@@ -118,6 +118,12 @@ public class Client {
             udpSocket.receive(receivePacket);
 
             String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
+
+            // ---- SPECIAL CASES
+            if (data.equals("died")) {
+                return new RecievedServerDataStruct(true);
+            }
+
             String[] splitData = new String[] { data.substring(0, data.indexOf("|")), data.substring(data.indexOf("|") + 1) };
             String playerData = splitData[0];
             objectData = splitData[1];
@@ -401,6 +407,7 @@ public class Client {
         // ---- Struct variables
         public List<ClientStruct> connectedClientsList;
         public String playerObjectData;
+        public boolean isDead;
 
         /**
          * Default constructor.
@@ -411,6 +418,15 @@ public class Client {
         public RecievedServerDataStruct(List<ClientStruct> list, String objectData) {
             this.connectedClientsList = list;
             this.playerObjectData = objectData;
+        }
+
+        /**
+         * Returned when server reported player died.
+         * 
+         * @param isDead - {@code boolean} value, true if player died.
+         */
+        public RecievedServerDataStruct(boolean isDead) {
+            this.isDead = isDead;
         }
 
     }

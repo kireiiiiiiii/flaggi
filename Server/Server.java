@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Iterator;
+import java.awt.Rectangle;
 
 /**
  * Server class for the LAN Game application.
@@ -51,12 +52,14 @@ public class Server {
     private static final List<Client> clients = new ArrayList<>();
 
     private static int maxClientID = 0;
+    private static GameLoop gameLoop;
 
     /////////////////
     // Variables
     ////////////////
 
     private static List<Bullet> existingPlayerObjects;
+    private static List<Integer> deadPlayers;
 
     /////////////////
     // Main
@@ -92,6 +95,9 @@ public class Server {
         log(YELLOW, "Server started on port '" + TCP_PORT + "'. Waiting for clients...");
         new Thread(Server::startUDPListener).start();
         log(YELLOW, "UDP started on port '" + UDP_PORT + "'. Waiting for data...");
+        gameLoop = new GameLoop(60);
+        gameLoop.start();
+        log(YELLOW, "Started game loop.");
     }
 
     /**
@@ -155,6 +161,7 @@ public class Server {
 
             // ---- Variables
             existingPlayerObjects = new ArrayList<>();
+            deadPlayers = new ArrayList<>();
 
             while (true) {
                 boolean timedOut = false;
@@ -195,15 +202,37 @@ public class Server {
                         }
 
                         if (client != null) {
+
+                            // ---- Client died handeling
+                            boolean isDead = false;
+                            Iterator<Integer> iterator = deadPlayers.iterator();
+                            while (iterator.hasNext()) {
+                                Integer id = iterator.next();
+                                if (id == clientId) {
+                                    isDead = true;
+                                    iterator.remove();
+                                }
+                            }
+
+                            // ---- Normal message handeling
                             client.setPosition(x, y);
-                            client.setHealth(health);
                             client.setAnimationFrame(animationFrame);
                             client.updateLastReceivedTime();
+                            if (health == -1) {
+                                client.setHealth(100);
+                            }
                             if (playerObjectData != null) {
                                 handlePlayerObjectData(playerObjectData, client);
                             }
 
-                            String sendMessage = getAllClientsData(clientId);
+                            // ---- Get message to send
+
+                            String sendMessage;
+                            if (isDead) {
+                                sendMessage = "died";
+                            } else {
+                                sendMessage = getAllClientsData(clientId);
+                            }
                             byte[] responseBuffer = sendMessage.getBytes();
                             DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length, client.getInetAddress(), packet.getPort());
 
@@ -569,11 +598,6 @@ public class Server {
         // Helpers
         ////////////////
 
-        /**
-         * Accesor for the bullet number.
-         * 
-         * @return
-         */
         public int getBulletId() {
             return bulletNum;
         }
@@ -584,6 +608,10 @@ public class Server {
 
         public boolean wasSendTo(int id) {
             return this.sendCliens.contains(id);
+        }
+
+        public int getOwningPlaterId() {
+            return this.playerId;
         }
 
         @Override
@@ -638,4 +666,107 @@ public class Server {
 
     }
 
+    /////////////////
+    // Game loop class
+    ////////////////
+
+    /**
+     * Game loop for the application.
+     * 
+     */
+    @SuppressWarnings("unused")
+    private static class GameLoop implements Runnable {
+
+        private boolean running = false;
+        private int targetFPS;
+
+        /**
+         * Gameloop constructor. WILL NOT START THE GAME LOOP AUTOMATICALLY!!
+         * 
+         * @param fps
+         */
+        public GameLoop(int fps) {
+            setFps(fps);
+        }
+
+        /**
+         * Starts the rendering loop.
+         * 
+         */
+        public void start() {
+            running = true;
+            new Thread(this, "Game loop Thread").start();
+        }
+
+        /**
+         * Stops the rendering loop.
+         * 
+         */
+        public void stop() {
+            running = false;
+        }
+
+        @Override
+        public void run() {
+            while (running) {
+                long optimalTime = 1_000_000_000 / targetFPS;
+                long startTime = System.nanoTime();
+
+                update();
+
+                long elapsedTime = System.nanoTime() - startTime;
+                long sleepTime = optimalTime - elapsedTime;
+
+                if (sleepTime > 0) {
+                    try {
+                        Thread.sleep(sleepTime / 1_000_000, (int) (sleepTime % 1_000_000));
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        }
+
+        /**
+         * Set a new FPS value.
+         * 
+         * @param value - new FPS value.
+         */
+        public void setFps(int value) {
+            targetFPS = value;
+        }
+
+        /**
+         * Update method that will pull player data from the server and display it to
+         * the user.
+         * 
+         */
+        private void update() {
+            if (existingPlayerObjects != null && clients != null && !existingPlayerObjects.isEmpty() && !clients.isEmpty()) {
+                synchronized (existingPlayerObjects) {
+                    Iterator<Bullet> bulletIterator = existingPlayerObjects.iterator();
+                    while (bulletIterator.hasNext()) {
+                        Bullet b = bulletIterator.next();
+                        Rectangle bulletHitbox = new Rectangle((int) b.position[0], (int) b.position[1], 5, 5);
+                        synchronized (clients) {
+                            for (Client c : clients) {
+                                Rectangle playerHitbox = new Rectangle(c.getX() + 7, c.getY() + 7, 53, 93);
+                                if (bulletHitbox.intersects(playerHitbox)) {
+                                    if (b.getOwningPlaterId() != c.id) {
+                                        bulletIterator.remove();
+                                        if (c.getHealth() - 10 < 1) {
+                                            c.setHealth(0);
+                                            deadPlayers.add(c.id);
+                                        }
+                                        c.setHealth(c.getHealth() - 10);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
