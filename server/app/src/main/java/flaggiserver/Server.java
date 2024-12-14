@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.Iterator;
 
 import flaggiserver.common.Rectangle;
@@ -58,22 +59,21 @@ public class Server {
     // Constants
     ////////////////
 
-    public static final int TCP_PORT = 54321;
-    public static final int UDP_PORT = 54322;
-    public static String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi-server";
-
+    private static final int TCP_PORT = 54321;
+    private static final int UDP_PORT = 54322;
     private static final int CLIENT_TIMEOUT_SECONDS = 10;
-    private static final List<Client> clients = new ArrayList<>();
-
-    private static int maxClientID = 0;
-    private static GameLoop gameLoop;
+    @SuppressWarnings("unused")
+    private static String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi-server";
 
     /////////////////
     // Variables
     ////////////////
 
-    private static List<Bullet> existingPlayerObjects;
-    private static List<Integer> deadPlayers;
+    private static int maxClientID = 0;
+    private static List<Client> clients;
+    private static List<Bullet> playerObjects;
+    private static List<Integer> deadClientIdQue;
+    private static GameLoop gameLoop;
 
     /////////////////
     // Main
@@ -103,6 +103,13 @@ public class Server {
      * @throws IOException
      */
     public static void startServer() throws IOException {
+
+        // ---- INITIALIZE
+        clients = new CopyOnWriteArrayList<Client>();
+        playerObjects = new CopyOnWriteArrayList<Bullet>();
+        deadClientIdQue = new CopyOnWriteArrayList<Integer>();
+
+        // ---- START LISTENERS & GAME LOOP
         ServerSocket serverSocket = new ServerSocket(TCP_PORT);
         log(YELLOW, "Server socket created on IP: '" + getIPv4Address().getHostAddress() + "'");
         new Thread(() -> startTCPListener(serverSocket)).start();
@@ -174,8 +181,8 @@ public class Server {
             udpSocket.setSoTimeout(CLIENT_TIMEOUT_SECONDS * 1000);
 
             // ---- Variables
-            existingPlayerObjects = new ArrayList<>();
-            deadPlayers = new ArrayList<>();
+            playerObjects = new ArrayList<>();
+            deadClientIdQue = new ArrayList<>();
 
             while (true) {
                 boolean timedOut = false;
@@ -219,7 +226,7 @@ public class Server {
 
                             // ---- Client died handeling
                             boolean isDead = false;
-                            Iterator<Integer> iterator = deadPlayers.iterator();
+                            Iterator<Integer> iterator = deadClientIdQue.iterator();
                             while (iterator.hasNext()) {
                                 Integer id = iterator.next();
                                 if (id == clientId) {
@@ -282,8 +289,8 @@ public class Server {
      */
     private static String getAllPlayerObjectData(int id) {
         StringBuilder data = new StringBuilder();
-        synchronized (existingPlayerObjects) {
-            for (Bullet bullet : existingPlayerObjects) {
+        synchronized (playerObjects) {
+            for (Bullet bullet : playerObjects) {
                 if (!bullet.wasSendTo(id)) {
                     data.append(bullet.toString()).append("+");
                 }
@@ -316,8 +323,8 @@ public class Server {
      */
     private static void handlePlayerObjectData(String dataString, Client client) {
         Bullet b = dataToBullet(dataString, client.getId());
-        synchronized (existingPlayerObjects) {
-            existingPlayerObjects.add(b);
+        synchronized (playerObjects) {
+            playerObjects.add(b);
         }
         client.addPlayerObject(b);
     }
@@ -586,7 +593,7 @@ public class Server {
                         }
                     }
                 }
-                existingPlayerObjects.remove(this);
+                playerObjects.remove(this);
             };
 
             this.playerId = playerId;
@@ -758,48 +765,40 @@ public class Server {
          * 
          */
         private void update() {
-            if (existingPlayerObjects != null && clients != null && !existingPlayerObjects.isEmpty() && !clients.isEmpty()) {
-                synchronized (existingPlayerObjects) {
-                    Iterator<Bullet> bulletIterator = existingPlayerObjects.iterator();
-                    while (bulletIterator.hasNext()) {
-                        Bullet b = bulletIterator.next();
-                        Rectangle bulletHitbox = new Rectangle((int) b.position[0], (int) b.position[1], 5, 5);
+            if (playerObjects != null && clients != null && !playerObjects.isEmpty() && !clients.isEmpty()) {
+                List<Bullet> bulletsToRemove = new ArrayList<>();
 
-                        synchronized (clients) {
-                            for (Client c : clients) {
-                                Rectangle playerHitbox = new Rectangle(c.getX() + 7, c.getY() + 7, 53, 93);
+                for (Bullet b : playerObjects) {
+                    Rectangle bulletHitbox = new Rectangle((int) b.position[0], (int) b.position[1], 5, 5);
 
-                                if (bulletHitbox.intersects(playerHitbox)) {
-                                    if (b.getOwningPlaterId() != c.id) {
+                    for (Client c : clients) {
+                        Rectangle playerHitbox = new Rectangle(c.getX() + 7, c.getY() + 7, 53, 93);
 
-                                        // Remove the bullet from the player who owns it
-                                        for (Client c1 : clients) {
-                                            if (c1.getId() == b.playerId) {
-                                                c1.removePlayerObject(b);
-                                            }
-                                        }
-
-                                        bulletIterator.remove();
-
-                                        // Update client health
-                                        int newHealth = c.getHealth() - 10;
-                                        c.setHealth(Math.max(newHealth, 0));
-
-                                        // Mark the client as dead if health reaches 0
-                                        if (newHealth < 1) {
-                                            synchronized (deadPlayers) {
-                                                deadPlayers.add(c.id);
-                                            }
-                                        }
-
-                                        // Stop checking other clients for this bullet
-                                        break;
+                        if (bulletHitbox.intersects(playerHitbox)) {
+                            if (b.getOwningPlaterId() != c.id) {
+                                for (Client c1 : clients) {
+                                    if (c1.getId() == b.playerId) {
+                                        c1.removePlayerObject(b);
                                     }
                                 }
+                                bulletsToRemove.add(b);
+
+                                int newHealth = c.getHealth() - 10;
+                                c.setHealth(Math.max(newHealth, 0));
+
+                                if (newHealth < 1) {
+                                    synchronized (deadClientIdQue) {
+                                        deadClientIdQue.add(c.id);
+                                    }
+                                }
+
+                                break;
                             }
                         }
                     }
                 }
+
+                playerObjects.removeAll(bulletsToRemove);
             }
         }
     }
