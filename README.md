@@ -24,9 +24,9 @@ java -jar Flaggi.jar
 
 ## Resources
 
+-   [Font used in the banners](https://fonts.google.com/specimen/Ultra)
 -   [The prompt and specifications given](./public/TTT-game-rules.pdf)
 -   [Mindmap mapping the project](./public/TTT.xmind)
--   [Font uses in the banners](https://fonts.google.com/specimen/Ultra)
 
 ## Contact
 
