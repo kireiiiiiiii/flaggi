@@ -78,7 +78,7 @@ public class App implements InteractableHandeler {
     public static final Logger LOGGER = Logger.getLogger(getApplicationDataFolder() + File.separator + "logs" + File.separator + "app.log");
     public static final int TCP_PORT = 54321;
     public static final int FPS = 60;
-    public static final boolean SHOW_HITBOXES = true;
+    public static final boolean SHOW_HITBOXES = false;
 
     /////////////////
     // Variables
@@ -86,7 +86,7 @@ public class App implements InteractableHandeler {
 
     private Client client;
     private String username, ip;
-    private int id, health;
+    private int id, health, speed;
     private GPanel gpanel;
     private GameLoop gameLoop;
     private AdvancedVariable<AppOptions> appOptions;
@@ -142,6 +142,7 @@ public class App implements InteractableHandeler {
         this.pos = new int[2];
         this.pos[0] = 0;
         this.pos[1] = 0;
+        this.speed = 10;
         this.spawnPoint = new int[] { this.windowSize[0] / 2, this.windowSize[1] / 2 };
         this.movementEnabled = false;
         this.paused = false;
@@ -307,17 +308,16 @@ public class App implements InteractableHandeler {
     }
 
     /**
-     * Moves the player.
+     * Moves the player based on the given speed and input events.
      * 
      * @param inputEvents - {@code List<KeyEvent>} of the pressed keys.
+     * @param speed       - The speed value (int) to scale movement.
      */
     public void move(List<KeyEvent> inputEvents) {
-        int step = 8;
         boolean moveUp = false, moveDown = false, moveLeft = false, moveRight = false;
-        List<KeyEvent> events = new ArrayList<>();
-        events.addAll(inputEvents);
+        List<KeyEvent> events = new ArrayList<>(inputEvents);
 
-        for (KeyEvent e : inputEvents) {
+        for (KeyEvent e : events) {
             switch (e.getKeyCode()) {
             case KeyEvent.VK_UP:
             case KeyEvent.VK_W:
@@ -347,7 +347,7 @@ public class App implements InteractableHandeler {
             this.localPlayer.setFacingRight(false);
         }
 
-        // Switch correct walkig animations
+        // Switch correct walking animations
         if ((moveUp && moveLeft) || (moveUp && moveRight)) {
             this.localPlayer.switchAnimation("walk_diagup");
         } else if ((moveDown && moveLeft) || (moveDown && moveRight)) {
@@ -362,7 +362,7 @@ public class App implements InteractableHandeler {
             this.localPlayer.switchAnimation("walk_side");
         }
 
-        // Calculate horizontal and vertical movement distances.
+        // Calculate horizontal and vertical movement directions
         double deltaX = 0;
         double deltaY = 0;
 
@@ -375,11 +375,11 @@ public class App implements InteractableHandeler {
         if (moveRight)
             deltaX += 1;
 
-        // Diagonal movement handeling
+        // Normalize the movement direction
         double magnitude = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         if (magnitude > 0) {
-            deltaX = (deltaX / magnitude) * step;
-            deltaY = (deltaY / magnitude) * step;
+            deltaX = (deltaX / magnitude) * this.speed;
+            deltaY = (deltaY / magnitude) * this.speed;
         }
 
         // Update the player's position
@@ -396,7 +396,7 @@ public class App implements InteractableHandeler {
      * @param e - {@code MouseEvent} of the mouse click.
      */
     public void shoot(MouseEvent e) {
-        Bullet b = new Bullet(this.pos, getMouseclickLocationRelativeToMap(e), 500, 1000, this.id);
+        Bullet b = new Bullet(this.pos, getMouseclickLocationRelativeToMap(e), 1000 + this.speed * 10, 2000, this.id);
         Runnable afterDecay = () -> {
             this.gpanel.remove(b);
         };

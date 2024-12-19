@@ -289,29 +289,37 @@ public class Server {
      */
     private static String getAllPlayerObjectData(int id) {
         StringBuilder data = new StringBuilder();
+
         synchronized (playerObjects) {
-            for (Bullet bullet : playerObjects) {
+            for (Bullet bullet : new ArrayList<>(playerObjects)) {
                 if (!bullet.wasSendTo(id)) {
                     data.append(bullet.toString()).append("+");
                 }
                 bullet.addId(id);
             }
 
-            // Remove trailing
+            // Remove trailing "+" if present
             if (data.length() > 0 && data.charAt(data.length() - 1) == '+') {
                 data.setLength(data.length() - 1);
             }
         }
+
         data.append("/");
 
         synchronized (clients) {
-            for (Client client : clients) {
-                List<Bullet> playerObject = client.getPlayerObjects();
-                for (Bullet object : playerObject) {
+            for (Client client : new ArrayList<>(clients)) {
+                List<Bullet> playerObjects = new ArrayList<>(client.getPlayerObjects());
+                for (Bullet object : playerObjects) {
                     data.append(client.id).append("-").append(object.getBulletId()).append(",");
                 }
             }
+
+            // Remove trailing "," if present
+            if (data.length() > 0 && data.charAt(data.length() - 1) == ',') {
+                data.setLength(data.length() - 1);
+            }
         }
+
         return data.toString();
     }
 
@@ -768,28 +776,28 @@ public class Server {
             if (playerObjects != null && clients != null && !playerObjects.isEmpty() && !clients.isEmpty()) {
                 List<Bullet> bulletsToRemove = new ArrayList<>();
 
-                for (Bullet b : playerObjects) {
+                for (Bullet b : new ArrayList<>(playerObjects)) {
                     Rectangle bulletHitbox = new Rectangle((int) b.position[0], (int) b.position[1], 5, 5);
 
-                    for (Client c : clients) {
+                    for (Client c : new ArrayList<>(clients)) {
                         Rectangle playerHitbox = new Rectangle(c.getX() + 7, c.getY() + 7, 53, 93);
 
                         if (bulletHitbox.intersects(playerHitbox)) {
                             if (b.getOwningPlaterId() != c.id) {
-                                for (Client c1 : clients) {
+                                for (Client c1 : new ArrayList<>(clients)) {
                                     if (c1.getId() == b.playerId) {
                                         c1.removePlayerObject(b);
                                     }
                                 }
+
                                 bulletsToRemove.add(b);
 
+                                // Update client health
                                 int newHealth = c.getHealth() - 10;
                                 c.setHealth(Math.max(newHealth, 0));
 
                                 if (newHealth < 1) {
-                                    synchronized (deadClientIdQue) {
-                                        deadClientIdQue.add(c.id);
-                                    }
+                                    deadClientIdQue.add(c.id);
                                 }
 
                                 break;
@@ -798,8 +806,13 @@ public class Server {
                     }
                 }
 
-                playerObjects.removeAll(bulletsToRemove);
+                try {
+                    playerObjects.removeAll(bulletsToRemove);
+                } catch (IndexOutOfBoundsException e) {
+                }
             }
         }
+
     }
+
 }
