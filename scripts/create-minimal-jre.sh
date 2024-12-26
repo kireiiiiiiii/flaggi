@@ -17,7 +17,11 @@ if [ -d "$OUTPUT_DIR" ]; then
 fi
 
 # Use jlink to create the JRE
-echo "Creating JRE..."
-jlink --add-modules java.base,java.desktop --output "$OUTPUT_DIR"
+echo "Creating minimal JRE..."
+
+jlink \
+    --add-modules java.base,java.desktop \
+    --output "$OUTPUT_DIR" \
+    --no-header-files
 
 echo "JRE created at $OUTPUT_DIR"

@@ -105,9 +105,8 @@ mkdir -p "$OUTPUT_PATH"
 if [ -f "$INPUT_PATH/$JAR_NAME" ]; then
 
   if [ "$diet" = true ]; then
-    echo "Making the diet JRE ..."
     cd "$SCRIPTS_DIR"
-    ./make-diet-jre.sh
+    ./create-minimal-jre.sh
     echo "Creating DMG with diet JRE..."
     jpackage \
       --input "$INPUT_PATH" \
