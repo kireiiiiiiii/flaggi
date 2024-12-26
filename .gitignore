@@ -1,0 +1,24 @@
+# Gradle files
+.gradle/
+build/
+*bin
+# Gradle Wrapper
+gradle/wrapper/gradle-wrapper.jar
+gradle/wrapper/gradle-wrapper.properties
+
+# vscode
+.vscode/settings.json
+
+# Java specific
+*.class
+*.jar
+*.war
+*.ear
+
+# macOS
+.DS_Store
+._*
+*-alias
+
+# JRE build files
+diet-jre/
