@@ -16,3 +16,6 @@ gradle/wrapper/gradle-wrapper.properties
 .DS_Store
 ._*
 *-alias
+
+# JRE build files
+diet-jre/
