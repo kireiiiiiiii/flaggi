@@ -2,9 +2,6 @@
 .gradle/
 build/
 *bin
-# Gradle Wrapper
-gradle/wrapper/gradle-wrapper.jar
-gradle/wrapper/gradle-wrapper.properties
 
 # vscode
 .vscode/settings.json
@@ -22,3 +19,6 @@ gradle/wrapper/gradle-wrapper.properties
 
 # JRE build files
 diet-jre/
+
+# Include the wrapper jar
+!gradle-wrapper.jar
