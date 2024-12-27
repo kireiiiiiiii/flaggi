@@ -469,7 +469,6 @@ public class Server {
      */
     public static String getHostIP() {
         String hostIP = System.getenv("HOST_IP");
-        System.out.println("Host IP: " + hostIP);
         return hostIP.length() > 0 ? hostIP : null;
     }
 
