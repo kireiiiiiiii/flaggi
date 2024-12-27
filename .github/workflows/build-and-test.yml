@@ -45,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: client-shadow-jar
-          path: client/build/libs/*.jar
+          path: client/app/build/libs/*.jar
 
       # -------------------
       # Build & Test Server
@@ -66,4 +66,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: server-shadow-jar
-          path: server/build/libs/*.jar
+          path: server/app/build/libs/*.jar
