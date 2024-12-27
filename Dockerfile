@@ -4,8 +4,8 @@ FROM openjdk:8-jdk
 # Set the working directory in the container to the server directory
 WORKDIR /app/server
 
-# Install wget and unzip (needed to install Gradle)
-RUN apt-get update && apt-get install -y wget unzip
+# Install wget, unzip (needed to install Gradle), and iproute2 (for network tools)
+RUN apt-get update && apt-get install -y wget unzip iproute2
 
 # Install Gradle 8.10.2
 RUN wget https://services.gradle.org/distributions/gradle-8.10.2-bin.zip -P /tmp \

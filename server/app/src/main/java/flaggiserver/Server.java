@@ -26,7 +26,10 @@
 
 package flaggiserver;
 
+import java.io.BufferedReader;
 import java.io.EOFException;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -111,7 +114,13 @@ public class Server {
 
         // ---- START LISTENERS & GAME LOOP
         ServerSocket serverSocket = new ServerSocket(TCP_PORT);
-        log(YELLOW, "Server socket created on IP: '" + getIPv4Address().getHostAddress() + "'");
+        if (isRunningInDocker()) {
+            String hostIp = getHostIP() == null ? "." : ": " + getHostIP();
+            log(YELLOW, "Server is running in Docker. Use host's IP adress to connect" + hostIp);
+        } else {
+            log(YELLOW, "Server socket created on IP: '" + getIPv4Address().getHostAddress() + "'");
+        }
+
         new Thread(() -> startTCPListener(serverSocket)).start();
         log(YELLOW, "Server started on port '" + TCP_PORT + "'. Waiting for clients...");
         new Thread(Server::startUDPListener).start();
@@ -424,6 +433,11 @@ public class Server {
         return positions.toString();
     }
 
+    /**
+     * Gets the local IP adress.
+     * 
+     * @return - {@code InetAdress} of the local IP.
+     */
     private static InetAddress getIPv4Address() {
         try {
             Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
@@ -446,6 +460,40 @@ public class Server {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * Gets the host's IP when running from a Docker container.
+     * 
+     * @return = - {@code String} of the host IP, null if not accesible.
+     */
+    public static String getHostIP() {
+        String hostIP = System.getenv("HOST_IP");
+        System.out.println("Host IP: " + hostIP);
+        return hostIP.length() > 0 ? hostIP : null;
+    }
+
+    /**
+     * Checks if a program is running in a Docker container or not.
+     * 
+     * @return - true if running in a Docker container, false otherwise.
+     */
+    public static boolean isRunningInDocker() {
+        if (new File("/.dockerenv").exists()) {
+            return true;
+        }
+
+        try (BufferedReader reader = new BufferedReader(new FileReader("/proc/1/cgroup"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("docker") || line.contains("containerd")) {
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+        }
+
+        return false;
     }
 
     /**
