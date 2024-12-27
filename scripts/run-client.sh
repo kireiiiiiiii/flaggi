@@ -12,15 +12,15 @@ diet=false
 
 # Help message print
 usage() {
- echo "Usage: $0 [OPTIONS]"
- echo "Options:"
- echo " -h, --help      Display this help message"
- echo " -d, --diet      Make and use a died version of the JRE."
+  echo "Usage: $0 [OPTIONS]"
+  echo "Options:"
+  echo " -h, --help      Display this help message"
+  echo " -d, --diet      Make and use a died version of the JRE."
 }
 
 # Has arguments?
 has_argument() {
-    [[ ("$1" == *=* && -n ${1#*=}) || ( ! -z "$2" && "$2" != -*)  ]];
+  [[ ("$1" == *=* && -n ${1#*=}) || (! -z "$2" && "$2" != -*) ]]
 }
 
 # Get the argument
@@ -32,18 +32,18 @@ extract_argument() {
 handle_options() {
   while [ $# -gt 0 ]; do
     case $1 in
-      -h | --help)
-        usage
-        exit 0
-        ;;
-      -d | --diet)
-        diet=true
-        ;;
-      *)
-        echo "Invalid option: $1" >&2
-        usage
-        exit 1
-        ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    -d | --diet)
+      diet=true
+      ;;
+    *)
+      echo "Invalid option: $1" >&2
+      usage
+      exit 1
+      ;;
     esac
     shift
   done
@@ -64,21 +64,21 @@ cd "$CLIENT_DIR"
 # Run the JAR
 if [ -f "$JAR_FILE" ]; then
 
-    if [ "$diet" = true ]; then
-        echo "Making the diet JRE ..."
-        cd "$SCRIPT_DIR"
-        ./make-diet-jre.sh
-        echo "Running the client application using diet JRE..."
-        cd "$(dirname "$JAR_FILE")"
-        "$DIET_JRE/bin/java" -jar "$(basename "$JAR_FILE")"
+  if [ "$diet" = true ]; then
+    echo "Making the diet JRE ..."
+    cd "$SCRIPT_DIR"
+    ./create-minimal-jre.sh
+    echo "Running the client application using diet JRE..."
+    cd "$(dirname "$JAR_FILE")"
+    "$DIET_JRE/bin/java" -jar "$(basename "$JAR_FILE")"
 
-    else 
-        echo "Running the client application using global JRE..."
-        cd "$(dirname "$JAR_FILE")"
-        java -jar "$(basename "$JAR_FILE")"
-    fi
+  else
+    echo "Running the client application using global JRE..."
+    cd "$(dirname "$JAR_FILE")"
+    java -jar "$(basename "$JAR_FILE")"
+  fi
 
 else
-    echo "Error: JAR file not found at $JAR_FILE"
-    exit 1
+  echo "Error: JAR file not found at $JAR_FILE"
+  exit 1
 fi
