@@ -37,8 +37,8 @@ usage() {
   echo "Options:"
   echo " -h, --help            Display this help message"
   echo " -n, --nodiet          Package without using the diet JRE"
-  echo " -jpackage <path>      Specify the path to the jpackage executable"
-  echo " -jlink <path>         Specify the path to the jlink executable"
+  echo " --jpackage <path>     Specifies the path to the jpackage executable"
+  echo " --jlink <path>        Specifies the path to the jlink executable"
   exit 0
 }
 
@@ -52,7 +52,7 @@ handle_options() {
     -n | --nodiet)
       diet=false
       ;;
-    -jpackage)
+    --jpackage)
       shift
       if [[ -z "$1" || "$1" == -* ]]; then
         echo "Error: -jpackage requires a valid path to the jpackage executable." >&2
@@ -61,7 +61,7 @@ handle_options() {
       fi
       jpackage_path="$1"
       ;;
-    -jlink)
+    --jlink)
       shift
       if [[ -z "$1" || "$1" == -* ]]; then
         echo "Error: -jlink requires a valid path to the jlink executable." >&2
@@ -92,7 +92,7 @@ build_minimal_jre() {
   # Use jlink to create the JRE
   echo "Creating minimal JRE..."
 
-  jlink \
+  "$jlink_path" \
     --add-modules java.base,java.desktop \
     --output "$DIET_JRE" \
     --no-header-files
