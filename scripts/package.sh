@@ -12,8 +12,8 @@ SCRIPTS_DIR="$ROOT/scripts"
 CLIENT_DIR="$ROOT/client"
 
 # Resources
+ABOUT_LINK="https://github.com/kireiiiiiiii/flaggi"
 INPUT_PATH="$CLIENT_DIR/app/build/libs"
-OUTPUT_PATH="$CLIENT_DIR/app/build/output"
 APP_NAME="Flaggi"
 SHADOWJAR_TASK="shadowjar"
 JAR_NAME="Flaggi.jar"
@@ -22,7 +22,8 @@ DIET_JRE="$ROOT/diet-jre"
 
 # Default options
 diet=true
-output=""
+output_type=""
+output_path=""
 icon=""
 jpackage_path="jpackage"
 jlink_path="jlink"
@@ -112,11 +113,13 @@ handle_options "$@"
 # Determine output format and icon based on OS
 case "$OSTYPE" in
 darwin*)
-  output="dmg"
+  output_type="dmg"
+  output_path="$CLIENT_DIR/app/build/mac"
   icon="$ICONS/mac.icns"
   ;;
 msys* | cygwin*)
-  output="exe"
+  output_type="exe"
+  output_path="$CLIENT_DIR/app/build/win"
   icon="$ICONS/win.ico"
   ;;
 *)
@@ -131,8 +134,8 @@ cd "$CLIENT_DIR"
 ./gradlew "app:$SHADOWJAR_TASK"
 
 # Ensure the output directory exists
-echo "Ensuring build directory exists at $OUTPUT_PATH..."
-mkdir -p "$OUTPUT_PATH"
+echo "Ensuring build directory exists at $output_path..."
+mkdir -p "$output_path"
 
 # Create the output package
 if [ -f "$INPUT_PATH/$JAR_NAME" ]; then
@@ -143,40 +146,42 @@ if [ -f "$INPUT_PATH/$JAR_NAME" ]; then
     build_minimal_jre
 
     # Package the app with a diet JRE
-    echo "Creating $output with diet JRE..."
+    echo "Creating $output_type with diet JRE..."
     "$jpackage_path" \
       --input "$INPUT_PATH" \
       --main-jar "$JAR_NAME" \
       --name "$APP_NAME" \
-      --type "$output" \
-      --dest "$OUTPUT_PATH" \
+      --type "$output_type" \
+      --dest "$output_path" \
       --icon "$icon" \
       --app-version 1.0 \
+      --about-url "$ABOUT_LINK" \
       --runtime-image "$DIET_JRE"
 
   else
     # Package the app without a diet JRE
-    echo "Creating $output without diet JRE..."
+    echo "Creating $output_type without diet JRE..."
     "$jpackage_path" \
       --input "$INPUT_PATH" \
       --main-jar "$JAR_NAME" \
       --name "$APP_NAME" \
-      --type "$output" \
-      --dest "$OUTPUT_PATH" \
+      --type "$output_type" \
+      --dest "$output_path" \
       --icon "$icon" \
+      --about-url "$ABOUT_LINK" \
       --app-version 1.0
   fi
 
   # Handle the created file based on the OS
-  case "$output" in
+  case "$output_type" in
   dmg)
-    echo "DMG created at $OUTPUT_PATH/$APP_NAME.dmg"
+    echo "DMG created at $output_path/$APP_NAME.dmg"
     ;;
   exe)
-    echo "EXE created at $OUTPUT_PATH/$APP_NAME.exe"
+    echo "EXE created at $output_path/$APP_NAME.exe"
     ;;
   *)
-    echo "Error: Unsupported output format ($output)"
+    echo "Error: Unsupported output format ($output_type)"
     exit 1
     ;;
   esac
