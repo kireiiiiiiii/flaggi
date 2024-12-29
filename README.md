@@ -16,7 +16,7 @@ Flaggi is a captue the flag local multiplayer game where two players fight each 
 
 ## 🚀 Installation
 
-Download the latest release of the **server** (`Server.jar`) and **client app** from the [latest release](https://github.com/kireiiiiiiii/Flaggi/releases/latest).
+Download the latest release of the **server** (`Server.jar`) and **client app** from the [latest release](https://github.com/kireiiiiiiii/flaggi/releases/latest).
 
 You can choose from the following options for the client:
 
