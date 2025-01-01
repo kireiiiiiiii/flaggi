@@ -137,6 +137,7 @@ public class Server {
      * @param serverSocket - TCP port
      */
     private static void startTCPListener(ServerSocket serverSocket) {
+
         while (true) {
             try (Socket clientSocket = serverSocket.accept()) {
                 clientSocket.setSoTimeout(500);
@@ -149,6 +150,14 @@ public class Server {
                         out.writeUTF("pong");
                         out.flush();
                         log(BLACK, "Handled 'is server running' check from client, responded 'pong'");
+                        continue;
+                    }
+
+                    if ("get-idle-clients".equals(initialMessage)) {
+                        String clientsData = getPlayerNameData(clients);
+                        out.writeUTF(clientsData);
+                        out.flush();
+                        log(BLACK, "Handeled get-idle-clients request from client.");
                         continue;
                     }
 
@@ -169,7 +178,7 @@ public class Server {
                     log(PURPLE, "Sent port and ID to client '" + clientName + "'");
 
                 } catch (EOFException | SocketTimeoutException e) {
-                    log(RED, e.getMessage());
+                    log(RED, "TCP exception: " + e.getMessage());
                 } catch (IOException e) {
                     log(RED, "Error handling client connection: " + e.getMessage());
                 }
@@ -330,6 +339,22 @@ public class Server {
         }
 
         return data.toString();
+    }
+
+    /**
+     * Gets a data {@code String} of names of clients from input list, and separates
+     * them by a comma.
+     * 
+     * @param clients - target client list.
+     * @return client names separated by a comma.
+     */
+    private static String getPlayerNameData(List<Client> clients) {
+        List<Client> tempClients = new ArrayList<Client>(clients);
+        String clientNames = "";
+        for (Client client : tempClients) {
+            clientNames += client.getDisplayName() + ",";
+        }
+        return clientNames;
     }
 
     /**

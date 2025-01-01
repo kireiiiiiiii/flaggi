@@ -29,6 +29,7 @@ package flaggi;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -50,12 +51,14 @@ import flaggi.common.Client.RecievedServerDataStruct;
 import flaggi.common.GPanel.Interactable;
 import flaggi.common.GPanel.InteractableHandeler;
 import flaggi.common.GPanel.Renderable;
+import flaggi.common.GPanel.Scrollable;
 import flaggi.common.GPanel.Typable;
 import flaggi.constants.WidgetTags;
 import flaggi.ui.Background;
 import flaggi.ui.Bullet;
 import flaggi.ui.ConnectionWidget;
 import flaggi.ui.HUD;
+import flaggi.ui.Lobby;
 import flaggi.ui.MenuScreen;
 import flaggi.ui.PauseMenu;
 import flaggi.ui.Player;
@@ -160,6 +163,18 @@ public class App implements InteractableHandeler {
         LOGGER.addLog("UI window created");
         goToMenu();
 
+        // TODO Debug lobby widget
+        // this.gpanel.hideAllWidgets();
+        // this.gpanel.add(new Lobby());
+        // this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
+        // List<String> placeholderNames = new ArrayList<String>();
+        // for (int i = 0; i <= 200; i++) {
+        // placeholderNames.add("placeholder " + i);
+        // }
+        // for (Lobby l : this.gpanel.getWidgetsByClass(Lobby.class)) {
+        // l.setClients(placeholderNames);
+        // }
+
     }
 
     /////////////////
@@ -239,6 +254,14 @@ public class App implements InteractableHandeler {
         this.gameLoop = new GameLoop(FPS);
         this.gameLoop.start();
         LOGGER.addLog("Game loop started");
+
+        // TODO Debug -> Print client list
+        System.out.println("Before");
+        List<String> names = this.client.getConnectedIdlePlayers();
+        System.out.println("After");
+        for (String name : names) {
+            System.out.println(name);
+        }
 
     }
 
@@ -640,6 +663,15 @@ public class App implements InteractableHandeler {
 
     @Override
     public void mouseExited(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        for (Renderable r : this.gpanel.getScrollables()) {
+            Scrollable s = (Scrollable) r;
+            s.scroll(e);
+        }
+
     }
 
     @Override

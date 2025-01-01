@@ -34,6 +34,8 @@ import java.awt.Image;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.KeyListener;
@@ -105,7 +107,7 @@ import javax.swing.SwingUtilities;
  *         <a href="https://github.com/kireiiiiiiii">@kireiiiiiiii</a>
  * @since 7/23/2024
  */
-public class GPanel extends JPanel implements MouseListener, MouseMotionListener, KeyListener {
+public class GPanel extends JPanel implements MouseListener, MouseMotionListener, KeyListener, MouseWheelListener {
 
     /////////////////
     // Variables
@@ -160,6 +162,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         addMouseListener(this);
         addMouseMotionListener(this);
         addKeyListener(this);
+        addMouseWheelListener(this);
         requestFocusInWindow();
 
         // ---- Start rendering ----
@@ -292,6 +295,11 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     }
 
     @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        this.handeler.mouseWheelMoved(e);
+    }
+
+    @Override
     public void keyTyped(KeyEvent e) {
         this.handeler.keyTyped(e);
     }
@@ -373,6 +381,25 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
                 }
             }
             return typables;
+        }
+    }
+
+    /**
+     * This method makes a list of {@code Renderable} objects in the {@code widgets}
+     * list that are also implementing the {@code Scrollable} inteface.
+     * 
+     * @return - list of {@code Renderable} object, that are implementing the
+     *         {@code Scrollable} interface.
+     */
+    public ArrayList<Renderable> getScrollables() {
+        synchronized (this.widgets) {
+            ArrayList<Renderable> scrollables = new ArrayList<>();
+            for (Renderable r : this.widgets) {
+                if (r instanceof Scrollable) {
+                    scrollables.add(r);
+                }
+            }
+            return scrollables;
         }
     }
 
@@ -767,7 +794,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     }
 
     /**
-     * Interface for interactable ui elements.
+     * Interface for interactable UI elements.
      * 
      */
     public interface Interactable {
@@ -782,8 +809,28 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     }
 
+    /**
+     * Interface for typable UI elements.
+     * 
+     */
     public interface Typable {
+
+        /**
+         * Sends the key event to be handeled by the widget.
+         * 
+         * @param k - target {@code KeyEvent}.
+         */
         public void type(KeyEvent k);
+    }
+
+    public interface Scrollable {
+
+        /**
+         * Sends the mouse wheel event to be handeled by the widget.
+         * 
+         * @param e - target {@code MouseWheelEvent}.
+         */
+        public void scroll(MouseWheelEvent e);
     }
 
     /**
@@ -807,10 +854,13 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
         public void mouseExited(MouseEvent e);
 
+        public void mouseWheelMoved(MouseWheelEvent e);
+
         public void keyTyped(KeyEvent e);
 
         public void keyPressed(KeyEvent e);
 
         public void keyReleased(KeyEvent e);
     }
+
 }

@@ -38,6 +38,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -62,6 +63,7 @@ public class Client {
     private int udpPort;
     private int clientId;
     private InetAddress serverAddress;
+    private Socket tcpSocket;
     private DatagramSocket udpSocket;
     private String clientName;
 
@@ -79,6 +81,13 @@ public class Client {
         // ------ Set variables
         this.clientName = clientName;
         this.serverAddress = serverAddress;
+
+        // ------ Socket creation
+        try {
+            this.tcpSocket = new Socket(this.serverAddress, TCP_PORT);
+        } catch (IOException e) {
+            App.LOGGER.addLog("Client IOException caught when creating TCP socket.", e);
+        }
 
         // ------ Make the connection
         makeConnection(this.clientName);
@@ -186,6 +195,37 @@ public class Client {
     }
 
     /**
+     * Requests the names of all connected players from the server.
+     * 
+     * @return - {@code List} of {@code String}s for all idle connected players from
+     *         the server.
+     */
+    public List<String> getConnectedIdlePlayers() {
+
+        List<String> connectedIdlePlayers = new ArrayList<>();
+
+        try {
+
+            this.tcpSocket = new Socket(this.serverAddress, TCP_PORT);
+            ObjectOutputStream out = new ObjectOutputStream(this.tcpSocket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(this.tcpSocket.getInputStream());
+
+            out.writeUTF("get-idle-clients");
+            out.flush();
+
+            String data = in.readUTF();
+            if (data != null && !data.isEmpty()) {
+                connectedIdlePlayers = Arrays.asList(data.split(","));
+            }
+
+        } catch (IOException e) {
+            App.LOGGER.addLog("IOException caught while communicating with server", e);
+        }
+
+        return connectedIdlePlayers;
+    }
+
+    /**
      * Helper method to get the IPv4 adress of the client, to contact the server.
      * 
      * @return - a {@code InterAdress} of the client IPv4.
@@ -214,6 +254,7 @@ public class Client {
         } catch (SocketException e) {
             e.printStackTrace();
         }
+
         return null; // No IPv4 address found
     }
 
@@ -227,7 +268,7 @@ public class Client {
      * @param clientName - {@code String} of the client display name.
      */
     private void makeConnection(String clientName) {
-        try (Socket socket = new Socket(serverAddress, TCP_PORT); ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+        try (ObjectOutputStream out = new ObjectOutputStream(this.tcpSocket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(this.tcpSocket.getInputStream())) {
 
             // ------ Send the client name to the server
             out.writeUTF(clientName);
