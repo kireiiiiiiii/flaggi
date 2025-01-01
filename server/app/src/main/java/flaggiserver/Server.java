@@ -290,9 +290,8 @@ public class Server {
 
                             udpSocket.send(responsePacket);
 
-                        } else {
-                            log(RED, "Client not found with ID: " + clientId);
                         }
+
                     } else {
                         log(RED, "Received message doesn't have at least 6 parts: " + Arrays.toString(parts));
                     }
@@ -412,16 +411,18 @@ public class Server {
      * 
      */
     private static void checkForDisconnectedClients() {
-        long currentTime = System.currentTimeMillis();
-        Iterator<Client> iterator = clients.iterator();
+        synchronized (clients) {
+            long currentTime = System.currentTimeMillis();
+            Iterator<Client> iterator = clients.iterator();
 
-        while (iterator.hasNext()) {
-            Client client = iterator.next();
-            long timeDifference = currentTime - client.getLastReceivedTime();
+            while (iterator.hasNext()) { // TODO BUG
+                Client client = iterator.next();
+                long timeDifference = currentTime - client.getLastReceivedTime();
 
-            if (timeDifference > CLIENT_TIMEOUT_SECONDS * 1000) {
-                log(RED, "Client '" + client.getDisplayName() + "' disconnected (Timed out).");
-                iterator.remove();
+                if (timeDifference > CLIENT_TIMEOUT_SECONDS * 1000) {
+                    log(RED, "Client '" + client.getDisplayName() + "' disconnected (Timed out).");
+                    clients.remove(client);
+                }
             }
         }
     }
