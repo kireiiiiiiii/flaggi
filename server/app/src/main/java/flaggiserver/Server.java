@@ -27,7 +27,6 @@
 package flaggiserver;
 
 import java.io.BufferedReader;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -139,32 +138,38 @@ public class Server {
     private static void startTCPListener(ServerSocket serverSocket) {
 
         while (true) {
+
             try (Socket clientSocket = serverSocket.accept()) {
+
+                // ---- Initialize
+
                 clientSocket.setSoTimeout(500);
+                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                String initialMessage = in.readUTF();
 
-                try (ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream())) {
+                // ---- Running check
 
-                    String initialMessage = in.readUTF();
+                if ("ping".equals(initialMessage)) {
+                    out.writeUTF("pong");
+                    out.flush();
+                    log(BLACK, "Handled 'is server running' check from client, responded 'pong'");
+                }
 
-                    if ("ping".equals(initialMessage)) {
-                        out.writeUTF("pong");
-                        out.flush();
-                        log(BLACK, "Handled 'is server running' check from client, responded 'pong'");
-                        continue;
-                    }
+                // ---- Lobby list request
 
-                    if ("get-idle-clients".equals(initialMessage)) {
-                        String clientsData = getPlayerNameData(clients);
-                        out.writeUTF(clientsData);
-                        out.flush();
-                        log(BLACK, "Handeled get-idle-clients request from client.");
-                        continue;
-                    }
+                else if ("get-idle-clients".equals(initialMessage)) {
+                    String clientsData = getPlayerNameData(clients);
+                    out.writeUTF(clientsData);
+                    out.flush();
+                    log(BLACK, "Handeled get-idle-clients request from client.");
+                }
 
-                    clientSocket.setSoTimeout(0);
+                // ---- New client
 
+                else if (initialMessage.startsWith("new-client:")) {
                     int clientId = maxClientID++;
-                    String clientName = initialMessage;
+                    String clientName = initialMessage.split(":")[1];
                     InetAddress clientAddress = clientSocket.getInetAddress();
 
                     synchronized (clients) {
@@ -176,16 +181,24 @@ public class Server {
                     out.writeInt(UDP_PORT);
                     out.flush();
                     log(PURPLE, "Sent port and ID to client '" + clientName + "'");
-
-                } catch (EOFException | SocketTimeoutException e) {
-                    log(RED, "TCP exception: " + e.getMessage());
-                } catch (IOException e) {
-                    log(RED, "Error handling client connection: " + e.getMessage());
                 }
+
+                // ---- Invalid message
+
+                else {
+                    log(RED, "Invalid message from client: " + initialMessage);
+                }
+
+            } catch (SocketTimeoutException e) {
+                log(RED, "TCP socket timed out: " + e.getMessage());
             } catch (IOException e) {
-                e.printStackTrace();
+                log(RED, "Error handling client connection: " + e.getMessage());
+            } catch (Exception e) {
+                log(RED, "An unexpected error occurred: " + e.getMessage());
             }
+
         }
+
     }
 
     /**

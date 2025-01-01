@@ -256,12 +256,12 @@ public class App implements InteractableHandeler {
         LOGGER.addLog("Game loop started");
 
         // TODO Debug -> Print client list
-        System.out.println("Before");
         List<String> names = this.client.getConnectedIdlePlayers();
-        System.out.println("After");
+        String debug = "Connected clients: ";
         for (String name : names) {
-            System.out.println(name);
+            debug += name + ", ";
         }
+        System.out.println(debug);
 
     }
 

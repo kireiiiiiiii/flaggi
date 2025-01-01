@@ -271,7 +271,7 @@ public class Client {
         try (ObjectOutputStream out = new ObjectOutputStream(this.tcpSocket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(this.tcpSocket.getInputStream())) {
 
             // ------ Send the client name to the server
-            out.writeUTF(clientName);
+            out.writeUTF("new-client:" + clientName);
             out.flush();
 
             // ------ Receive the assigned client ID and UDP port from the server
