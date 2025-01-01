@@ -210,7 +210,7 @@ public class Client {
             ObjectOutputStream out = new ObjectOutputStream(this.tcpSocket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(this.tcpSocket.getInputStream());
 
-            out.writeUTF("get-idle-clients");
+            out.writeUTF("get-idle-clients" + ":" + this.clientId);
             out.flush();
 
             String data = in.readUTF();

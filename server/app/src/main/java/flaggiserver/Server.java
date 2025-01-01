@@ -158,8 +158,9 @@ public class Server {
 
                 // ---- Lobby list request
 
-                else if ("get-idle-clients".equals(initialMessage)) {
-                    String clientsData = getPlayerNameData(clients);
+                else if (initialMessage.startsWith("get-idle-clients")) {
+                    int id = Integer.parseInt(initialMessage.split(":")[1]);
+                    String clientsData = getPlayerNameData(clients, id);
                     out.writeUTF(clientsData);
                     out.flush();
                     log(BLACK, "Handeled get-idle-clients request from client.");
@@ -360,11 +361,13 @@ public class Server {
      * @param clients - target client list.
      * @return client names separated by a comma.
      */
-    private static String getPlayerNameData(List<Client> clients) {
+    private static String getPlayerNameData(List<Client> clients, int blacklist) {
         List<Client> tempClients = new ArrayList<Client>(clients);
         String clientNames = "";
         for (Client client : tempClients) {
-            clientNames += client.getDisplayName() + ",";
+            if (client.getId() != blacklist) {
+                clientNames += client.getDisplayName() + ",";
+            }
         }
         return clientNames;
     }
