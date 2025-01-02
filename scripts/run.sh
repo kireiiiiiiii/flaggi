@@ -73,6 +73,11 @@ handle_options() {
   fi
 }
 
+print_divider() {
+  width=$(tput cols)
+  printf '%*s\n' "$width" '' | tr ' ' '-'
+}
+
 # Build the minimal JRE
 build_minimal_jre() {
   cd "$PROJECT_ROOT"
@@ -112,10 +117,14 @@ build_and_run() {
       build_minimal_jre
       echo "Running the $app_name using diet JRE..."
       cd "$(dirname "$jar_file")"
+      print_divider
+      echo ""
       "$DIET_JRE/bin/java" -jar "$(basename "$jar_file")"
     else
       echo "Running the $app_name using global JRE..."
       cd "$(dirname "$jar_file")"
+      echo ""
+      print_divider
       java -jar "$(basename "$jar_file")"
     fi
   else
