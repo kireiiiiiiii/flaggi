@@ -66,8 +66,7 @@ public class App {
     private static final int TCP_PORT = 54321;
     private static final int UDP_PORT = 54322;
     private static final int CLIENT_TIMEOUT_SECONDS = 10;
-    @SuppressWarnings("unused")
-    private static String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi-server";
+    private static final String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi-server";
 
     /////////////////
     // Variables
@@ -90,11 +89,7 @@ public class App {
      * @param args
      */
     public static void main(String[] args) {
-        try {
-            startServer();
-        } catch (IOException e) {
-            Logger.log(LogLevel.ERROR, "Error while starting the server.", e);
-        }
+        startServer();
     }
 
     /////////////////
@@ -105,104 +100,99 @@ public class App {
      * Starts the server by firts creating a socket, then the TCP port and then the
      * UDP port.
      * 
-     * @throws IOException
      */
-    public static void startServer() throws IOException {
+    public static void startServer() {
+        Logger.setLogFile(getApplicationDataFolder() + File.separator + "logs" + File.separator + "latest.log");
+        logServerCreation();
 
-        // ---- INITIALIZE
+        // ---- Initialize & log
         clients = new CopyOnWriteArrayList<ClientStruct>();
         playerObjects = new CopyOnWriteArrayList<Bullet>();
         deadClientIdQue = new CopyOnWriteArrayList<Integer>();
-
-        // ---- START LISTENERS & GAME LOOP
-        ServerSocket serverSocket = new ServerSocket(TCP_PORT);
-        if (isRunningInDocker()) {
-            String hostIp = getHostIP() == null ? "." : ": " + getHostIP();
-            Logger.log(LogLevel.INFO, "Server is running in Docker. Use host's IP adress to connect" + hostIp);
-        } else {
-            Logger.log(LogLevel.INFO, "Server socket created on IP: '" + getIPv4Address().getHostAddress() + "'");
-        }
-
-        new Thread(() -> startTCPListener(serverSocket)).start();
-        Logger.log(LogLevel.INFO, "TCP listener started on port '" + TCP_PORT + "'. Waiting for clients...");
-        new Thread(App::startUDPListener).start();
-        Logger.log(LogLevel.INFO, "UDP started on port '" + UDP_PORT + "'. Waiting for data...");
         gameLoop = new GameLoop(60);
         gameLoop.start();
-        Logger.log(LogLevel.INFO, "Started game loop.");
+
+        // ---- Start listener threads
+        new Thread(App::startTCPListener, "TCP listener").start();
+        new Thread(App::startUDPListener, "UDP listener").start();
     }
 
     /**
      * Starts the TCP listener that listens for new clients, assigns them their IDs,
      * and gives them the UDP port to send data to.
      * 
-     * @param serverSocket - TCP port
      */
-    private static void startTCPListener(ServerSocket serverSocket) {
+    private static void startTCPListener() {
+        Logger.log(LogLevel.INFO, "TCP listener started on port '" + TCP_PORT + "'. Waiting for clients...");
 
-        while (true) {
+        try (ServerSocket serverSocket = new ServerSocket(TCP_PORT)) {
+            while (true) {
 
-            try (Socket clientSocket = serverSocket.accept()) {
+                try (Socket clientSocket = serverSocket.accept()) {
 
-                // ---- Initialize
+                    // ---- Initialize
 
-                clientSocket.setSoTimeout(500);
-                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-                String initialMessage = in.readUTF();
+                    clientSocket.setSoTimeout(500);
+                    ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                    ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                    String initialMessage = in.readUTF();
 
-                // ---- Running check
+                    // ---- Running check
 
-                if ("ping".equals(initialMessage)) {
-                    out.writeUTF("pong");
-                    out.flush();
-                    Logger.log(LogLevel.PING, "Handled 'is server running' check from client, responded 'pong'");
-                }
-
-                // ---- Lobby list request
-
-                else if (initialMessage.startsWith("get-idle-clients")) {
-                    int id = Integer.parseInt(initialMessage.split(":")[1]);
-                    String clientsData = getPlayerNameData(clients, id);
-                    out.writeUTF(clientsData);
-                    out.flush();
-                    Logger.log(LogLevel.TCPREQUESTS, "Handeled get-idle-clients request from client.");
-                }
-
-                // ---- New client
-
-                else if (initialMessage.startsWith("new-client:")) {
-                    int clientId = maxClientID++;
-                    String clientName = initialMessage.split(":")[1];
-                    InetAddress clientAddress = clientSocket.getInetAddress();
-
-                    synchronized (clients) {
-                        clients.add(new ClientStruct(clientId, clientName, clientAddress));
+                    if ("ping".equals(initialMessage)) {
+                        out.writeUTF("pong");
+                        out.flush();
+                        Logger.log(LogLevel.PING, "Handled 'is server running' check from client, responded 'pong'");
                     }
-                    Logger.log(LogLevel.CONNECTION, "Client " + clientName + " connected. Assigned ID: " + clientId);
 
-                    out.writeInt(clientId);
-                    out.writeInt(UDP_PORT);
-                    out.flush();
-                    Logger.log(LogLevel.CONNECTION, "Sent UDP port and ID back to client '" + clientName + "'");
+                    // ---- Lobby list request
+
+                    else if (initialMessage.startsWith("get-idle-clients")) {
+                        int id = Integer.parseInt(initialMessage.split(":")[1]);
+                        String clientsData = getPlayerNameData(clients, id);
+                        out.writeUTF(clientsData);
+                        out.flush();
+                        Logger.log(LogLevel.TCPREQUESTS, "Handeled get-idle-clients request from client.");
+                    }
+
+                    // ---- New client
+
+                    else if (initialMessage.startsWith("new-client:")) {
+                        int clientId = maxClientID++;
+                        String clientName = initialMessage.split(":")[1];
+                        InetAddress clientAddress = clientSocket.getInetAddress();
+
+                        synchronized (clients) {
+                            clients.add(new ClientStruct(clientId, clientName, clientAddress));
+                        }
+                        Logger.log(LogLevel.CONNECTION, "Client " + clientName + " connected. Assigned ID: " + clientId);
+
+                        out.writeInt(clientId);
+                        out.writeInt(UDP_PORT);
+                        out.flush();
+                        Logger.log(LogLevel.CONNECTION, "Sent UDP port and ID back to client '" + clientName + "'");
+                    }
+
+                    // ---- Invalid message
+
+                    else {
+                        Logger.log(LogLevel.WARN, "Invalid TCP message from client for message '" + initialMessage + "'");
+                    }
+
+                } catch (SocketTimeoutException e) {
+                    Logger.log(LogLevel.WARN, "TCP connection timed out.", e);
+                } catch (IOException e) {
+                    Logger.log(LogLevel.ERROR, "IO exception occured in TCP listener.", e);
+                    handleFatalError();
+                } catch (Exception e) {
+                    Logger.log(LogLevel.ERROR, "An unexpected error occurred in TCP listener.", e);
+                    handleFatalError();
                 }
 
-                // ---- Invalid message
-
-                else {
-                    Logger.log(LogLevel.WARN, "Invalid TCP message from client for message '" + initialMessage + "'");
-                }
-
-            } catch (SocketTimeoutException e) {
-                Logger.log(LogLevel.WARN, "TCP connection timed out.", e);
-            } catch (IOException e) {
-                Logger.log(LogLevel.ERROR, "IO exception occured in TCP listener.", e);
-                handleFatalError();
-            } catch (Exception e) {
-                Logger.log(LogLevel.ERROR, "An unexpected error occurred in TCP listener.", e);
-                handleFatalError();
             }
-
+        } catch (IOException e) {
+            Logger.log(LogLevel.ERROR, "An IO Exception while creating the TCP socket.", e);
+            handleFatalError();
         }
 
     }
@@ -217,10 +207,64 @@ public class App {
     }
 
     /**
+     * Logs the server creation message and the IP it was created on.
+     * 
+     */
+    public static void logServerCreation() { // TODO make clear
+        if (isRunningInDocker()) {
+            String hostIp = getHostIP() == null ? "." : ": " + getHostIP();
+            Logger.log(LogLevel.INFO, "Server is running in Docker. Use host's IP adress to connect" + hostIp);
+        } else {
+            Logger.log(LogLevel.INFO, "Server socket created on IP: '" + getIPv4Address().getHostAddress() + "'");
+        }
+    }
+
+    /**
+     * Gets the program Application Data Folder path. If it doesn't exist, it will
+     * create one.
+     * 
+     * @return - {@code String} of the application data folder path.
+     */
+    private static String getApplicationDataFolder() {
+        String os = System.getProperty("os.name").toLowerCase();
+        String appDataFolder;
+
+        if (os.contains("win")) {
+            // Windows: Use %APPDATA%
+            appDataFolder = System.getenv("APPDATA");
+        } else if (os.contains("mac")) {
+            // macOS: Use ~/Library/Application Support/
+            appDataFolder = System.getProperty("user.home") + File.separator + "Library" + File.separator + "Application Support";
+        } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+            // Linux/Unix: Use ~/.config/
+            appDataFolder = System.getProperty("user.home") + File.separator + ".config";
+        } else {
+            // Other: Use the directory of server jar.
+            appDataFolder = File.separator;
+        }
+
+        // Add the application's specific folder name
+        appDataFolder = appDataFolder + File.separator + DATA_DIRECTORY_NAME;
+
+        // Ensure the directory exists
+        File folder = new File(appDataFolder);
+        if (!folder.exists()) {
+            boolean created = folder.mkdirs();
+            if (!created) {
+                throw new RuntimeException("Failed to create application data folder at: " + appDataFolder);
+            }
+        }
+
+        return appDataFolder;
+    }
+
+    /**
      * Starts the UDP listener for the clients to send their position data to. Now
      * also responds to heartbeat messages from clients to confirm connectivity.
      */
     private static void startUDPListener() {
+        Logger.log(LogLevel.INFO, "UDP started on port '" + UDP_PORT + "'. Waiting for data...");
+
         try (DatagramSocket udpSocket = new DatagramSocket(UDP_PORT)) {
 
             byte[] buffer = new byte[1024];
@@ -599,6 +643,7 @@ public class App {
          * 
          */
         public void start() {
+            Logger.log(LogLevel.INFO, "Started game loop.");
             running = true;
             new Thread(this, "Game loop Thread").start();
         }

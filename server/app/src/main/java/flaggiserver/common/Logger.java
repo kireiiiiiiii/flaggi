@@ -63,32 +63,37 @@ public class Logger {
      */
     public static void log(LogLevel level, String message, Exception e) {
         String timestamp = DATE_FORMAT.format(new Date()); // Current time
-        String logMessage = String.format("%s %s[%s]%s %s", level.getColor(), // Color based on log level
+
+        // Calculate padding to center the level name
+        int maxLevelLength = getMaxLogLevelLength() + 2; // 2 for brackets
+        String paddedLevel = centerText("[" + level.name() + "]", maxLevelLength); // Centered level name
+
+        // Build the log message
+        String logMessage = String.format("%s %s %s %s %s", level.getColor(), // Color based on log level
                 timestamp, // Timestamp
-                level.name(), // Log level name
+                paddedLevel, // Centered log level name
                 TermColors.WHITE, // Reset color after log level
                 message // Actual log message
         );
 
         System.out.println(logMessage);
 
-        // If an exception is passed, log the stack trace in red
+        // If an exception is passed, log the stack trace in the same color
         if (e != null) {
             System.out.println(level.getColor());
             e.printStackTrace(System.out);
             System.out.print(TermColors.WHITE); // Reset to default color
         }
 
-        // Write to log file
+        // Write to log file if configured
         if (logFile != null) {
             try (FileWriter fw = new FileWriter(logFile, true)) {
-                String noColorLogMessage = String.format("%s[%s]%s", timestamp, level.name(), message);
-                fw.write(noColorLogMessage);
+                String noColorLogMessage = String.format("%s %s %s %s", timestamp, paddedLevel, "", message);
+                fw.write(noColorLogMessage + "\n");
             } catch (IOException caughtE) {
                 log(LogLevel.WARN, "IO Exception caught when writing into log file.", caughtE);
             }
         }
-
     }
 
     /**
@@ -111,15 +116,46 @@ public class Logger {
      * @param path
      * @throws IOException
      */
-    public static void setLogFile(String path) throws IOException {
-        logFile = new File(path);
-        if (!logFile.exists()) {
-            logFile.getParentFile().mkdirs();
-            logFile.createNewFile();
+    public static void setLogFile(String path) {
+        try {
+            logFile = new File(path);
+            if (!logFile.exists()) {
+                logFile.getParentFile().mkdirs();
+                logFile.createNewFile();
+            }
             FileWriter fw = new FileWriter(logFile, false);
-            fw.write(" "); // Clear the log file
+            fw.write(""); // Clear the log file
             fw.close();
+        } catch (IOException e) {
+            log(LogLevel.WARN, "IO Exception caught when setting log file.", e);
         }
+    }
+
+    /////////////////
+    // Helper methods
+    ////////////////
+
+    private static int getMaxLogLevelLength() {
+        int maxLength = 0;
+        for (LogLevel level : LogLevel.values()) {
+            maxLength = Math.max(maxLength, level.name().length());
+        }
+        return maxLength;
+    }
+
+    private static String centerText(String text, int width) {
+        int padding = width - text.length();
+        int leftPadding = padding / 2;
+        int rightPadding = padding - leftPadding;
+        return repeat(' ', leftPadding) + text + repeat(' ', rightPadding);
+    }
+
+    private static String repeat(char ch, int count) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            builder.append(ch);
+        }
+        return builder.toString();
     }
 
     /////////////////
