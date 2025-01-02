@@ -40,8 +40,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -49,13 +47,17 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.Iterator;
 
+import flaggiserver.common.Bullet;
+import flaggiserver.common.ClientStruct;
+import flaggiserver.common.Logger;
 import flaggiserver.common.Rectangle;
+import flaggiserver.common.Logger.LogLevel;
 
 /**
  * Server class for the LAN Game application.
  * 
  */
-public class Server {
+public class App {
 
     /////////////////
     // Constants
@@ -71,9 +73,10 @@ public class Server {
     // Variables
     ////////////////
 
+    public static List<ClientStruct> clients;
+    public static List<Bullet> playerObjects;
+
     private static int maxClientID = 0;
-    private static List<Client> clients;
-    private static List<Bullet> playerObjects;
     private static List<Integer> deadClientIdQue;
     private static GameLoop gameLoop;
 
@@ -90,7 +93,7 @@ public class Server {
         try {
             startServer();
         } catch (IOException e) {
-            log(RED, "Error starting server: " + e.getMessage());
+            Logger.log(LogLevel.ERROR, "Error while starting the server.", e);
         }
     }
 
@@ -107,7 +110,7 @@ public class Server {
     public static void startServer() throws IOException {
 
         // ---- INITIALIZE
-        clients = new CopyOnWriteArrayList<Client>();
+        clients = new CopyOnWriteArrayList<ClientStruct>();
         playerObjects = new CopyOnWriteArrayList<Bullet>();
         deadClientIdQue = new CopyOnWriteArrayList<Integer>();
 
@@ -115,18 +118,18 @@ public class Server {
         ServerSocket serverSocket = new ServerSocket(TCP_PORT);
         if (isRunningInDocker()) {
             String hostIp = getHostIP() == null ? "." : ": " + getHostIP();
-            log(YELLOW, "Server is running in Docker. Use host's IP adress to connect" + hostIp);
+            Logger.log(LogLevel.INFO, "Server is running in Docker. Use host's IP adress to connect" + hostIp);
         } else {
-            log(YELLOW, "Server socket created on IP: '" + getIPv4Address().getHostAddress() + "'");
+            Logger.log(LogLevel.INFO, "Server socket created on IP: '" + getIPv4Address().getHostAddress() + "'");
         }
 
         new Thread(() -> startTCPListener(serverSocket)).start();
-        log(YELLOW, "Server started on port '" + TCP_PORT + "'. Waiting for clients...");
-        new Thread(Server::startUDPListener).start();
-        log(YELLOW, "UDP started on port '" + UDP_PORT + "'. Waiting for data...");
+        Logger.log(LogLevel.INFO, "TCP listener started on port '" + TCP_PORT + "'. Waiting for clients...");
+        new Thread(App::startUDPListener).start();
+        Logger.log(LogLevel.INFO, "UDP started on port '" + UDP_PORT + "'. Waiting for data...");
         gameLoop = new GameLoop(60);
         gameLoop.start();
-        log(YELLOW, "Started game loop.");
+        Logger.log(LogLevel.INFO, "Started game loop.");
     }
 
     /**
@@ -153,7 +156,7 @@ public class Server {
                 if ("ping".equals(initialMessage)) {
                     out.writeUTF("pong");
                     out.flush();
-                    log(BLACK, "Handled 'is server running' check from client, responded 'pong'");
+                    Logger.log(LogLevel.PING, "Handled 'is server running' check from client, responded 'pong'");
                 }
 
                 // ---- Lobby list request
@@ -163,7 +166,7 @@ public class Server {
                     String clientsData = getPlayerNameData(clients, id);
                     out.writeUTF(clientsData);
                     out.flush();
-                    log(BLACK, "Handeled get-idle-clients request from client.");
+                    Logger.log(LogLevel.TCPREQUESTS, "Handeled get-idle-clients request from client.");
                 }
 
                 // ---- New client
@@ -174,32 +177,43 @@ public class Server {
                     InetAddress clientAddress = clientSocket.getInetAddress();
 
                     synchronized (clients) {
-                        clients.add(new Client(clientId, clientName, clientAddress));
+                        clients.add(new ClientStruct(clientId, clientName, clientAddress));
                     }
-                    log(GREEN, "Assigned ID '" + clientId + "' to client '" + clientName + "'");
+                    Logger.log(LogLevel.CONNECTION, "Client " + clientName + " connected. Assigned ID: " + clientId);
 
                     out.writeInt(clientId);
                     out.writeInt(UDP_PORT);
                     out.flush();
-                    log(PURPLE, "Sent port and ID to client '" + clientName + "'");
+                    Logger.log(LogLevel.CONNECTION, "Sent UDP port and ID back to client '" + clientName + "'");
                 }
 
                 // ---- Invalid message
 
                 else {
-                    log(RED, "Invalid message from client: " + initialMessage);
+                    Logger.log(LogLevel.WARN, "Invalid TCP message from client for message '" + initialMessage + "'");
                 }
 
             } catch (SocketTimeoutException e) {
-                log(RED, "TCP socket timed out: " + e.getMessage());
+                Logger.log(LogLevel.WARN, "TCP connection timed out.", e);
             } catch (IOException e) {
-                log(RED, "Error handling client connection: " + e.getMessage());
+                Logger.log(LogLevel.ERROR, "IO exception occured in TCP listener.", e);
+                handleFatalError();
             } catch (Exception e) {
-                log(RED, "An unexpected error occurred: " + e.getMessage());
+                Logger.log(LogLevel.ERROR, "An unexpected error occurred in TCP listener.", e);
+                handleFatalError();
             }
 
         }
 
+    }
+
+    /**
+     * Method handeling the occurance of a fatal unrecoverable error.
+     * 
+     */
+    public static void handleFatalError() {
+        Logger.log(LogLevel.ERROR, "FATAL EXCEPTION CAUGHT! SHUTTING DOWN SERVER...");
+        System.exit(0);
     }
 
     /**
@@ -230,9 +244,9 @@ public class Server {
                     String[] parts = message.split(",");
                     if (parts[1].equals("disconnect")) {
                         synchronized (clients) {
-                            for (Client client : clients) {
-                                if (client.getId() == Integer.parseInt(parts[0])) {
-                                    log(CYAN, "Client '" + client.getDisplayName() + "' disconnected.");
+                            for (ClientStruct client : clients) {
+                                if (client.getID() == Integer.parseInt(parts[0])) {
+                                    Logger.log(LogLevel.CONNECTION, "Client '" + client.getDISPLAY_NAME() + "' disconnected.");
                                     clients.remove(client);
                                     break;
                                 }
@@ -249,7 +263,7 @@ public class Server {
                         String animationFrame = parts[5];
                         String playerObjectData = (parts.length < 7) ? null : parts[6];
 
-                        Client client;
+                        ClientStruct client;
                         synchronized (clients) {
                             client = getClient(clientId);
                         }
@@ -287,14 +301,14 @@ public class Server {
                                 sendMessage = getAllClientsData(clientId);
                             }
                             byte[] responseBuffer = sendMessage.getBytes();
-                            DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length, client.getInetAddress(), packet.getPort());
+                            DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length, client.getINET_ADRESS(), packet.getPort());
 
                             udpSocket.send(responsePacket);
 
                         }
 
                     } else {
-                        log(RED, "Received message doesn't have at least 6 parts: " + Arrays.toString(parts));
+                        Logger.log(LogLevel.WARN, "Received UDP message doesn't have at least 6 expected parts: " + Arrays.toString(parts));
                     }
                 }
 
@@ -304,8 +318,8 @@ public class Server {
                 buffer = new byte[1024];
             }
         } catch (IOException e) {
-            log(RED, "Error in UDP listener: " + e.getMessage());
-            System.exit(0);
+            Logger.log(LogLevel.ERROR, "An IO Exception occured in UDP listener.", e);
+            handleFatalError();
         }
     }
 
@@ -323,10 +337,10 @@ public class Server {
 
         synchronized (playerObjects) {
             for (Bullet bullet : new ArrayList<>(playerObjects)) {
-                if (!bullet.wasSendTo(id)) {
+                if (!bullet.wasCreationDataSendToClient(id)) {
                     data.append(bullet.toString()).append("+");
                 }
-                bullet.addId(id);
+                bullet.setWasSendToClient(id);
             }
 
             // Remove trailing "+" if present
@@ -338,10 +352,10 @@ public class Server {
         data.append("/");
 
         synchronized (clients) {
-            for (Client client : new ArrayList<>(clients)) {
+            for (ClientStruct client : new ArrayList<>(clients)) {
                 List<Bullet> playerObjects = new ArrayList<>(client.getPlayerObjects());
                 for (Bullet object : playerObjects) {
-                    data.append(client.id).append("-").append(object.getBulletId()).append(",");
+                    data.append(client.getID()).append("-").append(object.getBulletId()).append(",");
                 }
             }
 
@@ -361,12 +375,12 @@ public class Server {
      * @param clients - target client list.
      * @return client names separated by a comma.
      */
-    private static String getPlayerNameData(List<Client> clients, int blacklist) {
-        List<Client> tempClients = new ArrayList<Client>(clients);
+    private static String getPlayerNameData(List<ClientStruct> clients, int blacklist) {
+        List<ClientStruct> tempClients = new ArrayList<ClientStruct>(clients);
         String clientNames = "";
-        for (Client client : tempClients) {
-            if (client.getId() != blacklist) {
-                clientNames += client.getDisplayName() + ",";
+        for (ClientStruct client : tempClients) {
+            if (client.getID() != blacklist) {
+                clientNames += client.getDISPLAY_NAME() + ",";
             }
         }
         return clientNames;
@@ -378,8 +392,8 @@ public class Server {
      * @param dataString - recipe for the bullet.
      * @param client     - owning client.
      */
-    private static void handlePlayerObjectData(String dataString, Client client) {
-        Bullet b = dataToBullet(dataString, client.getId());
+    private static void handlePlayerObjectData(String dataString, ClientStruct client) {
+        Bullet b = dataToBullet(dataString, client.getID());
         synchronized (playerObjects) {
             playerObjects.add(b);
         }
@@ -395,7 +409,7 @@ public class Server {
     private static Bullet dataToBullet(String data, int clientId) {
         String[] parsedData = data.split(":");
         if (parsedData.length != 6) {
-            log(RED, "Invalid data format for creating a bullet object: " + Arrays.toString(parsedData));
+            Logger.log(LogLevel.WARN, "Recieved invalid data format for creating a bullet object: " + Arrays.toString(parsedData));
             return null;
         }
         int bulletNum = Integer.parseInt(parsedData[1]);
@@ -405,7 +419,27 @@ public class Server {
         int[] targetPos = new int[] { Integer.parseInt(targetPosData[0]), Integer.parseInt(targetPosData[1]) };
         int decayTime = Integer.parseInt(parsedData[4]);
         int initVelocity = Integer.parseInt(parsedData[5]);
+
         return new Bullet(initPos, targetPos, initVelocity, decayTime, clientId, bulletNum);
+    }
+
+    /**
+     * Method executed after a bullet decayes.
+     * 
+     * @param b - bullet object that decayed.
+     */
+    public static void afterBulletDecay(Bullet b) {
+        synchronized (clients) {
+            Iterator<ClientStruct> iterator = clients.iterator();
+            while (iterator.hasNext()) {
+                ClientStruct c = iterator.next();
+                if (c.getID() == b.getOwningPlaterId()) {
+                    c.removePlayerObject(b);
+                    break;
+                }
+            }
+        }
+        playerObjects.remove(b);
     }
 
     /**
@@ -416,14 +450,14 @@ public class Server {
     private static void checkForDisconnectedClients() {
         synchronized (clients) {
             long currentTime = System.currentTimeMillis();
-            Iterator<Client> iterator = clients.iterator();
+            Iterator<ClientStruct> iterator = clients.iterator();
 
-            while (iterator.hasNext()) { // TODO BUG
-                Client client = iterator.next();
+            while (iterator.hasNext()) {
+                ClientStruct client = iterator.next();
                 long timeDifference = currentTime - client.getLastReceivedTime();
 
                 if (timeDifference > CLIENT_TIMEOUT_SECONDS * 1000) {
-                    log(RED, "Client '" + client.getDisplayName() + "' disconnected (Timed out).");
+                    Logger.log(LogLevel.WARN, "Client '" + client.getDISPLAY_NAME() + "' disconnected (Timed out!).");
                     clients.remove(client);
                 }
             }
@@ -438,7 +472,7 @@ public class Server {
     private static void refreshIDNumberIfNoUsers() {
         if (clients.isEmpty() && maxClientID > 0) {
             maxClientID = 0;
-            log(CYAN, "No users connected, resetting ID number to 0.");
+            Logger.log(LogLevel.INFO, "No users connected, resetting ID number to 0.");
         }
     }
 
@@ -448,10 +482,10 @@ public class Server {
      * @param id - client ID
      * @return a {@code Client} object reference. If not found, returns null.
      */
-    private static Client getClient(int id) {
+    private static ClientStruct getClient(int id) {
         synchronized (clients) {
-            for (Client c : clients) {
-                if (c.getId() == id) {
+            for (ClientStruct c : clients) {
+                if (c.getID() == id) {
                     return c;
                 }
             }
@@ -467,8 +501,8 @@ public class Server {
     private static String getAllClientsData(int id) {
         StringBuilder positions = new StringBuilder();
         synchronized (clients) {
-            for (Client client : clients) {
-                positions.append(client.getId()).append(",").append(client.getX()).append(",").append(client.getY()).append(",").append(client.getHealth()).append(",").append(client.getDisplayName()).append(",").append(client.getAnimationFrame()).append(";");
+            for (ClientStruct client : clients) {
+                positions.append(client.getID()).append(",").append(client.getX()).append(",").append(client.getY()).append(",").append(client.getHealth()).append(",").append(client.getDISPLAY_NAME()).append(",").append(client.getAnimationFrame()).append(";");
             }
         }
         positions.append("|").append(getAllPlayerObjectData(id));
@@ -535,255 +569,6 @@ public class Server {
         }
 
         return false;
-    }
-
-    /**
-     * Term colors.
-     * 
-     */
-    public static final String BLACK = "\033[0;30m"; // ping
-    public static final String RED = "\033[0;31m"; // err
-    public static final String GREEN = "\033[0;32m"; // assigned
-    public static final String YELLOW = "\033[0;33m"; // init server
-    public static final String BLUE = "\033[0;34m"; // recieve
-    public static final String PURPLE = "\033[0;35m"; // send
-    public static final String CYAN = "\033[0;36m"; // disconnects, reset id
-    public static final String WHITE = "\033[0;37m";
-
-    /**
-     * Logs messages into the console.
-     * 
-     * @param color   - color of the log. Empty {@code String} if no color needed.
-     * @param message - message to log.
-     */
-    private static void log(String color, String message) {
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        System.out.println(LocalDateTime.now().format(timeFormatter) + " " + color + message + "\u001B[0m");
-    }
-
-    /////////////////
-    // Client struct
-    ////////////////
-
-    /**
-     * Structure for a client object.
-     * 
-     */
-    private static class Client {
-
-        private final int id;
-        private final String displayName;
-        private final InetAddress inetAddress;
-        private String animationFrame;
-        private int x, y, health;
-        private long lastReceivedTime;
-        private List<Bullet> playerObjects;
-
-        public Client(int id, String displayName, InetAddress inetAddress) {
-            this.playerObjects = new ArrayList<Bullet>();
-            this.id = id;
-            this.displayName = displayName;
-            this.inetAddress = inetAddress;
-            updateLastReceivedTime();
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public String getDisplayName() {
-            return displayName;
-        }
-
-        public InetAddress getInetAddress() {
-            return inetAddress;
-        }
-
-        public int getX() {
-            return x;
-        }
-
-        public int getY() {
-            return y;
-        }
-
-        public int getHealth() {
-            return this.health;
-        }
-
-        public void setHealth(int health) {
-            this.health = health;
-        }
-
-        public String getAnimationFrame() {
-            return this.animationFrame;
-        }
-
-        public void setPosition(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public void setAnimationFrame(String animationFrame) {
-            this.animationFrame = animationFrame;
-        }
-
-        public long getLastReceivedTime() {
-            return lastReceivedTime;
-        }
-
-        public void updateLastReceivedTime() {
-            this.lastReceivedTime = System.currentTimeMillis();
-        }
-
-        public List<Bullet> getPlayerObjects() {
-            return this.playerObjects;
-        }
-
-        public void addPlayerObject(Bullet bullet) {
-            this.playerObjects.add(bullet);
-        }
-
-        public void removePlayerObject(Bullet bullet) {
-            this.playerObjects.remove(bullet);
-        }
-
-    }
-
-    /**
-     * Bullet class, as an player created object.
-     * 
-     */
-    public static class Bullet implements Runnable {
-
-        // Init variables
-        private int bulletNum, playerId, decayTime;
-        private int[] initPos, targetPos;
-        private List<Integer> sendCliens;
-
-        // Other variables
-        private double[] position, direction;
-        private int velocity;
-        private boolean running;
-        private Thread decayUpdateThread;
-        private Runnable afterDecay;
-
-        /**
-         * Bullet constructor.
-         *
-         * @param initialPosition - Initial position of the bullet [x, y].
-         * @param targetPosition  - Target position the bullet heads to [x, y].
-         * @param velocity        - Velocity in points per second.
-         * @param decayTime       - Time (in ms) after which the bullet disappears.
-         */
-        public Bullet(int[] initialPosition, int[] targetPosition, int velocity, int decayTime, int playerId, int bulletNum) {
-            this.position = new double[] { initialPosition[0], initialPosition[1] };
-
-            this.afterDecay = () -> {
-                synchronized (clients) {
-                    Iterator<Client> iterator = clients.iterator();
-                    while (iterator.hasNext()) {
-                        Client c = iterator.next();
-                        if (c.getId() == this.playerId) {
-                            c.removePlayerObject(this);
-                            break;
-                        }
-                    }
-                }
-                playerObjects.remove(this);
-            };
-
-            this.playerId = playerId;
-            this.bulletNum = bulletNum;
-            this.initPos = initialPosition;
-            this.targetPos = targetPosition;
-            this.velocity = velocity;
-            this.decayTime = decayTime;
-            this.running = true;
-
-            this.sendCliens = new ArrayList<Integer>();
-
-            // Calculate normalized direction vector
-            double dx = targetPosition[0] - initialPosition[0];
-            double dy = targetPosition[1] - initialPosition[1];
-            double magnitude = Math.sqrt(dx * dx + dy * dy);
-            this.direction = new double[] { dx / magnitude, dy / magnitude };
-
-            // Start the movement thread
-            this.decayUpdateThread = new Thread(this, "Bullet decay update thread");
-            this.decayUpdateThread.start();
-        }
-
-        /////////////////
-        // Helpers
-        ////////////////
-
-        public int getBulletId() {
-            return bulletNum;
-        }
-
-        public void addId(int id) {
-            this.sendCliens.add(id);
-        }
-
-        public boolean wasSendTo(int id) {
-            return this.sendCliens.contains(id);
-        }
-
-        public int getOwningPlaterId() {
-            return this.playerId;
-        }
-
-        @Override
-        public String toString() {
-            return "bullet:" + playerId + "-" + bulletNum + ":" + initPos[0] + "&" + initPos[1] + ":" + targetPos[0] + "&" + targetPos[1] + ":" + decayTime + ":" + velocity;
-        }
-
-        /////////////////
-        // Movement Logic
-        ////////////////
-
-        /**
-         * Thread for updating the bullet's position and handling its lifecycle.
-         */
-        @Override
-        public void run() {
-            long startTime = System.currentTimeMillis();
-            long lastUpdate = System.currentTimeMillis();
-
-            while (running) {
-                long currentTime = System.currentTimeMillis();
-                long elapsedTime = currentTime - lastUpdate;
-
-                // Update position based on velocity and elapsed time
-                if (elapsedTime > 0) {
-                    double delta = (elapsedTime / 1000.0) * this.velocity; // Distance to move in this time slice
-                    this.position[0] += this.direction[0] * delta;
-                    this.position[1] += this.direction[1] * delta;
-                    lastUpdate = currentTime;
-                }
-
-                // Check for decay
-                if (currentTime - startTime >= this.decayTime) {
-                    this.afterDecay.run();
-                    this.running = false;
-                }
-
-                try {
-                    Thread.sleep(16);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        /**
-         * Stops the bullet thread.
-         */
-        public void stop() {
-            this.running = false;
-        }
-
     }
 
     /////////////////
@@ -866,15 +651,16 @@ public class Server {
                 List<Bullet> bulletsToRemove = new ArrayList<>();
 
                 for (Bullet b : new ArrayList<>(playerObjects)) {
-                    Rectangle bulletHitbox = new Rectangle((int) b.position[0], (int) b.position[1], 5, 5);
 
-                    for (Client c : new ArrayList<>(clients)) {
+                    Rectangle hitbox = b.getHitbox();
+
+                    for (ClientStruct c : new ArrayList<>(clients)) {
                         Rectangle playerHitbox = new Rectangle(c.getX() + 7, c.getY() + 7, 53, 93);
 
-                        if (bulletHitbox.intersects(playerHitbox)) {
-                            if (b.getOwningPlaterId() != c.id) {
-                                for (Client c1 : new ArrayList<>(clients)) {
-                                    if (c1.getId() == b.playerId) {
+                        if (hitbox.intersects(playerHitbox)) {
+                            if (b.getOwningPlaterId() != c.getID()) {
+                                for (ClientStruct c1 : new ArrayList<>(clients)) {
+                                    if (c1.getID() == b.getOwningPlaterId()) {
                                         c1.removePlayerObject(b);
                                     }
                                 }
@@ -886,7 +672,7 @@ public class Server {
                                 c.setHealth(Math.max(newHealth, 0));
 
                                 if (newHealth < 1) {
-                                    deadClientIdQue.add(c.id);
+                                    deadClientIdQue.add(c.getID());
                                 }
 
                                 break;
