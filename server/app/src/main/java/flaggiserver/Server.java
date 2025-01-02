@@ -76,7 +76,7 @@ public class Server {
     public static List<Bullet> playerObjects;
 
     private static int maxClientID = 0;
-    private static List<Integer> deadClientIdQue;
+    private static List<Integer> deadClientIdQueue;
     private static GameLoop gameLoop;
 
     /////////////////
@@ -89,41 +89,31 @@ public class Server {
      * @param args
      */
     public static void main(String[] args) {
-        startServer();
-    }
 
-    /////////////////
-    // Constructor
-    ////////////////
-
-    /**
-     * Starts the server by firts creating a socket, then the TCP port and then the
-     * UDP port.
-     * 
-     */
-    private static void startServer() {
         Logger.setLogFile(getApplicationDataFolder() + File.separator + "logs" + File.separator + "latest.log");
         logServerCreation();
 
         // ---- Initialize & log
         clients = new CopyOnWriteArrayList<ClientStruct>();
         playerObjects = new CopyOnWriteArrayList<Bullet>();
-        deadClientIdQue = new CopyOnWriteArrayList<Integer>();
+        deadClientIdQueue = new CopyOnWriteArrayList<Integer>();
         gameLoop = new GameLoop(60);
         gameLoop.start();
 
         // ---- Start listener threads
         new Thread(Server::startTCPListener, "TCP listener").start();
         new Thread(Server::startUDPListener, "UDP listener").start();
+
     }
 
     /////////////////
-    // Events
+    // TCP Listener
     ////////////////
 
     /**
      * Starts the TCP listener that listens for new clients, assigns them their IDs,
-     * and gives them the UDP port to send data to.
+     * and gives them the UDP port to send data to. Usually meant to be run on a new
+     * separate thread.
      * 
      */
     private static void startTCPListener() {
@@ -201,114 +191,187 @@ public class Server {
 
     }
 
+    /////////////////
+    // UDP
+    ////////////////
+
     /**
-     * Starts the UDP listener for the clients to send their position data to. Now
-     * also responds to heartbeat messages from clients to confirm connectivity.
+     * Starts the UDP listener for receiving client position data and handling
+     * heartbeat messages. Usually meant to be run on a separate thread.
      * 
      */
     private static void startUDPListener() {
         Logger.log(LogLevel.INFO, "UDP started on port '" + UDP_PORT + "'. Waiting for data...");
 
         try (DatagramSocket udpSocket = new DatagramSocket(UDP_PORT)) {
-
-            byte[] buffer = new byte[1024];
             udpSocket.setSoTimeout(CLIENT_TIMEOUT_SECONDS * 1000);
 
-            // ---- Variables
+            byte[] buffer = new byte[1024];
             playerObjects = new ArrayList<>();
-            deadClientIdQue = new ArrayList<>();
+            deadClientIdQueue = new ArrayList<>();
 
             while (true) {
-                boolean timedOut = false;
+
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 try {
                     udpSocket.receive(packet);
+                    processIncomingPacket(udpSocket, packet);
                 } catch (SocketTimeoutException e) {
-                    timedOut = true;
-                }
-
-                if (!timedOut) {
-                    String message = new String(packet.getData(), 0, packet.getLength());
-                    String[] parts = message.split(",");
-                    if (parts[1].equals("disconnect")) {
-                        synchronized (clients) {
-                            for (ClientStruct client : clients) {
-                                if (client.getID() == Integer.parseInt(parts[0])) {
-                                    Logger.log(LogLevel.CONNECTION, "Client '" + client.getDISPLAY_NAME() + "' disconnected.");
-                                    clients.remove(client);
-                                    break;
-                                }
-                            }
-                        }
-                        continue;
-                    }
-                    if (parts.length >= 6) {
-                        int clientId = Integer.parseInt(parts[0]);
-                        int x = Integer.parseInt(parts[1]);
-                        int y = Integer.parseInt(parts[2]);
-                        int health = Integer.parseInt(parts[3]);
-                        // Username is on parts[4]
-                        String animationFrame = parts[5];
-                        String playerObjectData = (parts.length < 7) ? null : parts[6];
-
-                        ClientStruct client;
-                        synchronized (clients) {
-                            client = getClient(clientId);
-                        }
-
-                        if (client != null) {
-
-                            // ---- Client died handeling
-                            boolean isDead = false;
-                            Iterator<Integer> iterator = deadClientIdQue.iterator();
-                            while (iterator.hasNext()) {
-                                Integer id = iterator.next();
-                                if (id == clientId) {
-                                    isDead = true;
-                                    iterator.remove();
-                                }
-                            }
-
-                            // ---- Normal message handeling
-                            client.setPosition(x, y);
-                            client.setAnimationFrame(animationFrame);
-                            client.updateLastReceivedTime();
-                            if (health == -1) {
-                                client.setHealth(100);
-                            }
-                            if (playerObjectData != null) {
-                                handlePlayerObjectData(playerObjectData, client);
-                            }
-
-                            // ---- Get message to send
-
-                            String sendMessage;
-                            if (isDead) {
-                                sendMessage = "died";
-                            } else {
-                                sendMessage = getAllClientsData(clientId);
-                            }
-                            byte[] responseBuffer = sendMessage.getBytes();
-                            DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length, client.getINET_ADRESS(), packet.getPort());
-
-                            udpSocket.send(responsePacket);
-
-                        }
-
-                    } else {
-                        Logger.log(LogLevel.WARN, "Received UDP message doesn't have at least 6 expected parts: " + Arrays.toString(parts));
-                    }
                 }
 
                 checkForDisconnectedClients();
                 refreshIDNumberIfNoUsers();
 
+                // Reset buffer for the next packet
                 buffer = new byte[1024];
             }
+
         } catch (IOException e) {
-            Logger.log(LogLevel.ERROR, "An IO Exception occured in UDP listener.", e);
+            Logger.log(LogLevel.ERROR, "An IO Exception occurred in the UDP listener.", e);
             handleFatalError();
         }
+    }
+
+    /**
+     * Processes an incoming UDP packet and handles client messages.
+     * 
+     */
+    private static void processIncomingPacket(DatagramSocket udpSocket, DatagramPacket packet) throws IOException {
+        String message = new String(packet.getData(), 0, packet.getLength());
+        String[] parts = message.split(",");
+
+        // Handle client disconnect
+        if (isDisconnectMessage(parts)) {
+            handleClientDisconnect(parts[0]);
+            return;
+        }
+
+        // Validate packet structure
+        if (parts.length < 6) {
+            Logger.log(LogLevel.WARN, "Received malformed UDP message: " + Arrays.toString(parts));
+            return;
+        }
+
+        // Parse client data
+        int clientId = Integer.parseInt(parts[0]);
+        int x = Integer.parseInt(parts[1]);
+        int y = Integer.parseInt(parts[2]);
+        int health = Integer.parseInt(parts[3]);
+        // Username is on parts[4]
+        String animationFrame = parts[5];
+        String playerObjectData = (parts.length < 7) ? null : parts[6];
+
+        ClientStruct client;
+        synchronized (clients) {
+            client = getClient(clientId);
+        }
+
+        if (client != null) {
+            updateClientData(client, x, y, health, animationFrame, playerObjectData);
+
+            String responseMessage = isClientRecentlyDead(clientId) ? "died" : getAllClientsData(clientId);
+            sendResponse(udpSocket, client, responseMessage, packet.getPort());
+        }
+    }
+
+    /**
+     * Checks if a client UDP message is a disconnect message.
+     * 
+     * @param parts - split recieved message from client.
+     * @return true if it is a disconnect message, false otherwise.
+     */
+    private static boolean isDisconnectMessage(String[] parts) {
+        return parts.length >= 2 && "disconnect".equals(parts[1]);
+    }
+
+    /**
+     * Handles player disconnects.
+     * 
+     * @param clientIdStr - client ID in a {@code String} form.
+     */
+    private static void handleClientDisconnect(String clientIdStr) {
+        int clientId = Integer.parseInt(clientIdStr);
+        synchronized (clients) { // Synchronize if needed
+            for (ClientStruct client : clients) {
+                if (client.getID() == clientId) {
+                    Logger.log(LogLevel.CONNECTION, "Client '" + client.getDISPLAY_NAME() + "' disconnected.");
+                    clients.remove(client); // Directly remove the client
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Updates the data of a client.
+     * 
+     * @param client           - target {@code Client} object.
+     * @param x                - X position.
+     * @param y                - Y position.
+     * @param health           - client health
+     * @param animationFrame   - animation daya.
+     * @param playerObjectData - player objects.
+     */
+    private static void updateClientData(ClientStruct client, int x, int y, int health, String animationFrame, String playerObjectData) {
+        client.setPosition(x, y);
+        client.setAnimationFrame(animationFrame);
+        client.updateLastReceivedTime();
+
+        if (health == -1) {
+            client.setHealth(100); // Reset health if required
+        }
+
+        if (playerObjectData != null) {
+            handlePlayerObjectData(playerObjectData, client);
+        }
+    }
+
+    /**
+     * Adds all new bullets reported by the client.
+     * 
+     * @param dataString - recipe for the bullet.
+     * @param client     - owning client.
+     */
+    private static void handlePlayerObjectData(String dataString, ClientStruct client) {
+        Bullet b = dataToBullet(dataString, client.getID());
+        synchronized (playerObjects) {
+            playerObjects.add(b);
+        }
+        client.addPlayerObject(b);
+    }
+
+    /**
+     * Checks if a client recently died.
+     * 
+     * @param clientId - target client ID.
+     * @return true if the client is recently dead, false otherwise.
+     */
+    private static boolean isClientRecentlyDead(int clientId) {
+        synchronized (deadClientIdQueue) {
+            Iterator<Integer> iterator = deadClientIdQueue.iterator();
+            while (iterator.hasNext()) {
+                if (iterator.next() == clientId) {
+                    iterator.remove();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Sends a response of all player data back to the client.
+     * 
+     * @param udpSocket - target UDP socket.
+     * @param client    - target client.
+     * @param message   - response message/
+     * @param port      - port number.
+     * @throws IOException if an error occurs.
+     */
+    private static void sendResponse(DatagramSocket udpSocket, ClientStruct client, String message, int port) throws IOException {
+        byte[] responseBuffer = message.getBytes();
+        DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length, client.getINET_ADRESS(), port);
+        udpSocket.send(responsePacket);
     }
 
     /////////////////
@@ -328,12 +391,12 @@ public class Server {
      * Logs the server creation message and the IP it was created on.
      * 
      */
-    private static void logServerCreation() { // TODO make clear
+    private static void logServerCreation() {
         if (isRunningInDocker()) {
             String hostIp = getHostIP() == null ? "." : ": " + getHostIP();
             Logger.log(LogLevel.INFO, "Server is running in Docker. Use host's IP adress to connect" + hostIp);
         } else {
-            Logger.log(LogLevel.INFO, "Server socket created on IP: '" + getIPv4Address().getHostAddress() + "'");
+            Logger.log(LogLevel.INFO, "Server socket created on IP: '" + getLocalIPv4Address().getHostAddress() + "'");
         }
     }
 
@@ -436,20 +499,6 @@ public class Server {
     }
 
     /**
-     * Adds all new bullets reported by the client.
-     * 
-     * @param dataString - recipe for the bullet.
-     * @param client     - owning client.
-     */
-    private static void handlePlayerObjectData(String dataString, ClientStruct client) {
-        Bullet b = dataToBullet(dataString, client.getID());
-        synchronized (playerObjects) {
-            playerObjects.add(b);
-        }
-        client.addPlayerObject(b);
-    }
-
-    /**
      * Coverts bullet creation data into a bullet object
      * 
      * @param data
@@ -544,7 +593,7 @@ public class Server {
      * 
      * @return - {@code InetAdress} of the local IP.
      */
-    private static InetAddress getIPv4Address() {
+    private static InetAddress getLocalIPv4Address() {
         try {
             Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
             while (networkInterfaces.hasMoreElements()) {
@@ -703,7 +752,7 @@ public class Server {
                                 c.setHealth(Math.max(newHealth, 0));
 
                                 if (newHealth < 1) {
-                                    deadClientIdQue.add(c.getID());
+                                    deadClientIdQueue.add(c.getID());
                                 }
 
                                 break;
