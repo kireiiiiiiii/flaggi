@@ -66,7 +66,7 @@ public class Logger {
 
         // Calculate padding to center the level name
         int maxLevelLength = getMaxLogLevelLength() + 2; // 2 for brackets
-        String paddedLevel = centerText("[" + level.name() + "]", maxLevelLength); // Centered level name
+        String paddedLevel = padRight("[" + level.name() + "]", maxLevelLength); // Centered level name
 
         // Build the log message
         String logMessage = String.format("%s %s %s %s %s", level.getColor(), // Color based on log level
@@ -135,6 +135,12 @@ public class Logger {
     // Helper methods
     ////////////////
 
+    /**
+     * Gets the longest length of the log level names. This is used to center the
+     * log level names in the output.
+     * 
+     * @return maximun lenght of the log level name.
+     */
     private static int getMaxLogLevelLength() {
         int maxLength = 0;
         for (LogLevel level : LogLevel.values()) {
@@ -143,17 +149,18 @@ public class Logger {
         return maxLength;
     }
 
-    private static String centerText(String text, int width) {
-        int padding = width - text.length();
-        int leftPadding = padding / 2;
-        int rightPadding = padding - leftPadding;
-        return repeat(' ', leftPadding) + text + repeat(' ', rightPadding);
-    }
-
-    private static String repeat(char ch, int count) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < count; i++) {
-            builder.append(ch);
+    /**
+     * Pads the text to desired width, insterning the padding to the right side of
+     * the message.
+     * 
+     * @param text  - target message to pad.
+     * @param width - max width.
+     * @return padded text.
+     */
+    private static String padRight(String text, int width) {
+        StringBuilder builder = new StringBuilder(text);
+        while (builder.length() < width) {
+            builder.append(" ");
         }
         return builder.toString();
     }

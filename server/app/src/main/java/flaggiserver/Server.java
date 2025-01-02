@@ -238,7 +238,7 @@ public class Server {
      * 
      */
     private static void startUDPListener() {
-        Logger.log(LogLevel.INFO, "UDP started on port '" + UDP_PORT + "'. Waiting for data...");
+        Logger.log(LogLevel.INFO, "UDP listener started on port '" + UDP_PORT + "'. Waiting for data...");
 
         try (DatagramSocket udpSocket = new DatagramSocket(UDP_PORT)) {
             udpSocket.setSoTimeout(CLIENT_TIMEOUT_SECONDS * 1000);
