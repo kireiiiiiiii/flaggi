@@ -90,10 +90,8 @@ public class Server {
      */
     public static void main(String[] args) {
 
-        Logger.setLogFile(getApplicationDataFolder() + File.separator + "logs" + File.separator + "latest.log");
-        logServerCreation();
-
         // ---- Initialize & log
+        logServerCreation();
         clients = new CopyOnWriteArrayList<ClientStruct>();
         playerObjects = new CopyOnWriteArrayList<Bullet>();
         deadClientIdQueue = new CopyOnWriteArrayList<Integer>();
@@ -429,6 +427,7 @@ public class Server {
      * 
      */
     private static void logServerCreation() {
+        Logger.setLogFile(getApplicationDataFolder() + File.separator + "logs" + File.separator + "latest.log");
         if (isRunningInDocker()) {
             String hostIp = getHostIP() == null ? "." : ": " + getHostIP();
             Logger.log(LogLevel.INFO, "Server is running in Docker. Use host's IP adress to connect" + hostIp);
