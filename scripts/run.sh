@@ -20,6 +20,7 @@ SERVER_JAR="$SERVER_DIR/app/build/libs/Flaggi-server.jar"
 diet=true
 mode=""
 host_ip=""
+clear_screen=false
 
 ###############
 #   METHODS   #
@@ -31,6 +32,7 @@ usage() {
   echo "Options:"
   echo "  -h, --help      Display this help message."
   echo "  -n, --nodiet    Don't use diet JRE, but a normal one."
+  echo "  -c, --clear     Clear the screen before running the script."
   exit 0
 }
 
@@ -57,6 +59,9 @@ handle_options() {
       ;;
     -n | --nodiet)
       diet=false
+      ;;
+    -c | --clear)
+      clear_screen=true
       ;;
     *)
       echo "Invalid option: $1" >&2
@@ -176,6 +181,10 @@ handle_options "$@"
 if [ -z "$mode" ]; then
   echo "Error: No mode specified. Use 'client', 'server', or 'docker'."
   usage
+fi
+
+if [ "$clear_screen" = true ]; then
+  clear
 fi
 
 if [ "$mode" = "client" ]; then
