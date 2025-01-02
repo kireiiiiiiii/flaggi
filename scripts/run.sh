@@ -20,6 +20,7 @@ SERVER_JAR="$SERVER_DIR/app/build/libs/Flaggi-server.jar"
 diet=true
 mode=""
 host_ip=""
+clear_screen=false
 
 ###############
 #   METHODS   #
@@ -31,6 +32,7 @@ usage() {
   echo "Options:"
   echo "  -h, --help      Display this help message."
   echo "  -n, --nodiet    Don't use diet JRE, but a normal one."
+  echo "  -c, --clear     Clear the screen before running the script."
   exit 0
 }
 
@@ -58,6 +60,9 @@ handle_options() {
     -n | --nodiet)
       diet=false
       ;;
+    -c | --clear)
+      clear_screen=true
+      ;;
     *)
       echo "Invalid option: $1" >&2
       usage
@@ -71,6 +76,11 @@ handle_options() {
     echo "Error: Cannot specify multiple modes (client, server, docker) at once."
     usage
   fi
+}
+
+print_divider() {
+  width=$(tput cols)
+  printf '%*s\n' "$width" '' | tr ' ' '-'
 }
 
 # Build the minimal JRE
@@ -112,10 +122,14 @@ build_and_run() {
       build_minimal_jre
       echo "Running the $app_name using diet JRE..."
       cd "$(dirname "$jar_file")"
+      print_divider
+      echo ""
       "$DIET_JRE/bin/java" -jar "$(basename "$jar_file")"
     else
       echo "Running the $app_name using global JRE..."
       cd "$(dirname "$jar_file")"
+      echo ""
+      print_divider
       java -jar "$(basename "$jar_file")"
     fi
   else
@@ -167,6 +181,10 @@ handle_options "$@"
 if [ -z "$mode" ]; then
   echo "Error: No mode specified. Use 'client', 'server', or 'docker'."
   usage
+fi
+
+if [ "$clear_screen" = true ]; then
+  clear
 fi
 
 if [ "$mode" = "client" ]; then
