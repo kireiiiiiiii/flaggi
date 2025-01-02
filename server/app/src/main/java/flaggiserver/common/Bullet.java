@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import flaggiserver.App;
+import flaggiserver.Server;
 
 /**
  * Bullet class, as an player created object.
@@ -82,8 +82,8 @@ public class Bullet implements Runnable {
         this.DECAY_TIME = decayTime;
 
         Runnable afterDecay = () -> {
-            synchronized (App.clients) {
-                Iterator<ClientStruct> iterator = App.clients.iterator();
+            synchronized (Server.clients) {
+                Iterator<ClientStruct> iterator = Server.clients.iterator();
                 while (iterator.hasNext()) {
                     ClientStruct c = iterator.next();
                     if (c.getID() == this.PLAYER_ID) {
@@ -92,7 +92,7 @@ public class Bullet implements Runnable {
                     }
                 }
             }
-            App.playerObjects.remove(this);
+            Server.playerObjects.remove(this);
         };
 
         this.velocity = velocity;

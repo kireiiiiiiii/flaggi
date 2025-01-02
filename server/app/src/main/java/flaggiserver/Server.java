@@ -57,7 +57,7 @@ import flaggiserver.common.Logger.LogLevel;
  * Server class for the LAN Game application.
  * 
  */
-public class App {
+public class Server {
 
     /////////////////
     // Constants
@@ -93,7 +93,7 @@ public class App {
     }
 
     /////////////////
-    // Events
+    // Constructor
     ////////////////
 
     /**
@@ -101,7 +101,7 @@ public class App {
      * UDP port.
      * 
      */
-    public static void startServer() {
+    private static void startServer() {
         Logger.setLogFile(getApplicationDataFolder() + File.separator + "logs" + File.separator + "latest.log");
         logServerCreation();
 
@@ -113,9 +113,13 @@ public class App {
         gameLoop.start();
 
         // ---- Start listener threads
-        new Thread(App::startTCPListener, "TCP listener").start();
-        new Thread(App::startUDPListener, "UDP listener").start();
+        new Thread(Server::startTCPListener, "TCP listener").start();
+        new Thread(Server::startUDPListener, "UDP listener").start();
     }
+
+    /////////////////
+    // Events
+    ////////////////
 
     /**
      * Starts the TCP listener that listens for new clients, assigns them their IDs,
@@ -198,69 +202,9 @@ public class App {
     }
 
     /**
-     * Method handeling the occurance of a fatal unrecoverable error.
-     * 
-     */
-    public static void handleFatalError() {
-        Logger.log(LogLevel.ERROR, "FATAL EXCEPTION CAUGHT! SHUTTING DOWN SERVER...");
-        System.exit(0);
-    }
-
-    /**
-     * Logs the server creation message and the IP it was created on.
-     * 
-     */
-    public static void logServerCreation() { // TODO make clear
-        if (isRunningInDocker()) {
-            String hostIp = getHostIP() == null ? "." : ": " + getHostIP();
-            Logger.log(LogLevel.INFO, "Server is running in Docker. Use host's IP adress to connect" + hostIp);
-        } else {
-            Logger.log(LogLevel.INFO, "Server socket created on IP: '" + getIPv4Address().getHostAddress() + "'");
-        }
-    }
-
-    /**
-     * Gets the program Application Data Folder path. If it doesn't exist, it will
-     * create one.
-     * 
-     * @return - {@code String} of the application data folder path.
-     */
-    private static String getApplicationDataFolder() {
-        String os = System.getProperty("os.name").toLowerCase();
-        String appDataFolder;
-
-        if (os.contains("win")) {
-            // Windows: Use %APPDATA%
-            appDataFolder = System.getenv("APPDATA");
-        } else if (os.contains("mac")) {
-            // macOS: Use ~/Library/Application Support/
-            appDataFolder = System.getProperty("user.home") + File.separator + "Library" + File.separator + "Application Support";
-        } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
-            // Linux/Unix: Use ~/.config/
-            appDataFolder = System.getProperty("user.home") + File.separator + ".config";
-        } else {
-            // Other: Use the directory of server jar.
-            appDataFolder = File.separator;
-        }
-
-        // Add the application's specific folder name
-        appDataFolder = appDataFolder + File.separator + DATA_DIRECTORY_NAME;
-
-        // Ensure the directory exists
-        File folder = new File(appDataFolder);
-        if (!folder.exists()) {
-            boolean created = folder.mkdirs();
-            if (!created) {
-                throw new RuntimeException("Failed to create application data folder at: " + appDataFolder);
-            }
-        }
-
-        return appDataFolder;
-    }
-
-    /**
      * Starts the UDP listener for the clients to send their position data to. Now
      * also responds to heartbeat messages from clients to confirm connectivity.
+     * 
      */
     private static void startUDPListener() {
         Logger.log(LogLevel.INFO, "UDP started on port '" + UDP_PORT + "'. Waiting for data...");
@@ -372,6 +316,67 @@ public class App {
     ////////////////
 
     /**
+     * Method handeling the occurance of a fatal unrecoverable error.
+     * 
+     */
+    private static void handleFatalError() {
+        Logger.log(LogLevel.ERROR, "FATAL EXCEPTION CAUGHT! SHUTTING DOWN SERVER...");
+        System.exit(0);
+    }
+
+    /**
+     * Logs the server creation message and the IP it was created on.
+     * 
+     */
+    private static void logServerCreation() { // TODO make clear
+        if (isRunningInDocker()) {
+            String hostIp = getHostIP() == null ? "." : ": " + getHostIP();
+            Logger.log(LogLevel.INFO, "Server is running in Docker. Use host's IP adress to connect" + hostIp);
+        } else {
+            Logger.log(LogLevel.INFO, "Server socket created on IP: '" + getIPv4Address().getHostAddress() + "'");
+        }
+    }
+
+    /**
+     * Gets the program Application Data Folder path. If it doesn't exist, it will
+     * create one.
+     * 
+     * @return - {@code String} of the application data folder path.
+     */
+    private static String getApplicationDataFolder() {
+        String os = System.getProperty("os.name").toLowerCase();
+        String appDataFolder;
+
+        if (os.contains("win")) {
+            // Windows: Use %APPDATA%
+            appDataFolder = System.getenv("APPDATA");
+        } else if (os.contains("mac")) {
+            // macOS: Use ~/Library/Application Support/
+            appDataFolder = System.getProperty("user.home") + File.separator + "Library" + File.separator + "Application Support";
+        } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+            // Linux/Unix: Use ~/.config/
+            appDataFolder = System.getProperty("user.home") + File.separator + ".config";
+        } else {
+            // Other: Use the directory of server jar.
+            appDataFolder = File.separator;
+        }
+
+        // Add the application's specific folder name
+        appDataFolder = appDataFolder + File.separator + DATA_DIRECTORY_NAME;
+
+        // Ensure the directory exists
+        File folder = new File(appDataFolder);
+        if (!folder.exists()) {
+            boolean created = folder.mkdirs();
+            if (!created) {
+                throw new RuntimeException("Failed to create application data folder at: " + appDataFolder);
+            }
+        }
+
+        return appDataFolder;
+    }
+
+    /**
      * Gets the {@code String} of player object data to send to server.
      * 
      * @return - data.
@@ -465,25 +470,6 @@ public class App {
         int initVelocity = Integer.parseInt(parsedData[5]);
 
         return new Bullet(initPos, targetPos, initVelocity, decayTime, clientId, bulletNum);
-    }
-
-    /**
-     * Method executed after a bullet decayes.
-     * 
-     * @param b - bullet object that decayed.
-     */
-    public static void afterBulletDecay(Bullet b) {
-        synchronized (clients) {
-            Iterator<ClientStruct> iterator = clients.iterator();
-            while (iterator.hasNext()) {
-                ClientStruct c = iterator.next();
-                if (c.getID() == b.getOwningPlaterId()) {
-                    c.removePlayerObject(b);
-                    break;
-                }
-            }
-        }
-        playerObjects.remove(b);
     }
 
     /**
@@ -587,7 +573,7 @@ public class App {
      * 
      * @return = - {@code String} of the host IP, null if not accesible.
      */
-    public static String getHostIP() {
+    private static String getHostIP() {
         String hostIP = System.getenv("HOST_IP");
         return hostIP.length() > 0 ? hostIP : null;
     }
@@ -597,7 +583,7 @@ public class App {
      * 
      * @return - true if running in a Docker container, false otherwise.
      */
-    public static boolean isRunningInDocker() {
+    private static boolean isRunningInDocker() {
         if (new File("/.dockerenv").exists()) {
             return true;
         }
