@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.SwingUtilities;
 
@@ -63,13 +64,14 @@ import flaggi.ui.MenuScreen;
 import flaggi.ui.PauseMenu;
 import flaggi.ui.Player;
 import flaggi.ui.Tree;
+import flaggi.ui.Lobby.LobbyHandeler;
 import flaggi.util.ImageUtil;
 import flaggi.util.ScreenUtil;
 
 /**
  * Main class for the LAN Game application.
  */
-public class App implements InteractableHandeler {
+public class App implements InteractableHandeler, LobbyHandeler {
 
     /////////////////
     // Constants
@@ -164,16 +166,16 @@ public class App implements InteractableHandeler {
         goToMenu();
 
         // TODO Debug lobby widget
-        // this.gpanel.hideAllWidgets();
-        // this.gpanel.add(new Lobby());
-        // this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
-        // List<String> placeholderNames = new ArrayList<String>();
-        // for (int i = 0; i <= 200; i++) {
-        // placeholderNames.add("placeholder " + i);
-        // }
-        // for (Lobby l : this.gpanel.getWidgetsByClass(Lobby.class)) {
-        // l.setClients(placeholderNames);
-        // }
+        this.gpanel.hideAllWidgets();
+        this.gpanel.add(new Lobby(this));
+        this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
+        Map<Integer, String> placeholderClients = new HashMap<Integer, String>();
+        for (int i = 0; i <= 200; i++) {
+            placeholderClients.put(i, "placeholderClient" + i);
+        }
+        for (Lobby l : this.gpanel.getWidgetsByClass(Lobby.class)) {
+            l.setClients(placeholderClients);
+        }
 
     }
 
@@ -655,6 +657,11 @@ public class App implements InteractableHandeler {
             Interactable i = (Interactable) r;
             i.interact(e);
         }
+    }
+
+    @Override
+    public void joinToLobby(String playerName, int playerID) {
+        System.out.println("join to lobby request: " + playerName + " with ID: " + playerID);
     }
 
     @Override
