@@ -165,17 +165,17 @@ public class App implements InteractableHandeler, LobbyHandeler {
         LOGGER.addLog("UI window created");
         goToMenu();
 
-        // TODO Debug lobby widget
-        this.gpanel.hideAllWidgets();
-        this.gpanel.add(new Lobby(this));
-        this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
-        Map<Integer, String> placeholderClients = new HashMap<Integer, String>();
-        for (int i = 0; i <= 200; i++) {
-            placeholderClients.put(i, "placeholderClient" + i);
-        }
-        for (Lobby l : this.gpanel.getWidgetsByClass(Lobby.class)) {
-            l.setClients(placeholderClients);
-        }
+        // // TODO Debug lobby widget
+        // this.gpanel.hideAllWidgets();
+        // this.gpanel.add(new Lobby(this));
+        // this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
+        // Map<Integer, String> placeholderClients = new HashMap<Integer, String>();
+        // for (int i = 0; i <= 200; i++) {
+        // placeholderClients.put(i, "placeholderClient" + i);
+        // }
+        // for (Lobby l : this.gpanel.getWidgetsByClass(Lobby.class)) {
+        // l.setClients(placeholderClients);
+        // }
 
     }
 
