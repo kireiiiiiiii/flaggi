@@ -63,6 +63,7 @@ public class Client {
     private ObjectOutputStream tcpIn;
     private ObjectInputStream tcpOut;
     private Thread tcpListenerThread;
+    private ServerMessageHandeler handeler;
 
     /////////////////
     // Server requests
@@ -75,12 +76,30 @@ public class Client {
     public static class ServerRequests {
 
         public static final String PING = "ping";
-        public static final String PONG = "flaggi-pong";
         public static final String DISCONNECT = "disconnect";
         public static final String GET_IDLE_CLIENTS = "get-idle-clients";
 
         public static String initialMessage(String clientName) {
             return "new-client:" + clientName;
+        }
+
+    }
+
+    public static class ServerResponses {
+
+        public static boolean isPong(String message) {
+            return message.equals("flaggi-pong");
+        }
+
+        public static String isLobbyList(String message) {
+            String prefix = "idle-clients:";
+            if (message.startsWith(prefix)) {
+                if (message.length() == prefix.length()) {
+                    return "";
+                }
+                return message.substring(prefix.length());
+            }
+            return null;
         }
 
     }
@@ -95,9 +114,10 @@ public class Client {
      * @param clientName    - display name of the client.
      * @param serverAddress - server address.
      */
-    public Client(String clientName, InetAddress serverAddress) {
+    public Client(String clientName, InetAddress serverAddress, ServerMessageHandeler handeler) {
         this.clientName = clientName;
         this.serverAddress = serverAddress;
+        this.handeler = handeler;
 
         try {
             this.tcpSocket = new Socket(this.serverAddress, TCP_PORT);
@@ -137,7 +157,7 @@ public class Client {
                 out.flush();
 
                 String response = in.readUTF();
-                return response.equals(ServerRequests.PONG);
+                return ServerResponses.isPong(response);
             }
         } catch (SocketTimeoutException e) {
             App.LOGGER.addLog("Server check timed out.", e);
@@ -160,7 +180,7 @@ public class Client {
                     try {
                         if (tcpOut.available() > 0) {
                             String serverMessage = tcpOut.readUTF();
-                            handleServerMessage(serverMessage);
+                            handeler.handleMessage(serverMessage);
                         } else {
                             Thread.sleep(50);
                         }
@@ -228,15 +248,6 @@ public class Client {
         } catch (IOException e) {
             App.LOGGER.addLog("IOException while disconnecting from server.", e);
         }
-    }
-
-    /**
-     * Handles messages received from the server.
-     * 
-     * @param message - server message.
-     */
-    private void handleServerMessage(String message) { // TODO implement
-        System.out.println("Server message received: " + message);
     }
 
     /////////////////
@@ -357,6 +368,21 @@ public class Client {
         public RecievedServerDataStruct(boolean isDead) { // TODO death should be through TCP
             this.isDead = isDead;
         }
+
+    }
+
+    /**
+     * The interface for handling server messages.
+     * 
+     */
+    public interface ServerMessageHandeler {
+
+        /**
+         * Handeles messages send by the server.
+         * 
+         * @param message - raw server message.
+         */
+        public void handleMessage(String message);
 
     }
 

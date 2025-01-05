@@ -9,7 +9,9 @@ import java.awt.event.MouseWheelEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import flaggi.common.RepeatedTask;
 import flaggi.common.GPanel.Interactable;
 import flaggi.common.GPanel.Renderable;
 import flaggi.common.GPanel.Scrollable;
@@ -25,7 +27,8 @@ public class Lobby implements Renderable, Scrollable, Interactable {
     // Constants
     ////////////////
 
-    public static final int SCROLL_SPEED = 10;
+    private static final int SCROLL_SPEED = 10;
+    private static final int UPDATE_INTERVAL = 3;
 
     /////////////////
     // Variables
@@ -53,7 +56,9 @@ public class Lobby implements Renderable, Scrollable, Interactable {
      * @param handeler - lobby action handler.
      * 
      */
-    public Lobby(LobbyHandeler handeler) {
+    public Lobby(LobbyHandeler handeler, Runnable update) {
+        RepeatedTask task = new RepeatedTask();
+        task.scheduleTask(update, UPDATE_INTERVAL, TimeUnit.SECONDS);
         this.clientItems = new ArrayList<>();
         this.handeler = handeler;
     }

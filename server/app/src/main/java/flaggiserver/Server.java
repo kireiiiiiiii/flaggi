@@ -125,7 +125,7 @@ public class Server {
                 try {
 
                     Socket clientSocket = serverSocket.accept();
-                    Logger.log(LogLevel.CONNECTION, "New client connection established.");
+                    Logger.log(LogLevel.DEBUG, "New client connection established.");
                     ClientHandler clientHandler = new ClientHandler(clientSocket);
                     tcpListenerThreads.submit(clientHandler);
 
@@ -325,6 +325,20 @@ public class Server {
     }
 
     /**
+     * Removes a client from the list of clients.
+     * 
+     * 
+     */
+    private static void removeClient(int clientId) {
+        for (ClientStruct c : clients) {
+            if (c.getID() == clientId) {
+                clients.remove(c);
+                return;
+            }
+        }
+    }
+
+    /**
      * Logs the server creation message and the IP it was created on.
      * 
      */
@@ -430,7 +444,7 @@ public class Server {
         String clientNames = "";
         for (ClientStruct client : tempClients) {
             if (client.getID() != blacklist) {
-                clientNames += client.getDisplayName() + ",";
+                clientNames += client.getID() + client.getDisplayName() + ",";
             }
         }
         return clientNames;
@@ -799,7 +813,7 @@ public class Server {
 
                 clientSocket.setSoTimeout(0); // Unset timeout!
                 while ((initialMessage = in.readUTF()) != null) {
-                    Logger.log(LogLevel.INFO, "Received message from client " + clientId + ": " + initialMessage);
+                    Logger.log(LogLevel.DEBUG, "Received message from client " + clientId + ": " + initialMessage);
 
                     if (initialMessage.equals("get-idle-clients")) {
                         handleIdleClientsRequest();
@@ -854,7 +868,7 @@ public class Server {
         private void handleIdleClientsRequest() throws IOException {
             String clientsData = getPlayerNameData(clients, clientId);
 
-            sendMessage(clientsData);
+            sendMessage("idle-clients:" + clientsData);
             out.flush();
 
             Logger.log(LogLevel.TCPREQUESTS, "Handled 'get-idle-clients' request from client " + clientId);
@@ -882,7 +896,7 @@ public class Server {
             try {
                 out.writeUTF(message);
                 out.flush();
-                Logger.log(LogLevel.INFO, "Sent message to client " + clientId + ": " + message);
+                Logger.log(LogLevel.DEBUG, "Sent message to client " + clientId + ": " + message);
             } catch (IOException e) {
                 Logger.log(LogLevel.ERROR, "Failed to send message to client " + clientId, e);
             }
@@ -894,15 +908,19 @@ public class Server {
          */
         private void disconnectClient() {
             try {
-                Logger.log(LogLevel.CONNECTION, "Disconnecting client " + clients.get(clientId).getDisplayName() + " with ID " + clientId);
+                String log = "Disconnecting client " + clientId;
+                try {
+                    log = "Disconnecting client " + clients.get(clientId).getDisplayName() + " with ID " + clientId;
+                } catch (Exception e) {
+                }
+                Logger.log(LogLevel.CONNECTION, log);
 
-                clients.remove(clientId);
-                clientHandlers.remove(clientId);
+                removeClient(clientId);
                 clientSocket.close();
                 refreshIDNumberIfNoUsers();
 
             } catch (IOException e) {
-                Logger.log(LogLevel.ERROR, "Failed to disconnect client " + clients.get(clientId).getDisplayName() + " with ID " + clientId, e);
+                Logger.log(LogLevel.ERROR, "Failed to disconnect client " + clientId, e);
             }
         }
 

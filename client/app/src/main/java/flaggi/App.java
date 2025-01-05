@@ -48,6 +48,9 @@ import flaggi.common.Client;
 import flaggi.common.GPanel;
 import flaggi.common.Logger;
 import flaggi.common.Client.RecievedServerDataStruct;
+import flaggi.common.Client.ServerMessageHandeler;
+import flaggi.common.Client.ServerRequests;
+import flaggi.common.Client.ServerResponses;
 import flaggi.common.GPanel.Interactable;
 import flaggi.common.GPanel.InteractableHandeler;
 import flaggi.common.GPanel.Renderable;
@@ -71,7 +74,7 @@ import flaggi.util.ScreenUtil;
 /**
  * Main class for the LAN Game application.
  */
-public class App implements InteractableHandeler, LobbyHandeler {
+public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHandeler {
 
     /////////////////
     // Constants
@@ -165,18 +168,6 @@ public class App implements InteractableHandeler, LobbyHandeler {
         LOGGER.addLog("UI window created");
         goToMenu();
 
-        // // TODO Debug lobby widget
-        // this.gpanel.hideAllWidgets();
-        // this.gpanel.add(new Lobby(this));
-        // this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
-        // Map<Integer, String> placeholderClients = new HashMap<Integer, String>();
-        // for (int i = 0; i <= 200; i++) {
-        // placeholderClients.put(i, "placeholderClient" + i);
-        // }
-        // for (Lobby l : this.gpanel.getWidgetsByClass(Lobby.class)) {
-        // l.setClients(placeholderClients);
-        // }
-
     }
 
     /////////////////
@@ -243,7 +234,7 @@ public class App implements InteractableHandeler, LobbyHandeler {
         }
 
         // ------ Initialize client & change UI
-        this.localClient = new Client(username, serverAddress);
+        this.localClient = new Client(username, serverAddress, this);
         this.clientID = this.localClient.getId();
         this.localPlayer = new Player(new int[] { this.spawnPoint[0], this.spawnPoint[1] }, username, skinName, this.clientID);
         this.gpanel.add(this.localPlayer);
@@ -256,6 +247,13 @@ public class App implements InteractableHandeler, LobbyHandeler {
         this.gameLoop = new GameLoop(FPS);
         this.gameLoop.start();
         LOGGER.addLog("Game loop started");
+
+        // // TODO Debug lobby widget
+        // this.gpanel.hideAllWidgets();
+        // this.gpanel.add(new Lobby(this, () -> {
+        //     this.localClient.sendTCPMessageToServer(ServerRequests.GET_IDLE_CLIENTS);
+        // }));
+        // this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
     }
 
     /**
@@ -277,6 +275,17 @@ public class App implements InteractableHandeler, LobbyHandeler {
             LOGGER.addLog("Saving menu fields data not succesful.", e);
         }
         System.exit(1);
+    }
+
+    @Override
+    public void handleMessage(String message) {
+
+        if (ServerResponses.isLobbyList(message) != null) {
+            String data = ServerResponses.isLobbyList(message);
+            updateLobbyList(data);
+        } else {
+            LOGGER.addLog("Received invalid message from server: " + message);
+        }
     }
 
     /**
@@ -418,6 +427,26 @@ public class App implements InteractableHandeler, LobbyHandeler {
         };
         b.setAfterDecayRunnable(afterDecay);
         this.quedPlayerObjects.add(b);
+    }
+
+    /**
+     * Updates the lobby list.
+     * 
+     * @param list - target list.
+     */
+    public void updateLobbyList(String list) {
+        Map<Integer, String> clients = new HashMap<>();
+
+        if (!list.equals("")) {
+            String[] displayNames = list.split(",");
+            for (String client : displayNames) {
+                clients.put(Integer.parseInt(client.substring(0, 1)), client.substring(1));
+            }
+        }
+
+        for (Lobby l : this.gpanel.getWidgetsByClass(Lobby.class)) {
+            l.setClients(clients);
+        }
     }
 
     /**
