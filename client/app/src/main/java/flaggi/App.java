@@ -47,7 +47,6 @@ import flaggi.common.AppOptions;
 import flaggi.common.Client;
 import flaggi.common.GPanel;
 import flaggi.common.Logger;
-import flaggi.common.Client.ClientStruct;
 import flaggi.common.Client.RecievedServerDataStruct;
 import flaggi.common.GPanel.Interactable;
 import flaggi.common.GPanel.InteractableHandeler;
@@ -55,6 +54,7 @@ import flaggi.common.GPanel.Renderable;
 import flaggi.common.GPanel.Scrollable;
 import flaggi.common.GPanel.Typable;
 import flaggi.constants.WidgetTags;
+import flaggi.struct.ClientStruct;
 import flaggi.ui.Background;
 import flaggi.ui.Bullet;
 import flaggi.ui.ConnectionWidget;
@@ -227,7 +227,7 @@ public class App implements InteractableHandeler, LobbyHandeler {
         LOGGER.addLog("Selected ip: " + serverIP);
 
         // ------ Check if a Flaggi server is reachable there
-        if (!Client.isServerRunning(serverAddress, TCP_PORT)) {
+        if (!Client.isFlaggiServerRunning(serverAddress, TCP_PORT)) {
             for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
                 m.setErrorMessage("Not a valid IP. Try again.");
                 return;

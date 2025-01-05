@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import flaggi.App;
+import flaggi.struct.ClientStruct;
 
 public class Client {
 
@@ -62,6 +63,27 @@ public class Client {
     private ObjectOutputStream tcpIn;
     private ObjectInputStream tcpOut;
     private Thread tcpListenerThread;
+
+    /////////////////
+    // Server requests
+    ////////////////
+
+    /**
+     * Contstants class with message options for the server.
+     * 
+     */
+    public static class ServerRequests {
+
+        public static final String PING = "ping";
+        public static final String PONG = "flaggi-pong";
+        public static final String DISCONNECT = "disconnect";
+        public static final String GET_IDLE_CLIENTS = "get-idle-clients";
+
+        public static String initialMessage(String clientName) {
+            return "new-client:" + clientName;
+        }
+
+    }
 
     /////////////////
     // Constructor
@@ -92,7 +114,133 @@ public class Client {
     }
 
     /////////////////
-    // Public Methods
+    // TCP
+    ////////////////
+
+    /**
+     * Checks if there is a server running on a specific IP address and port by
+     * trying to establish a connection and exchanging a test message.
+     * 
+     * @param serverAddress - target IP address or hostname as a {@code InetAddress}
+     * @param port          - target port number as an {@code int}
+     * @return boolean value - {@code true} if a server is running, {@code false}
+     *         otherwise
+     */
+    public static boolean isFlaggiServerRunning(InetAddress serverAddress, int port) {
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(serverAddress, port), 2000);
+            socket.setSoTimeout(5000); // 5 sec
+
+            try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+
+                out.writeUTF(ServerRequests.PING);
+                out.flush();
+
+                String response = in.readUTF();
+                return response.equals(ServerRequests.PONG);
+            }
+        } catch (SocketTimeoutException e) {
+            App.LOGGER.addLog("Server check timed out.", e);
+            return false;
+        } catch (IOException e) {
+            App.LOGGER.addLog("Failed to communicate with the server.", e);
+            return false;
+        }
+    }
+
+    /**
+     * Starts a separate thread to listen for server-to-client messages.
+     * 
+     */
+    private void startTCPListener() {
+        tcpListenerThread = new Thread(() -> {
+            try {
+
+                while (!Thread.currentThread().isInterrupted()) {
+                    try {
+                        if (tcpOut.available() > 0) {
+                            String serverMessage = tcpOut.readUTF();
+                            handleServerMessage(serverMessage);
+                        } else {
+                            Thread.sleep(50);
+                        }
+                    } catch (EOFException e) {
+                        System.err.println("Connection closed by server.");
+                    } catch (SocketTimeoutException e) {
+                        System.err.println("Socket read timed out. Retrying...");
+                    } catch (IOException e) {
+                        System.err.println("I/O error while reading from server: " + e.getMessage());
+                        e.printStackTrace();
+                        break;
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                // TODO Clenup resources
+            }
+        });
+
+        tcpListenerThread.setDaemon(true);
+        tcpListenerThread.start();
+    }
+
+    /**
+     * Makes initial connection with the server through TCP.
+     * 
+     */
+    private void makeConnection() throws IOException {
+        tcpIn.writeUTF(ServerRequests.initialMessage(clientName));
+        tcpIn.flush();
+
+        clientId = tcpOut.readInt();
+        udpPort = tcpOut.readInt();
+
+        App.LOGGER.addLog("Assigned Client ID: " + clientId);
+        App.LOGGER.addLog("Received UDP Port: " + udpPort);
+    }
+
+    /**
+     * Sends a custom message to the server through TCP.
+     * 
+     * @param message - The message to send.
+     */
+    public void sendTCPMessageToServer(String message) {
+        try {
+            tcpIn.writeUTF(message);
+            tcpIn.flush();
+            App.LOGGER.addLog("Sent message to server: " + message);
+        } catch (IOException e) {
+            App.LOGGER.addLog("Failed to send message to server.", e);
+        }
+    }
+
+    /**
+     * Disconnects the client from the server.
+     */
+    public void disconnectFromServer() {
+        try {
+            sendTCPMessageToServer(ServerRequests.DISCONNECT);
+            udpSocket.close();
+            tcpSocket.close();
+            tcpListenerThread.interrupt();
+            App.LOGGER.addLog("Disconnected successfully from server.");
+        } catch (IOException e) {
+            App.LOGGER.addLog("IOException while disconnecting from server.", e);
+        }
+    }
+
+    /**
+     * Handles messages received from the server.
+     * 
+     * @param message - server message.
+     */
+    private void handleServerMessage(String message) { // TODO implement
+        System.out.println("Server message received: " + message);
+    }
+
+    /////////////////
+    // UDP
     ////////////////
 
     /**
@@ -132,130 +280,22 @@ public class Client {
 
         return new RecievedServerDataStruct(playerPositions, objectData);
     }
-
-    /**
-     * Sends a custom message to the server through TCP.
-     * 
-     * @param message - The message to send.
-     */
-    public void sendMessageToServer(String message) {
-        try {
-            tcpIn.writeUTF(message);
-            tcpIn.flush();
-            App.LOGGER.addLog("Sent message to server: " + message);
-        } catch (IOException e) {
-            App.LOGGER.addLog("Failed to send message to server.", e);
-        }
-    }
-
-    /**
-     * Disconnects the client from the server.
-     */
-    public void disconnectFromServer() { // TODO Send through TCP
-        try {
-            sendMessageToServer("disconnect");
-            udpSocket.close();
-            tcpSocket.close();
-            tcpListenerThread.interrupt();
-            App.LOGGER.addLog("Disconnected successfully from server.");
-        } catch (IOException e) {
-            App.LOGGER.addLog("IOException while disconnecting from server.", e);
-        }
-    }
-
-    /**
-     * Requests the names of all connected idle players.
-     * 
-     * @return - List of idle player names.
-     */
-    public void getConnectedIdlePlayers() { // TODO Remove, and call directly from App
-        sendMessageToServer("get-idle-clients");
-    }
-
-    /**
-     * Checks if there is a server running on a specific IP address and port by
-     * trying to establish a connection and exchanging a test message.
-     * 
-     * @param serverAddress - target IP address or hostname as a {@code InetAddress}
-     * @param port          - target port number as an {@code int}
-     * @return boolean value - {@code true} if a server is running, {@code false}
-     *         otherwise
-     */
-    public static boolean isServerRunning(InetAddress serverAddress, int port) {
-        try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(serverAddress, port), 2000);
-            socket.setSoTimeout(5000); // 5 sec
-
-            try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
-
-                out.writeUTF("ping");
-                out.flush();
-
-                String response = in.readUTF();
-                return "flaggi-pong".equals(response);
-            }
-        } catch (SocketTimeoutException e) {
-            App.LOGGER.addLog("Server check timed out.", e);
-            return false;
-        } catch (IOException e) {
-            App.LOGGER.addLog("Failed to communicate with the server.", e);
-            return false;
-        }
-    }
-
     /////////////////
-    // Private Methods
+    // Accessors
     ////////////////
 
     /**
-     * Makes initial connection with the server through TCP.
+     * Accesor for the server give ID.
      * 
+     * @return - client ID.
      */
-    private void makeConnection() throws IOException {
-        tcpIn.writeUTF("new-client:" + clientName);
-        tcpIn.flush();
-
-        clientId = tcpOut.readInt();
-        udpPort = tcpOut.readInt();
-
-        App.LOGGER.addLog("Assigned Client ID: " + clientId);
-        App.LOGGER.addLog("Received UDP Port: " + udpPort);
+    public int getId() {
+        return this.clientId;
     }
 
-    /**
-     * Starts a separate thread to listen for server-to-client messages.
-     * 
-     */
-    private void startTCPListener() {
-        tcpListenerThread = new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-
-                String serverMessage = null;
-                try {
-                    if (tcpOut.available() > 0) {
-                        serverMessage = tcpOut.readUTF();
-                    } else {
-                        throw new EOFException("Stream closed or empty.");
-                    }
-                } catch (IOException e) { // TODO What are we doing here?
-                }
-                if (serverMessage != null) {
-                    System.out.println("Received message from server: " + serverMessage);
-                    handleServerMessage(serverMessage);
-                }
-            }
-        });
-        tcpListenerThread.start();
-    }
-
-    /**
-     * Handles messages received from the server.
-     * 
-     * @param message - server message.
-     */
-    private void handleServerMessage(String message) { // TODO implement
-        System.out.println("Server message received: " + message);
-    }
+    /////////////////
+    // Helpers
+    ////////////////
 
     /**
      * Parses the string of player positions.
@@ -281,128 +321,6 @@ public class Client {
         }
 
         return positions;
-    }
-
-    /////////////////
-    // Accessors
-    ////////////////
-
-    /**
-     * Accesor for the server give ID.
-     * 
-     * @return - client ID.
-     */
-    public int getId() {
-        return this.clientId;
-    }
-
-    /////////////////
-    /// Client struct
-    ////////////////
-
-    /**
-     * A read only structure class for a client.
-     * 
-     */
-    public static class ClientStruct { // TODO Move to a separate class
-
-        // ---- Struct variables
-        private int x, y, id, health;
-        private String displayName, animationFrame, playerObjectData;
-
-        /**
-         * Default constructor
-         * 
-         * @param x                - X position of the client.
-         * @param y                - Y position of the client.
-         * @param id               - ID of the client given by the server.
-         * @param health           - current health of the client.
-         * @param displayName      - display name of the client.
-         * @param animationName    - animation frame data.
-         * @param playerObjectData - player objects data.
-         */
-        public ClientStruct(int x, int y, int id, int health, String displayName, String animationName, String playerObjectData) {
-            this.x = x;
-            this.y = y;
-            this.id = id;
-            this.health = health;
-            this.displayName = displayName;
-            this.animationFrame = animationName;
-            this.playerObjectData = playerObjectData;
-        }
-
-        /**
-         * Accesor for the X coordinate of the client.
-         * 
-         * @return X coordinate of the client.
-         */
-        public int getX() {
-            return this.x;
-        }
-
-        /**
-         * Accesor for the Y coordinate of the client.
-         * 
-         * @return Y coordinate of the client.
-         */
-        public int getY() {
-            return this.y;
-        }
-
-        /**
-         * Accesor for the ID of the client.
-         * 
-         * @return id of the client.
-         */
-        public int getId() {
-            return this.id;
-        }
-
-        /**
-         * Accesor for the health of the client.
-         * 
-         * @return health of the client.
-         */
-        public int getHealth() {
-            return this.health;
-        }
-
-        /**
-         * Accesor for the display name of the client.
-         * 
-         * @return display name of the client.
-         */
-        public String getName() {
-            return this.displayName;
-        }
-
-        /**
-         * Accesor for the animation frame of the client.
-         * 
-         * @return animation frame data.
-         */
-        public String getAnimationFrame() {
-            return this.animationFrame;
-        }
-
-        /**
-         * Accesor for the player objects data of the client.
-         * 
-         * @return player objects data.
-         */
-        public String getPlayerObjectData() {
-            return this.playerObjectData;
-        }
-
-        /**
-         * To String method used to get the data {@code String} to send to server.
-         * 
-         */
-        @Override
-        public String toString() {
-            return this.id + "," + this.x + "," + this.y + "," + this.health + "," + this.displayName + "," + this.animationFrame + "," + this.playerObjectData;
-        }
-
     }
 
     /////////////////
