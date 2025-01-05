@@ -211,12 +211,6 @@ public class Server {
         String message = new String(packet.getData(), 0, packet.getLength());
         String[] parts = message.split(",");
 
-        // Handle client disconnect
-        if (isDisconnectMessage(parts)) {
-            handleClientDisconnect(parts[0]);
-            return;
-        }
-
         // Validate packet structure
         if (parts.length < 6) {
             Logger.log(LogLevel.WARN, "Received malformed UDP message: " + Arrays.toString(parts));
@@ -242,34 +236,6 @@ public class Server {
 
             String responseMessage = isClientRecentlyDead(clientId) ? "died" : getAllClientsData(clientId);
             sendUDPMessage(udpSocket, packet.getPort(), client, responseMessage);
-        }
-    }
-
-    /**
-     * Checks if a client UDP message is a disconnect message.
-     * 
-     * @param parts - split recieved message from client.
-     * @return true if it is a disconnect message, false otherwise.
-     */
-    private static boolean isDisconnectMessage(String[] parts) {
-        return parts.length >= 2 && "disconnect".equals(parts[1]);
-    }
-
-    /**
-     * Handles player disconnects.
-     * 
-     * @param clientIdStr - client ID in a {@code String} form.
-     */
-    private static void handleClientDisconnect(String clientIdStr) {
-        int clientId = Integer.parseInt(clientIdStr);
-        synchronized (clients) { // Synchronize if needed
-            for (ClientStruct client : clients) {
-                if (client.getID() == clientId) {
-                    Logger.log(LogLevel.CONNECTION, "Client '" + client.getDISPLAY_NAME() + "'disconnected.");
-                    clients.remove(client); // Directly remove the client
-                    break;
-                }
-            }
         }
     }
 
@@ -464,7 +430,7 @@ public class Server {
         String clientNames = "";
         for (ClientStruct client : tempClients) {
             if (client.getID() != blacklist) {
-                clientNames += client.getDISPLAY_NAME() + ",";
+                clientNames += client.getDisplayName() + ",";
             }
         }
         return clientNames;
@@ -508,8 +474,8 @@ public class Server {
                 long timeDifference = currentTime - client.getLastReceivedTime();
 
                 if (timeDifference > CLIENT_TIMEOUT_SECONDS * 1000) {
-                    Logger.log(LogLevel.WARN, "Client '" + client.getDISPLAY_NAME() + "' disconnected (Timed out!).");
-                    clients.remove(client);
+                    Logger.log(LogLevel.WARN, "Client '" + client.getDisplayName() + "' disconnected (Timed out!).");
+                    clientHandlers.get(client.getID()).disconnectClient();
                 }
             }
         }
@@ -553,7 +519,7 @@ public class Server {
         StringBuilder positions = new StringBuilder();
         synchronized (clients) {
             for (ClientStruct client : clients) {
-                positions.append(client.getID()).append(",").append(client.getX()).append(",").append(client.getY()).append(",").append(client.getHealth()).append(",").append(client.getDISPLAY_NAME()).append(",").append(client.getAnimationFrame()).append(";");
+                positions.append(client.getID()).append(",").append(client.getX()).append(",").append(client.getY()).append(",").append(client.getHealth()).append(",").append(client.getDisplayName()).append(",").append(client.getAnimationFrame()).append(";");
             }
         }
         positions.append("|").append(getAllPlayerObjectData(id));
@@ -650,7 +616,7 @@ public class Server {
             deadClientIdQueue.add(target.getID());
         }
 
-        Logger.log(LogLevel.DEBUG, "Bullet hit player '" + target.getDISPLAY_NAME() + "'. Health: " + newHealth);
+        Logger.log(LogLevel.DEBUG, "Bullet hit player '" + target.getDisplayName() + "'. Health: " + newHealth);
     }
 
     /**
@@ -837,6 +803,8 @@ public class Server {
 
                     if (initialMessage.equals("get-idle-clients")) {
                         handleIdleClientsRequest();
+                    } else if (initialMessage.equals("disconnect")) {
+                        break;
                     } else {
                         Logger.log(LogLevel.WARN, "Invalid TCP message received: '" + initialMessage + "'");
                     }
@@ -926,12 +894,15 @@ public class Server {
          */
         private void disconnectClient() {
             try {
-                Logger.log(LogLevel.CONNECTION, "Disconnecting client " + clientId);
-                clients.remove(clientId); // Remove client from client list.
+                Logger.log(LogLevel.CONNECTION, "Disconnecting client " + clients.get(clientId).getDisplayName() + " with ID " + clientId);
+
+                clients.remove(clientId);
                 clientHandlers.remove(clientId);
                 clientSocket.close();
+                refreshIDNumberIfNoUsers();
+
             } catch (IOException e) {
-                Logger.log(LogLevel.ERROR, "Failed to disconnect client " + clientId, e);
+                Logger.log(LogLevel.ERROR, "Failed to disconnect client " + clients.get(clientId).getDisplayName() + " with ID " + clientId, e);
             }
         }
 
