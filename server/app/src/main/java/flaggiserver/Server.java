@@ -44,7 +44,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.Iterator;
 
 import flaggiserver.common.Bullet;
@@ -71,6 +75,9 @@ public class Server {
     /////////////////
     // Variables
     ////////////////
+
+    private static final ExecutorService threadPool = Executors.newCachedThreadPool();
+    private static final Map<Integer, ClientHandler> clientHandlers = new ConcurrentHashMap<>();
 
     public static List<ClientStruct> clients;
     public static List<Bullet> playerObjects;
@@ -106,124 +113,58 @@ public class Server {
 
     /////////////////
     // TCP Listener
-    ////////////////
+    /////////////////
 
     /**
      * Starts the TCP listener for new client connections. Assigns IDs, handles
      * requests, and provides UDP port information. Designed to run on a separate
      * thread.
-     * 
      */
     private static void startTCPListener() {
         Logger.log(LogLevel.INFO, "TCP listener started on port '" + TCP_PORT + "'. Waiting for clients...");
 
         try (ServerSocket serverSocket = new ServerSocket(TCP_PORT)) {
-
             while (true) {
-                try (Socket clientSocket = serverSocket.accept()) {
-                    handleClientConnection(clientSocket);
-                } catch (SocketTimeoutException e) {
-                    Logger.log(LogLevel.WARN, "TCP connection timed out.", e);
+                try {
+
+                    Socket clientSocket = serverSocket.accept();
+                    Logger.log(LogLevel.CONNECTION, "New client connection established.");
+                    ClientHandler clientHandler = new ClientHandler(clientSocket);
+                    threadPool.submit(clientHandler);
+
                 } catch (IOException e) {
                     Logger.log(LogLevel.ERROR, "IO exception occurred in TCP listener.", e);
-                    handleFatalError();
-                } catch (Exception e) {
-                    Logger.log(LogLevel.ERROR, "Unexpected error in TCP listener.", e);
-                    handleFatalError();
                 }
             }
-
         } catch (IOException e) {
             Logger.log(LogLevel.ERROR, "IO Exception while creating the TCP socket.", e);
-            handleFatalError();
         }
     }
 
     /**
-     * Handles an individual client connection over TCP.
-     * 
+     * Sends a message to a specific client by ID.
+     *
+     * @param clientId The ID of the target client.
+     * @param message  The message to send.
      */
-    private static void handleClientConnection(Socket clientSocket) throws IOException {
-        // Initialize I/O streams
-        clientSocket.setSoTimeout(500);
-        ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-        ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-
-        // Read the initial message
-        String initialMessage = in.readUTF();
-
-        if ("ping".equals(initialMessage)) {
-            handlePingRequest(out);
-        } else if (initialMessage.startsWith("get-idle-clients")) {
-            handleIdleClientsRequest(out, initialMessage);
-        } else if (initialMessage.startsWith("new-client:")) {
-            handleNewClientRequest(out, clientSocket, initialMessage);
+    public static void sendToClient(int clientId, String message) {
+        ClientHandler handler = clientHandlers.get(clientId);
+        if (handler != null) {
+            handler.sendMessage(message);
         } else {
-            Logger.log(LogLevel.WARN, "Invalid TCP message received: '" + initialMessage + "'");
+            Logger.log(LogLevel.WARN, "Attempted to send message to non-existent client " + clientId);
         }
     }
 
     /**
-     * Handles a ping request from a client.
-     * 
-     * @param out - target output stream.
-     * @throws IOException
+     * Broadcasts a message to all connected clients.
+     *
+     * @param message The message to broadcast.
      */
-    private static void handlePingRequest(ObjectOutputStream out) throws IOException {
-        out.writeUTF("pong");
-        out.flush();
-        Logger.log(LogLevel.PING, "Handled 'is server running' check. Responded 'pong'");
-    }
-
-    /**
-     * Handles an 'get-idle-clients' request from a client. This is required for the
-     * lobby menu to work.
-     * 
-     * @param out     - target output stream.
-     * @param message - the initial message.
-     * @throws IOException
-     */
-    private static void handleIdleClientsRequest(ObjectOutputStream out, String message) throws IOException {
-        try {
-            int clientId = Integer.parseInt(message.split(":")[1]);
-            String clientsData = getPlayerNameData(clients, clientId);
-
-            out.writeUTF(clientsData);
-            out.flush();
-
-            Logger.log(LogLevel.TCPREQUESTS, "Handled 'get-idle-clients' request.");
-        } catch (NumberFormatException e) {
-            Logger.log(LogLevel.WARN, "Invalid client ID in 'get-idle-clients' request: " + message, e);
+    public static void broadcast(String message) {
+        for (ClientHandler handler : clientHandlers.values()) {
+            handler.sendMessage(message);
         }
-    }
-
-    /**
-     * Handles a new client connection to the server.
-     * 
-     * @param out          - target output stream.
-     * @param clientSocket - target client socket.
-     * @param message      - initial message.
-     * @throws IOException
-     */
-    private static void handleNewClientRequest(ObjectOutputStream out, Socket clientSocket, String message) throws IOException {
-        // Parse client name
-        String clientName = message.split(":")[1];
-        int clientId = maxClientID++;
-        InetAddress clientAddress = clientSocket.getInetAddress();
-
-        // Register the new client
-        synchronized (clients) {
-            clients.add(new ClientStruct(clientId, clientName, clientAddress));
-        }
-
-        Logger.log(LogLevel.CONNECTION, "Client '" + clientName + "' connected. Assigned ID: " + clientId);
-
-        // Send client ID and UDP port
-        out.writeInt(clientId);
-        out.writeInt(UDP_PORT);
-        out.flush();
-
-        Logger.log(LogLevel.CONNECTION, "Sent UDP port and ID back to client '" + clientName + "'");
     }
 
     /////////////////
@@ -847,6 +788,125 @@ public class Server {
             removeBullets(bulletsToRemove);
         }
 
+    }
+
+    /////////////////
+    // Client handler
+    ////////////////
+
+    /**
+     * Handles individual client connections in separate threads.
+     */
+    private static class ClientHandler implements Runnable {
+        private final Socket clientSocket;
+        private final ObjectOutputStream out;
+        private final ObjectInputStream in;
+        private int clientId;
+
+        public ClientHandler(Socket socket) throws IOException {
+            this.clientSocket = socket;
+            this.out = new ObjectOutputStream(socket.getOutputStream());
+            this.in = new ObjectInputStream(socket.getInputStream());
+        }
+
+        @Override
+        public void run() {
+            try {
+                clientSocket.setSoTimeout(500); // Timeout for client socket
+
+                String initialMessage = in.readUTF();
+
+                if (initialMessage.startsWith("new-client:")) {
+                    handleNewClientRequest(initialMessage);
+                } else {
+                    Logger.log(LogLevel.WARN, "Invalid initial message: " + initialMessage);
+                    return;
+                }
+
+                clientHandlers.put(clientId, this);
+
+                clientSocket.setSoTimeout(0); // Unset timeout
+                while ((initialMessage = in.readUTF()) != null) {
+                    Logger.log(LogLevel.INFO, "Received message from client " + clientId + ": " + initialMessage);
+
+                    if (initialMessage.startsWith("get-idle-clients")) {
+                        handleIdleClientsRequest(initialMessage);
+                    } else {
+                        Logger.log(LogLevel.WARN, "Invalid TCP message received: '" + initialMessage + "'");
+                    }
+                }
+            } catch (IOException e) {
+                Logger.log(LogLevel.WARN, "Client " + clientId + " disconnected without closing the TCP socket!");
+            } finally {
+                disconnectClient();
+            }
+        }
+
+        private void handleNewClientRequest(String message) throws IOException {
+            // Parse client name
+            String clientName = message.split(":")[1];
+            this.clientId = maxClientID++;
+            InetAddress clientAddress = clientSocket.getInetAddress();
+
+            // Register the new client
+            synchronized (clients) {
+                clients.add(new ClientStruct(clientId, clientName, clientAddress));
+            }
+
+            Logger.log(LogLevel.CONNECTION, "Client '" + clientName + "' connected. Assigned ID: " + clientId);
+
+            // Send client ID and UDP port
+            out.writeInt(clientId);
+            out.writeInt(UDP_PORT);
+            out.flush();
+
+            Logger.log(LogLevel.CONNECTION, "Sent UDP port and ID back to client '" + clientName + "'");
+        }
+
+        // private void handlePingRequest() throws IOException {
+        // out.writeUTF("pong");
+        // out.flush();
+        // Logger.log(LogLevel.PING, "Handled 'ping' request from client " + clientId);
+        // }
+
+        private void handleIdleClientsRequest(String message) throws IOException {
+            int requestId = Integer.parseInt(message.split(":")[1]);
+            String clientsData = getPlayerNameData(clients, requestId);
+
+            sendMessage("lol");
+            out.flush();
+
+            Logger.log(LogLevel.TCPREQUESTS, "Handled 'get-idle-clients' request from client " + clientId);
+        }
+
+        /**
+         * Sends a message to this client.
+         *
+         * @param message The message to send.
+         */
+        public synchronized void sendMessage(String message) {
+            try {
+                out.writeUTF(message);
+                out.flush();
+                Logger.log(LogLevel.INFO, "Sent message to client " + clientId + ": " + message);
+            } catch (IOException e) {
+                Logger.log(LogLevel.ERROR, "Failed to send message to client " + clientId, e);
+            }
+        }
+
+        /**
+         * Disconnects the client and removes it from the handlers list.
+         */
+        private void disconnectClient() {
+            try {
+                Logger.log(LogLevel.CONNECTION, "Disconnecting client " + clientId);
+                clients.remove(clientId); // Remove client from client list.
+                clientHandlers.remove(clientId);
+                clientSocket.close();
+            } catch (IOException e) {
+                Logger.log(LogLevel.ERROR, "Failed to disconnect client " + clientId, e);
+            }
+        }
     }
 
 }

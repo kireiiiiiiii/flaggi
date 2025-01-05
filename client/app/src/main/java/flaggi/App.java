@@ -221,18 +221,10 @@ public class App implements InteractableHandeler, LobbyHandeler {
         try {
             serverAddress = InetAddress.getByName(ip);
         } catch (UnknownHostException e) {
-            LOGGER.addLog("Unknown host exception when trying to get IP from a file.", e);
+            LOGGER.addLog("Unknown host exception.", e);
             return;
         }
         LOGGER.addLog("Selected ip: " + ip);
-
-        // ------ Check if server is running
-        if (!Client.isServerRunning(serverAddress, TCP_PORT)) {
-            for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
-                m.setErrorMessage("Not a valid IP. Please try again.");
-            }
-            return;
-        }
 
         // ------ Set the skin name
         String skinName = Player.DEFAULT_SKIN; // default skin
@@ -243,7 +235,14 @@ public class App implements InteractableHandeler, LobbyHandeler {
         }
 
         // ------ Initialize client & change UI
-        this.client = new Client(username, serverAddress);
+        try {
+            this.client = new Client(username, serverAddress);
+        } catch (Exception e) {
+            for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+                m.setErrorMessage(e.getMessage());
+            }
+            return;
+        }
         this.id = this.client.getId();
         this.localPlayer = new Player(new int[] { this.spawnPoint[0], this.spawnPoint[1] }, username, skinName, this.id);
         this.gpanel.add(this.localPlayer);
@@ -257,13 +256,8 @@ public class App implements InteractableHandeler, LobbyHandeler {
         this.gameLoop.start();
         LOGGER.addLog("Game loop started");
 
-        // TODO Debug -> Print client list
-        List<String> names = this.client.getConnectedIdlePlayers();
-        String debug = "Connected clients: ";
-        for (String name : names) {
-            debug += name + ", ";
-        }
-        System.out.println(debug);
+        // TODO debug
+        this.client.getConnectedIdlePlayers();
 
     }
 

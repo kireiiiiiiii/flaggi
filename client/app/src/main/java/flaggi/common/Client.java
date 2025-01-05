@@ -26,28 +26,11 @@
 
 package flaggi.common;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.List;
-
+import java.io.*;
+import java.net.*;
+import java.util.*;
 import flaggi.App;
 
-/**
- * Client class for communicating with the server.
- * 
- */
 public class Client {
 
     /////////////////
@@ -66,40 +49,36 @@ public class Client {
     private Socket tcpSocket;
     private DatagramSocket udpSocket;
     private String clientName;
+    private ObjectOutputStream out;
+    private ObjectInputStream in;
+    private Thread tcpListenerThread;
 
     /////////////////
     // Constructor
     ////////////////
 
-    /**
-     * Constructor. Initializes the client with the server address and port.
-     * 
-     * @param clientName - {@code String} of the client display name.
-     */
-    public Client(String clientName, InetAddress serverAddress) {
-
-        // ------ Set variables
+    public Client(String clientName, InetAddress serverAddress) throws Exception {
         this.clientName = clientName;
         this.serverAddress = serverAddress;
 
-        // ------ Socket creation
-        try {
-            this.tcpSocket = new Socket(this.serverAddress, TCP_PORT);
-        } catch (IOException e) {
-            App.LOGGER.addLog("Client IOException caught when creating TCP socket.", e);
-        }
+        // ------ Connect via TCP
+        this.tcpSocket = new Socket(this.serverAddress, TCP_PORT);
+        this.out = new ObjectOutputStream(tcpSocket.getOutputStream());
+        this.in = new ObjectInputStream(tcpSocket.getInputStream());
 
-        // ------ Make the connection
-        makeConnection(this.clientName);
-        try {
-            udpSocket = new DatagramSocket();
-        } catch (SocketException e) {
-            App.LOGGER.addLog("Client Socket Exception caught", e);
-        }
+        // ------ Initialize UDP Socket
+        this.udpSocket = new DatagramSocket();
+
+        // ------ Establish connection with the server
+        makeConnection();
+
+        // ------ Start listening for server-to-client messages
+        startTCPListener();
+
     }
 
     /////////////////
-    // Public methods
+    // Public Methods
     ////////////////
 
     /**
@@ -116,182 +95,173 @@ public class Client {
         String objectData = "";
 
         try {
+            // Send player position via UDP
             String message = clientStruct.toString();
             byte[] buffer = message.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, serverAddress, udpPort);
             udpSocket.send(packet);
 
+            // Receive server response
             byte[] receiveBuffer = new byte[1024];
             DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
-
             udpSocket.receive(receivePacket);
 
             String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-            // ---- SPECIAL CASES
             if (data.equals("died")) {
                 return new RecievedServerDataStruct(true);
             }
 
-            String[] splitData = new String[] { data.substring(0, data.indexOf("|")), data.substring(data.indexOf("|") + 1) };
-            String playerData = splitData[0];
+            String[] splitData = data.split("\\|");
+            playerPositions = parsePositions(splitData[0]);
             objectData = splitData[1];
-            playerPositions = parsePositions(playerData);
 
         } catch (IOException e) {
-            App.LOGGER.addLog("IOException caught while sending/receiving position data to/from the server", e);
+            App.LOGGER.addLog("IOException caught while sending/receiving position data.", e);
         }
 
         return new RecievedServerDataStruct(playerPositions, objectData);
     }
 
     /**
-     * Disconnects the player from the server.
+     * Sends a custom message to the server through TCP.
      * 
+     * @param message - The message to send.
+     */
+    public void sendMessageToServer(String message) {
+        try {
+            out.writeUTF(message);
+            out.flush();
+            App.LOGGER.addLog("Sent message to server: " + message);
+        } catch (IOException e) {
+            App.LOGGER.addLog("Failed to send message to server.", e);
+        }
+    }
+
+    /**
+     * Disconnects the client from the server.
      */
     public void disconnectFromServer() {
-        String message = this.clientId + "," + "disconnect";
-        byte[] buffer = message.getBytes();
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, serverAddress, udpPort);
         try {
-            udpSocket.send(packet);
-            App.LOGGER.addLog("Disconnected succesfuly from server.");
+            sendMessageToServer("disconnect");
+            udpSocket.close();
+            tcpSocket.close();
+            tcpListenerThread.interrupt();
+            App.LOGGER.addLog("Disconnected successfully from server.");
         } catch (IOException e) {
-            App.LOGGER.addLog("IOExeption while sending disconnect message to server.", e);
+            App.LOGGER.addLog("IOException while disconnecting from server.", e);
         }
-        udpSocket.close();
+    }
+
+    /**
+     * Requests the names of all connected idle players.
+     * 
+     * @return - List of idle player names.
+     */
+    public void getConnectedIdlePlayers() {
+        sendMessageToServer("get-idle-clients:" + clientId);
     }
 
     /**
      * Checks if there is a server running on a specific IP address and port by
      * trying to establish a connection and exchanging a test message.
      * 
-     * @param serverAddress - target IP address or hostname as a String
-     * @param port          - target port
-     * @return boolean value, true if something is running on the specified IP and
-     *         port
+     * @param serverAddress - target IP address or hostname as a {@code InetAddress}
+     * @param port          - target port number as an {@code int}
+     * @return boolean value - {@code true} if a server is running, {@code false}
+     *         otherwise
      */
-    public static boolean isServerRunning(InetAddress serverAddress, int port) {
-        try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(serverAddress, port), 2000); // 2-second timeout for connection
+    // public static boolean isServerRunning(InetAddress serverAddress, int port) {
+    // try (Socket socket = new Socket()) {
+    // // Attempt to connect to the server with a 2-second timeout
+    // socket.connect(new InetSocketAddress(serverAddress, port), 2000);
+    // socket.setSoTimeout(5000); // 5-second timeout for server response
 
-            socket.setSoTimeout(5000);
+    // // Create I/O streams for communication
+    // try (ObjectOutputStream out = new
+    // ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new
+    // ObjectInputStream(socket.getInputStream())) {
 
-            try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+    // // Send a "ping" message to the server
+    // out.writeUTF("ping");
+    // out.flush();
 
-                out.writeUTF("ping");
-                out.flush();
-
-                String response = in.readUTF();
-                return "pong".equals(response);
-            }
-        } catch (SocketTimeoutException e) {
-            App.LOGGER.addLog("Server running check timed out.", e);
-            return false;
-        } catch (IOException e) {
-            App.LOGGER.addLog("Server running check failed.", e);
-            return false;
-        }
-    }
-
-    /**
-     * Requests the names of all connected players from the server.
-     * 
-     * @return - {@code List} of {@code String}s for all idle connected players from
-     *         the server.
-     */
-    public List<String> getConnectedIdlePlayers() {
-
-        List<String> connectedIdlePlayers = new ArrayList<>();
-
-        try {
-
-            this.tcpSocket = new Socket(this.serverAddress, TCP_PORT);
-            ObjectOutputStream out = new ObjectOutputStream(this.tcpSocket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(this.tcpSocket.getInputStream());
-
-            out.writeUTF("get-idle-clients" + ":" + this.clientId);
-            out.flush();
-
-            String data = in.readUTF();
-            if (data != null && !data.isEmpty()) {
-                connectedIdlePlayers = Arrays.asList(data.split(","));
-            }
-
-        } catch (IOException e) {
-            App.LOGGER.addLog("IOException caught while communicating with server", e);
-        }
-
-        return connectedIdlePlayers;
-    }
-
-    /**
-     * Helper method to get the IPv4 adress of the client, to contact the server.
-     * 
-     * @return - a {@code InterAdress} of the client IPv4.
-     */
-    public static InetAddress getIPv4Address() {
-        try {
-            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
-            while (networkInterfaces.hasMoreElements()) {
-                NetworkInterface networkInterface = networkInterfaces.nextElement();
-
-                // Skip loopback and inactive interfaces
-                if (networkInterface.isLoopback() || !networkInterface.isUp()) {
-                    continue;
-                }
-
-                Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
-                while (inetAddresses.hasMoreElements()) {
-                    InetAddress inetAddress = inetAddresses.nextElement();
-
-                    // Check for an IPv4 address
-                    if (inetAddress instanceof java.net.Inet4Address) {
-                        return inetAddress; // Return the InetAddress instance
-                    }
-                }
-            }
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
-
-        return null; // No IPv4 address found
-    }
+    // // Wait for a "pong" response from the server
+    // String response = in.readUTF();
+    // return "pong".equals(response); // Return true if server replies with "pong"
+    // }
+    // } catch (SocketTimeoutException e) {
+    // App.LOGGER.addLog("Server check timed out.", e); // Log timeout error
+    // return false;
+    // } catch (IOException e) {
+    // App.LOGGER.addLog("Failed to communicate with the server.", e); // Log
+    // communication error
+    // return false;
+    // }
+    // }
 
     /////////////////
-    // Helper methods
+    // Private Methods
     ////////////////
 
     /**
-     * Makes the initial connection with the server through TCP.
-     * 
-     * @param clientName - {@code String} of the client display name.
+     * Makes initial connection with the server through TCP.
      */
-    private void makeConnection(String clientName) {
-        try (ObjectOutputStream out = new ObjectOutputStream(this.tcpSocket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(this.tcpSocket.getInputStream())) {
+    private void makeConnection() throws Exception {
+        // Send client registration message
+        out.writeUTF("new-client:" + clientName);
+        out.flush();
 
-            // ------ Send the client name to the server
-            out.writeUTF("new-client:" + clientName);
-            out.flush();
+        // Receive assigned client ID and UDP port
+        clientId = in.readInt();
+        udpPort = in.readInt();
 
-            // ------ Receive the assigned client ID and UDP port from the server
-            clientId = in.readInt();
-            App.LOGGER.addLog("Received client ID '" + clientId + "' from server.");
+        System.out.println("ID: " + clientId + "  Port: " + udpPort);
+        App.LOGGER.addLog("Assigned Client ID: " + clientId);
+        App.LOGGER.addLog("Received UDP Port: " + udpPort);
+    }
 
-            udpPort = in.readInt();
-            App.LOGGER.addLog("Received UDP port '" + udpPort + "' for updates from server.");
+    /**
+     * Starts a separate thread to listen for server-to-client messages.
+     */
+    private void startTCPListener() {
+        tcpListenerThread = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
 
-        } catch (IOException e) {
-            App.LOGGER.addLog("IOException caught while sending data to server", e);
+                String serverMessage = null;
+                try {
+                    if (in.available() > 0) { // Check if data is available
+                        serverMessage = in.readUTF();
+                    } else {
+                        throw new EOFException("Stream closed or empty.");
+                    }
+                } catch (IOException e) {
+                }
+                if (serverMessage != null) {
+                    System.out.println("Received message from server: " + serverMessage);
+                    handleServerMessage(serverMessage);
+                }
+            }
+        });
+        tcpListenerThread.start();
+    }
+
+    /**
+     * Handles messages received from the server.
+     * 
+     * @param message - Server message.
+     */
+    private void handleServerMessage(String message) {
+        if (message.startsWith("update:")) {
+            App.LOGGER.addLog("Received update from server: " + message);
+            // Process update data if needed
+        } else {
+            App.LOGGER.addLog("Server Message: " + message);
         }
     }
 
     /**
-     * Parses the string of player positions and converts them to an
-     * {@code ArrayList} of position arrays.
-     * 
-     * @param data - {@code String} of the data.
-     * @return - {@code ArrayList} of {@code ClientStructs}.
+     * Parses the string of player positions.
      */
     private static ArrayList<ClientStruct> parsePositions(String data) {
         ArrayList<ClientStruct> positions = new ArrayList<>();
@@ -306,22 +276,15 @@ public class Client {
                 String displayName = parts[4];
                 String animationFrame = parts[5];
                 positions.add(new ClientStruct(posX, posY, clientID, health, displayName, animationFrame, ""));
-            } else {
-                App.LOGGER.addLog("Recieved server message doesn't have 6 parts");
             }
         }
         return positions;
     }
 
     /////////////////
-    /// Accesors
+    // Accessors
     ////////////////
 
-    /**
-     * Returns the id of the client given by the server.
-     * 
-     * @return {@code int} of the client ID.
-     */
     public int getId() {
         return this.clientId;
     }
