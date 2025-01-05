@@ -57,23 +57,35 @@ public class Client {
     // Constructor
     ////////////////
 
-    public Client(String clientName, InetAddress serverAddress) throws Exception {
+    /**
+     * Default constructor.
+     * 
+     * @param clientName    - display name of the client.
+     * @param serverAddress - server address.
+     * @throws Exception
+     */
+    public Client(String clientName, InetAddress serverAddress) {
         this.clientName = clientName;
         this.serverAddress = serverAddress;
 
-        // ------ Connect via TCP
-        this.tcpSocket = new Socket(this.serverAddress, TCP_PORT);
-        this.out = new ObjectOutputStream(tcpSocket.getOutputStream());
-        this.in = new ObjectInputStream(tcpSocket.getInputStream());
+        try {
+            // ------ Connect via TCP
+            this.tcpSocket = new Socket(this.serverAddress, TCP_PORT);
+            this.out = new ObjectOutputStream(tcpSocket.getOutputStream());
+            this.in = new ObjectInputStream(tcpSocket.getInputStream());
 
-        // ------ Initialize UDP Socket
-        this.udpSocket = new DatagramSocket();
+            // ------ Initialize UDP Socket
+            this.udpSocket = new DatagramSocket();
 
-        // ------ Establish connection with the server
-        makeConnection();
+            // ------ Establish connection with the server
+            makeConnection();
 
-        // ------ Start listening for server-to-client messages
-        startTCPListener();
+            // ------ Start listening for server-to-client messages
+            startTCPListener();
+
+        } catch (IOException e) {
+            App.LOGGER.addLog("IO Exception occured while connecting to the server.", e);
+        }
 
     }
 
@@ -159,7 +171,7 @@ public class Client {
      * @return - List of idle player names.
      */
     public void getConnectedIdlePlayers() {
-        sendMessageToServer("get-idle-clients:" + clientId);
+        sendMessageToServer("get-idle-clients");
     }
 
     /**
@@ -171,34 +183,29 @@ public class Client {
      * @return boolean value - {@code true} if a server is running, {@code false}
      *         otherwise
      */
-    // public static boolean isServerRunning(InetAddress serverAddress, int port) {
-    // try (Socket socket = new Socket()) {
-    // // Attempt to connect to the server with a 2-second timeout
-    // socket.connect(new InetSocketAddress(serverAddress, port), 2000);
-    // socket.setSoTimeout(5000); // 5-second timeout for server response
+    public static boolean isServerRunning(InetAddress serverAddress, int port) {
+        try (Socket socket = new Socket()) {
+            // Attempt to connect to the server with a 2-second timeout
+            socket.connect(new InetSocketAddress(serverAddress, port), 2000);
+            socket.setSoTimeout(5000); // 5-second timeout for server response
 
-    // // Create I/O streams for communication
-    // try (ObjectOutputStream out = new
-    // ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new
-    // ObjectInputStream(socket.getInputStream())) {
+            try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
-    // // Send a "ping" message to the server
-    // out.writeUTF("ping");
-    // out.flush();
+                out.writeUTF("ping");
+                out.flush();
 
-    // // Wait for a "pong" response from the server
-    // String response = in.readUTF();
-    // return "pong".equals(response); // Return true if server replies with "pong"
-    // }
-    // } catch (SocketTimeoutException e) {
-    // App.LOGGER.addLog("Server check timed out.", e); // Log timeout error
-    // return false;
-    // } catch (IOException e) {
-    // App.LOGGER.addLog("Failed to communicate with the server.", e); // Log
-    // communication error
-    // return false;
-    // }
-    // }
+                String response = in.readUTF();
+                System.out.println("Got: " + response);
+                return "flaggi-pong".equals(response);
+            }
+        } catch (SocketTimeoutException e) {
+            App.LOGGER.addLog("Server check timed out.", e);
+            return false;
+        } catch (IOException e) {
+            App.LOGGER.addLog("Failed to communicate with the server.", e);
+            return false;
+        }
+    }
 
     /////////////////
     // Private Methods
@@ -207,7 +214,7 @@ public class Client {
     /**
      * Makes initial connection with the server through TCP.
      */
-    private void makeConnection() throws Exception {
+    private void makeConnection() throws IOException {
         // Send client registration message
         out.writeUTF("new-client:" + clientName);
         out.flush();

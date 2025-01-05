@@ -226,6 +226,14 @@ public class App implements InteractableHandeler, LobbyHandeler {
         }
         LOGGER.addLog("Selected ip: " + ip);
 
+        // Check if a Flaggi server is reachable there
+        if (!Client.isServerRunning(serverAddress, TCP_PORT)) {
+            for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+                m.setErrorMessage("Not a valid IP. Try again.");
+                return;
+            }
+        }
+
         // ------ Set the skin name
         String skinName = Player.DEFAULT_SKIN; // default skin
         if (username.equals("daarlin") || username.equals("owo")) {
@@ -235,14 +243,7 @@ public class App implements InteractableHandeler, LobbyHandeler {
         }
 
         // ------ Initialize client & change UI
-        try {
-            this.client = new Client(username, serverAddress);
-        } catch (Exception e) {
-            for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
-                m.setErrorMessage(e.getMessage());
-            }
-            return;
-        }
+        this.client = new Client(username, serverAddress);
         this.id = this.client.getId();
         this.localPlayer = new Player(new int[] { this.spawnPoint[0], this.spawnPoint[1] }, username, skinName, this.id);
         this.gpanel.add(this.localPlayer);
