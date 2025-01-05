@@ -37,10 +37,10 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.util.List;
 
 import flaggi.App;
 import flaggi.struct.ClientStruct;
+import flaggi.struct.GameDataStruct;
 
 public class Client {
 
@@ -89,6 +89,10 @@ public class Client {
 
         public static boolean isPong(String message) {
             return message.equals("flaggi-pong");
+        }
+
+        public static boolean isDied(String message) {
+            return message.equals("player-died");
         }
 
         public static String isLobbyList(String message) {
@@ -261,7 +265,7 @@ public class Client {
      * @param clientStruct - local player data.
      * @return a data struct with other player data.
      */
-    public RecievedServerDataStruct updatePlayerPositions(ClientStruct clientStruct) {
+    public GameDataStruct updatePlayerPositions(ClientStruct clientStruct) {
 
         ArrayList<ClientStruct> playerPositions = new ArrayList<>();
         String objectData = "";
@@ -277,10 +281,6 @@ public class Client {
             udpSocket.receive(receivePacket);
             String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-            if (data.equals("died")) { // TODO Recieve through TCP
-                return new RecievedServerDataStruct(true);
-            }
-
             String[] splitData = data.split("\\|");
             playerPositions = parsePositions(splitData[0]);
             objectData = splitData[1];
@@ -289,7 +289,7 @@ public class Client {
             App.LOGGER.addLog("IOException caught while sending/receiving position data.", e);
         }
 
-        return new RecievedServerDataStruct(playerPositions, objectData);
+        return new GameDataStruct(playerPositions, objectData);
     }
     /////////////////
     // Accessors
@@ -335,41 +335,8 @@ public class Client {
     }
 
     /////////////////
-    /// Recieved server data struct
+    // Message handeler interface
     ////////////////
-
-    /**
-     * Struct class to hold the data recieved from the server.
-     * 
-     */
-    public static class RecievedServerDataStruct { // TODO simplify this mess
-
-        // ---- Struct variables
-        public List<ClientStruct> connectedClientsList;
-        public String playerObjectData;
-        public boolean isDead;
-
-        /**
-         * Default constructor.
-         * 
-         * @param list       - list of connected clients given by the server.
-         * @param objectData - data {@code String} with all player created object data.
-         */
-        public RecievedServerDataStruct(List<ClientStruct> list, String objectData) {
-            this.connectedClientsList = list;
-            this.playerObjectData = objectData;
-        }
-
-        /**
-         * Returned when server reported player died.
-         * 
-         * @param isDead - {@code boolean} value, true if player died.
-         */
-        public RecievedServerDataStruct(boolean isDead) { // TODO death should be through TCP
-            this.isDead = isDead;
-        }
-
-    }
 
     /**
      * The interface for handling server messages.

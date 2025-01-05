@@ -47,7 +47,6 @@ import flaggi.common.AppOptions;
 import flaggi.common.Client;
 import flaggi.common.GPanel;
 import flaggi.common.Logger;
-import flaggi.common.Client.RecievedServerDataStruct;
 import flaggi.common.Client.ServerMessageHandeler;
 import flaggi.common.Client.ServerRequests;
 import flaggi.common.Client.ServerResponses;
@@ -58,6 +57,7 @@ import flaggi.common.GPanel.Scrollable;
 import flaggi.common.GPanel.Typable;
 import flaggi.constants.WidgetTags;
 import flaggi.struct.ClientStruct;
+import flaggi.struct.GameDataStruct;
 import flaggi.ui.Background;
 import flaggi.ui.Bullet;
 import flaggi.ui.ConnectionWidget;
@@ -248,10 +248,10 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
         this.gameLoop.start();
         LOGGER.addLog("Game loop started");
 
-        // // TODO Debug lobby widget
+        // TODO Debug lobby widget
         // this.gpanel.hideAllWidgets();
         // this.gpanel.add(new Lobby(this, () -> {
-        //     this.localClient.sendTCPMessageToServer(ServerRequests.GET_IDLE_CLIENTS);
+        // this.localClient.sendTCPMessageToServer(ServerRequests.GET_IDLE_CLIENTS);
         // }));
         // this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
     }
@@ -283,6 +283,8 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
         if (ServerResponses.isLobbyList(message) != null) {
             String data = ServerResponses.isLobbyList(message);
             updateLobbyList(data);
+        } else if (ServerResponses.isDied(message)) {
+            die();
         } else {
             LOGGER.addLog("Received invalid message from server: " + message);
         }
@@ -465,13 +467,7 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
 
         // Get the current players from the panel and their positions from the server
         ArrayList<Player> players = this.gpanel.getWidgetsByClass(Player.class);
-        RecievedServerDataStruct struct = localClient.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.clientID, this.health, this.username, localAnimationFrame, getPlayerObjectDataString(true)));
-
-        // ---- Handle special cases
-        if (struct.isDead) {
-            die();
-            return;
-        }
+        GameDataStruct struct = localClient.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.clientID, this.health, this.username, localAnimationFrame, getPlayerObjectDataString(true)));
 
         List<ClientStruct> serverPositions = struct.connectedClientsList;
         String playerObjectData = struct.playerObjectData;

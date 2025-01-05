@@ -82,7 +82,6 @@ public class Server {
     private static final Map<Integer, ClientHandler> clientHandlers = new ConcurrentHashMap<>();
 
     private static int maxClientID = 0;
-    private static List<Integer> deadClientIdQueue;
     private static GameLoop gameLoop;
 
     /////////////////
@@ -98,7 +97,6 @@ public class Server {
 
         // ---- Initialize & log
         logServerCreation();
-        deadClientIdQueue = new CopyOnWriteArrayList<Integer>();
         gameLoop = new GameLoop(60);
         gameLoop.start();
 
@@ -234,7 +232,7 @@ public class Server {
         if (client != null) {
             updateClientData(client, x, y, health, animationFrame, playerObjectData);
 
-            String responseMessage = isClientRecentlyDead(clientId) ? "died" : getAllClientsData(clientId);
+            String responseMessage = getAllClientsData(clientId);
             sendUDPMessage(udpSocket, packet.getPort(), client, responseMessage);
         }
     }
@@ -275,25 +273,6 @@ public class Server {
             playerObjects.add(b);
         }
         client.addPlayerObject(b);
-    }
-
-    /**
-     * Checks if a client recently died.
-     * 
-     * @param clientId - target client ID.
-     * @return true if the client is recently dead, false otherwise.
-     */
-    private static boolean isClientRecentlyDead(int clientId) {
-        synchronized (deadClientIdQueue) {
-            Iterator<Integer> iterator = deadClientIdQueue.iterator();
-            while (iterator.hasNext()) {
-                if (iterator.next() == clientId) {
-                    iterator.remove();
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     /**
@@ -627,7 +606,7 @@ public class Server {
         target.setHealth(newHealth);
 
         if (newHealth == 0) {
-            deadClientIdQueue.add(target.getID());
+            clientHandlers.get(target.getID()).sendMessage("player-died");
         }
 
         Logger.log(LogLevel.DEBUG, "Bullet hit player '" + target.getDisplayName() + "'. Health: " + newHealth);
