@@ -26,9 +26,19 @@
 
 package flaggi.common;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.List;
+
 import flaggi.App;
 
 public class Client {
