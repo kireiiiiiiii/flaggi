@@ -887,6 +887,12 @@ public class Server {
             Logger.log(LogLevel.TCPREQUESTS, "Handled 'get-idle-clients' request from client " + clientId);
         }
 
+        /**
+         * Handles a player ping by responding with a message the client expects to
+         * prove server works, and then disposes of this connection.
+         * 
+         * @throws IOException
+         */
         private void handleInitialPing() throws IOException {
             // Send a simple ping message to the client
             sendMessage("flaggi-pong");
@@ -914,6 +920,7 @@ public class Server {
 
         /**
          * Disconnects the client and removes it from the handlers list.
+         * 
          */
         private void disconnectClient() {
             try {
