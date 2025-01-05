@@ -792,7 +792,7 @@ public class Server {
         private final Socket clientSocket;
         private final ObjectOutputStream out;
         private final ObjectInputStream in;
-        private int clientId;
+        private int clientId = -1;
 
         /**
          * Default constructor for the client handler.
@@ -812,6 +812,7 @@ public class Server {
          */
         @Override
         public void run() {
+            boolean ping = false;
             try {
                 clientSocket.setSoTimeout(500);
 
@@ -821,6 +822,8 @@ public class Server {
                     handleNewClientRequest(initialMessage);
                 } else if (initialMessage.equals("ping")) {
                     handleInitialPing();
+                    ping = true;
+                    return;
                 } else {
                     Logger.log(LogLevel.WARN, "Invalid initial message: " + initialMessage);
                     return;
@@ -841,7 +844,9 @@ public class Server {
             } catch (IOException e) {
                 Logger.log(LogLevel.WARN, "Client " + clientId + " disconnected without closing the TCP socket!");
             } finally {
-                disconnectClient();
+                if (!ping) {
+                    disconnectClient();
+                }
             }
         }
 
@@ -894,13 +899,10 @@ public class Server {
          * @throws IOException
          */
         private void handleInitialPing() throws IOException {
-            // Send a simple ping message to the client
-            sendMessage("flaggi-pong");
+            out.writeUTF("flaggi-pong");
             out.flush();
-            clients.remove(clientId); // Remove client from client list.
-            clientHandlers.remove(clientId);
             clientSocket.close();
-            Logger.log(LogLevel.PING, "Received initial ping from client.");
+            Logger.log(LogLevel.PING, "Received initial ping from client. Closing connection...");
         }
 
         /**
