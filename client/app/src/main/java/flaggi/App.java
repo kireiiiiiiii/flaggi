@@ -80,7 +80,7 @@ public class App implements InteractableHandeler, LobbyHandeler {
     public static final String PROJECT_NAME = "Flaggi";
     public static final String DATA_DIRECTORY_NAME = "kireiiiiiiii.flaggi";
     public static final String FILE_JAR_SEPARATOR = "/";
-    public static final Logger LOGGER = Logger.getLogger(getApplicationDataFolder() + File.separator + "logs" + File.separator + "app.log");
+    public static final Logger LOGGER = Logger.getLogger(getApplicationDataFolder() + File.separator + "logs" + File.separator + "app.log"); // TODO Fix lobby
     public static final int TCP_PORT = 54321;
     public static final int FPS = 60;
     public static final boolean SHOW_HITBOXES = false;
@@ -89,15 +89,15 @@ public class App implements InteractableHandeler, LobbyHandeler {
     // Variables
     ////////////////
 
-    private Client client;
-    private String username, ip;
-    private int id, health, speed;
+    private Client localClient;
+    private Player localPlayer;
+    private String username, serverIP;
+    private int clientID, health, speed;
     private GPanel gpanel;
     private GameLoop gameLoop;
     private AdvancedVariable<AppOptions> appOptions;
     private ArrayList<KeyEvent> pressedKeys;
     private ArrayList<Bullet> quedPlayerObjects;
-    private Player localPlayer;
     private int[] pos, spawnPoint, windowSize;
     private boolean movementEnabled, paused;
 
@@ -109,9 +109,8 @@ public class App implements InteractableHandeler, LobbyHandeler {
      * Main method.
      * 
      * @param args
-     * @throws Exception
      */
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         SwingUtilities.invokeLater(App::new);
     }
 
@@ -125,7 +124,7 @@ public class App implements InteractableHandeler, LobbyHandeler {
         LOGGER.clearLog();
         LOGGER.addLog("App started");
 
-        // ------ Initialize game
+        // ------ Get user settings
         try {
             this.appOptions = new AdvancedVariable<AppOptions>(getApplicationDataFolder() + File.separator + "user-options.json", AppOptions.class);
         } catch (IOException e) {
@@ -143,6 +142,7 @@ public class App implements InteractableHandeler, LobbyHandeler {
             this.appOptions.set(getDefaultOptions());
         }
 
+        // ------ Initialize
         this.windowSize = ScreenUtil.getScreenDimensions();
         this.pos = new int[2];
         this.pos[0] = 0;
@@ -192,9 +192,9 @@ public class App implements InteractableHandeler, LobbyHandeler {
         // ---- Set variables
         this.health = -1;
 
-        // ------ Get username
+        // ------ Get entered username
         for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
-            this.username = m.getName();
+            this.username = m.getEnteredUsername();
         }
         String userNameValidation = isValidUsername(this.username);
         if (userNameValidation != null) {
@@ -206,11 +206,11 @@ public class App implements InteractableHandeler, LobbyHandeler {
         LOGGER.addLog("User entered name '" + username + "'");
 
         // ------ Get IP
-        this.ip = "";
+        this.serverIP = "";
         for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
-            ip = m.getIP();
+            serverIP = m.getEnteredIP();
         }
-        if (ip.length() < 1) {
+        if (serverIP.length() < 1) {
             for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
                 m.setErrorMessage("No server IP entered.");
             }
@@ -219,14 +219,14 @@ public class App implements InteractableHandeler, LobbyHandeler {
 
         InetAddress serverAddress;
         try {
-            serverAddress = InetAddress.getByName(ip);
+            serverAddress = InetAddress.getByName(serverIP);
         } catch (UnknownHostException e) {
             LOGGER.addLog("Unknown host exception.", e);
             return;
         }
-        LOGGER.addLog("Selected ip: " + ip);
+        LOGGER.addLog("Selected ip: " + serverIP);
 
-        // Check if a Flaggi server is reachable there
+        // ------ Check if a Flaggi server is reachable there
         if (!Client.isServerRunning(serverAddress, TCP_PORT)) {
             for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
                 m.setErrorMessage("Not a valid IP. Try again.");
@@ -243,9 +243,9 @@ public class App implements InteractableHandeler, LobbyHandeler {
         }
 
         // ------ Initialize client & change UI
-        this.client = new Client(username, serverAddress);
-        this.id = this.client.getId();
-        this.localPlayer = new Player(new int[] { this.spawnPoint[0], this.spawnPoint[1] }, username, skinName, this.id);
+        this.localClient = new Client(username, serverAddress);
+        this.clientID = this.localClient.getId();
+        this.localPlayer = new Player(new int[] { this.spawnPoint[0], this.spawnPoint[1] }, username, skinName, this.clientID);
         this.gpanel.add(this.localPlayer);
 
         this.gpanel.hideAllWidgets();
@@ -256,10 +256,6 @@ public class App implements InteractableHandeler, LobbyHandeler {
         this.gameLoop = new GameLoop(FPS);
         this.gameLoop.start();
         LOGGER.addLog("Game loop started");
-
-        // TODO debug
-        this.client.getConnectedIdlePlayers();
-
     }
 
     /**
@@ -269,11 +265,11 @@ public class App implements InteractableHandeler, LobbyHandeler {
     public void exitGame() {
         if (this.gameLoop != null)
             this.gameLoop.stop();
-        if (this.client != null)
-            this.client.disconnectFromServer();
+        if (this.localClient != null)
+            this.localClient.disconnectFromServer();
         try {
-            if (this.username != null && this.ip != null) {
-                this.appOptions.set(new AppOptions(this.username, this.ip));
+            if (this.username != null && this.serverIP != null) {
+                this.appOptions.set(new AppOptions(this.username, this.serverIP));
             }
             this.appOptions.save();
             LOGGER.addLog("Menu fields data saved succesfully.");
@@ -309,8 +305,8 @@ public class App implements InteractableHandeler, LobbyHandeler {
         }
 
         // ------ Reset variables
-        if (this.client != null)
-            this.client.disconnectFromServer();
+        if (this.localClient != null)
+            this.localClient.disconnectFromServer();
         if (this.gameLoop != null)
             this.gameLoop.stop();
         movementEnabled = false;
@@ -416,7 +412,7 @@ public class App implements InteractableHandeler, LobbyHandeler {
      * @param e - {@code MouseEvent} of the mouse click.
      */
     public void shoot(MouseEvent e) {
-        Bullet b = new Bullet(this.pos, getMouseclickLocationRelativeToMap(e), 1000 + this.speed * 10, 2000, this.id);
+        Bullet b = new Bullet(this.pos, getMouseclickLocationRelativeToGpanel(e, this.gpanel, this.pos), 1000 + this.speed * 10, 2000, this.clientID);
         Runnable afterDecay = () -> {
             this.gpanel.remove(b);
         };
@@ -440,7 +436,7 @@ public class App implements InteractableHandeler, LobbyHandeler {
 
         // Get the current players from the panel and their positions from the server
         ArrayList<Player> players = this.gpanel.getWidgetsByClass(Player.class);
-        RecievedServerDataStruct struct = client.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.id, this.health, this.username, localAnimationFrame, getPlayerObjectDataString(true)));
+        RecievedServerDataStruct struct = localClient.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.clientID, this.health, this.username, localAnimationFrame, getPlayerObjectDataString(true)));
 
         // ---- Handle special cases
         if (struct.isDead) {
@@ -454,7 +450,7 @@ public class App implements InteractableHandeler, LobbyHandeler {
         // Get the local player, and remove it from the rendering list
         ClientStruct localPlayerStruct = null;
         for (ClientStruct cs : serverPositions) { // Find the local player
-            if (cs.getId() == this.id) {
+            if (cs.getId() == this.clientID) {
                 localPlayerStruct = cs;
                 serverPositions.remove(localPlayerStruct); // Remove local player for rendering
                 break;
@@ -519,7 +515,7 @@ public class App implements InteractableHandeler, LobbyHandeler {
         // Remove players no longer reported by the server
         for (Player remainingPlayer : existingPlayers.values()) {
             // Exclude the local player
-            if (remainingPlayer.getId() == this.id) {
+            if (remainingPlayer.getId() == this.clientID) {
                 continue;
             }
             this.gpanel.remove(remainingPlayer);
@@ -726,7 +722,7 @@ public class App implements InteractableHandeler, LobbyHandeler {
      * Prints the header of this game
      * 
      */
-    private void printHeader() {
+    private static void printHeader() {
         System.out.println("\n" + " ______   __         ______     ______     ______     __    \n" + "/\\  ___\\ /\\ \\       /\\  __ \\   /\\  ___\\   /\\  ___\\   /\\ \\   \n" + "\\ \\  __\\ \\ \\ \\____  \\ \\  __ \\  \\ \\ \\__ \\  \\ \\ \\__ \\  \\ \\ \\  \n" + " \\ \\_\\    \\ \\_____\\  \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_____\\  \\ \\_\\ \n" + "  \\/_/     \\/_____/   \\/_/\\/_/   \\/_____/   \\/_____/   \\/_/ \n" + "                                                            \n" + "");
     }
 
@@ -753,8 +749,8 @@ public class App implements InteractableHandeler, LobbyHandeler {
      * @param e - {@code MouseEvent} of the mouse click.
      * @return 2D array of the mouse click position relative to the map.
      */
-    private int[] getMouseclickLocationRelativeToMap(MouseEvent e) {
-        return new int[] { (e.getX() - this.gpanel.getWidth() / 2) + this.pos[0], e.getY() - (this.gpanel.getHeight() / 2) + this.pos[1] };
+    private static int[] getMouseclickLocationRelativeToGpanel(MouseEvent e, GPanel gpanel, int[] pos) {
+        return new int[] { (e.getX() - gpanel.getWidth() / 2) + pos[0], e.getY() - (gpanel.getHeight() / 2) + pos[1] };
     }
 
     /**
@@ -801,7 +797,7 @@ public class App implements InteractableHandeler, LobbyHandeler {
      * 
      * @return - a {@code AppOptions} object.
      */
-    private AppOptions getDefaultOptions() {
+    private static AppOptions getDefaultOptions() {
         return new AppOptions("", "");
     }
 

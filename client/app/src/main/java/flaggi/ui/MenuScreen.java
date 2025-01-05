@@ -264,7 +264,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
      * 
      * @return
      */
-    public String getName() {
+    public String getEnteredUsername() {
         return nameUserInput == null ? "" : nameUserInput;
     }
 
@@ -273,7 +273,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
      * 
      * @return
      */
-    public String getIP() {
+    public String getEnteredIP() {
         return ipUserInput == null ? "" : ipUserInput;
     }
 

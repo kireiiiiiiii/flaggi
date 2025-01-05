@@ -59,8 +59,8 @@ public class Client {
     private Socket tcpSocket;
     private DatagramSocket udpSocket;
     private String clientName;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
+    private ObjectOutputStream tcpIn;
+    private ObjectInputStream tcpOut;
     private Thread tcpListenerThread;
 
     /////////////////
@@ -72,31 +72,23 @@ public class Client {
      * 
      * @param clientName    - display name of the client.
      * @param serverAddress - server address.
-     * @throws Exception
      */
     public Client(String clientName, InetAddress serverAddress) {
         this.clientName = clientName;
         this.serverAddress = serverAddress;
 
         try {
-            // ------ Connect via TCP
             this.tcpSocket = new Socket(this.serverAddress, TCP_PORT);
-            this.out = new ObjectOutputStream(tcpSocket.getOutputStream());
-            this.in = new ObjectInputStream(tcpSocket.getInputStream());
-
-            // ------ Initialize UDP Socket
+            this.tcpIn = new ObjectOutputStream(tcpSocket.getOutputStream());
+            this.tcpOut = new ObjectInputStream(tcpSocket.getInputStream());
             this.udpSocket = new DatagramSocket();
 
-            // ------ Establish connection with the server
             makeConnection();
-
-            // ------ Start listening for server-to-client messages
             startTCPListener();
 
         } catch (IOException e) {
             App.LOGGER.addLog("IO Exception occured while connecting to the server.", e);
         }
-
     }
 
     /////////////////
@@ -107,9 +99,8 @@ public class Client {
      * Updates the position of this player on the server and gets all the positions
      * of other players from the server. This method is called every frame.
      * 
-     * @param clientStruct - {@code ClientStruct} object containing the new position
-     *                     of this player.
-     * @return {@code ArrayList} of positions of other players.
+     * @param clientStruct - local player data.
+     * @return a data struct with other player data.
      */
     public RecievedServerDataStruct updatePlayerPositions(ClientStruct clientStruct) {
 
@@ -117,20 +108,17 @@ public class Client {
         String objectData = "";
 
         try {
-            // Send player position via UDP
             String message = clientStruct.toString();
             byte[] buffer = message.getBytes();
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, serverAddress, udpPort);
             udpSocket.send(packet);
 
-            // Receive server response
             byte[] receiveBuffer = new byte[1024];
             DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
             udpSocket.receive(receivePacket);
-
             String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-            if (data.equals("died")) {
+            if (data.equals("died")) { // TODO Recieve through TCP
                 return new RecievedServerDataStruct(true);
             }
 
@@ -152,8 +140,8 @@ public class Client {
      */
     public void sendMessageToServer(String message) {
         try {
-            out.writeUTF(message);
-            out.flush();
+            tcpIn.writeUTF(message);
+            tcpIn.flush();
             App.LOGGER.addLog("Sent message to server: " + message);
         } catch (IOException e) {
             App.LOGGER.addLog("Failed to send message to server.", e);
@@ -163,7 +151,7 @@ public class Client {
     /**
      * Disconnects the client from the server.
      */
-    public void disconnectFromServer() {
+    public void disconnectFromServer() { // TODO Send through TCP
         try {
             sendMessageToServer("disconnect");
             udpSocket.close();
@@ -180,7 +168,7 @@ public class Client {
      * 
      * @return - List of idle player names.
      */
-    public void getConnectedIdlePlayers() {
+    public void getConnectedIdlePlayers() { // TODO Remove, and call directly from App
         sendMessageToServer("get-idle-clients");
     }
 
@@ -195,9 +183,8 @@ public class Client {
      */
     public static boolean isServerRunning(InetAddress serverAddress, int port) {
         try (Socket socket = new Socket()) {
-            // Attempt to connect to the server with a 2-second timeout
             socket.connect(new InetSocketAddress(serverAddress, port), 2000);
-            socket.setSoTimeout(5000); // 5-second timeout for server response
+            socket.setSoTimeout(5000); // 5 sec
 
             try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
@@ -205,7 +192,6 @@ public class Client {
                 out.flush();
 
                 String response = in.readUTF();
-                System.out.println("Got: " + response);
                 return "flaggi-pong".equals(response);
             }
         } catch (SocketTimeoutException e) {
@@ -223,23 +209,22 @@ public class Client {
 
     /**
      * Makes initial connection with the server through TCP.
+     * 
      */
     private void makeConnection() throws IOException {
-        // Send client registration message
-        out.writeUTF("new-client:" + clientName);
-        out.flush();
+        tcpIn.writeUTF("new-client:" + clientName);
+        tcpIn.flush();
 
-        // Receive assigned client ID and UDP port
-        clientId = in.readInt();
-        udpPort = in.readInt();
+        clientId = tcpOut.readInt();
+        udpPort = tcpOut.readInt();
 
-        System.out.println("ID: " + clientId + "  Port: " + udpPort);
         App.LOGGER.addLog("Assigned Client ID: " + clientId);
         App.LOGGER.addLog("Received UDP Port: " + udpPort);
     }
 
     /**
      * Starts a separate thread to listen for server-to-client messages.
+     * 
      */
     private void startTCPListener() {
         tcpListenerThread = new Thread(() -> {
@@ -247,12 +232,12 @@ public class Client {
 
                 String serverMessage = null;
                 try {
-                    if (in.available() > 0) { // Check if data is available
-                        serverMessage = in.readUTF();
+                    if (tcpOut.available() > 0) {
+                        serverMessage = tcpOut.readUTF();
                     } else {
                         throw new EOFException("Stream closed or empty.");
                     }
-                } catch (IOException e) {
+                } catch (IOException e) { // TODO What are we doing here?
                 }
                 if (serverMessage != null) {
                     System.out.println("Received message from server: " + serverMessage);
@@ -266,35 +251,35 @@ public class Client {
     /**
      * Handles messages received from the server.
      * 
-     * @param message - Server message.
+     * @param message - server message.
      */
-    private void handleServerMessage(String message) {
-        if (message.startsWith("update:")) {
-            App.LOGGER.addLog("Received update from server: " + message);
-            // Process update data if needed
-        } else {
-            App.LOGGER.addLog("Server Message: " + message);
-        }
+    private void handleServerMessage(String message) { // TODO implement
+        System.out.println("Server message received: " + message);
     }
 
     /**
      * Parses the string of player positions.
+     * 
      */
     private static ArrayList<ClientStruct> parsePositions(String data) {
         ArrayList<ClientStruct> positions = new ArrayList<>();
         String[] playerData = data.split(";");
+
         for (String entry : playerData) {
             String[] parts = entry.split(",");
             if (parts.length == 6) {
+
                 int clientID = Integer.parseInt(parts[0]);
                 int posX = Integer.parseInt(parts[1]);
                 int posY = Integer.parseInt(parts[2]);
                 int health = Integer.parseInt(parts[3]);
                 String displayName = parts[4];
                 String animationFrame = parts[5];
+
                 positions.add(new ClientStruct(posX, posY, clientID, health, displayName, animationFrame, ""));
             }
         }
+
         return positions;
     }
 
@@ -302,6 +287,11 @@ public class Client {
     // Accessors
     ////////////////
 
+    /**
+     * Accesor for the server give ID.
+     * 
+     * @return - client ID.
+     */
     public int getId() {
         return this.clientId;
     }
@@ -314,7 +304,7 @@ public class Client {
      * A read only structure class for a client.
      * 
      */
-    public static class ClientStruct {
+    public static class ClientStruct { // TODO Move to a separate class
 
         // ---- Struct variables
         private int x, y, id, health;
@@ -423,7 +413,7 @@ public class Client {
      * Struct class to hold the data recieved from the server.
      * 
      */
-    public static class RecievedServerDataStruct {
+    public static class RecievedServerDataStruct { // TODO simplify this mess
 
         // ---- Struct variables
         public List<ClientStruct> connectedClientsList;
@@ -446,7 +436,7 @@ public class Client {
          * 
          * @param isDead - {@code boolean} value, true if player died.
          */
-        public RecievedServerDataStruct(boolean isDead) {
+        public RecievedServerDataStruct(boolean isDead) { // TODO death should be through TCP
             this.isDead = isDead;
         }
 
