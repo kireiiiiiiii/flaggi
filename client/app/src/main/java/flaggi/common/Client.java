@@ -49,6 +49,7 @@ public class Client {
     ////////////////
 
     public static final int TCP_PORT = 54321;
+    private static final int SERVER_TIMEOUT_SECONDS = 3;
 
     /////////////////
     // Variables
@@ -128,6 +129,7 @@ public class Client {
             this.tcpIn = new ObjectOutputStream(tcpSocket.getOutputStream());
             this.tcpOut = new ObjectInputStream(tcpSocket.getInputStream());
             this.udpSocket = new DatagramSocket();
+            this.udpSocket.setSoTimeout(SERVER_TIMEOUT_SECONDS * 1000);
 
             makeConnection();
             startTCPListener();
@@ -285,6 +287,8 @@ public class Client {
             playerPositions = parsePositions(splitData[0]);
             objectData = splitData[1];
 
+        } catch (SocketTimeoutException e) {
+            this.handeler.timeout();
         } catch (IOException e) {
             App.LOGGER.addLog("IOException caught while sending/receiving position data.", e);
         }
@@ -350,6 +354,12 @@ public class Client {
          * @param message - raw server message.
          */
         public void handleMessage(String message);
+
+        /**
+         * Method ececuted on server time-out.
+         * 
+         */
+        public void timeout();
 
     }
 

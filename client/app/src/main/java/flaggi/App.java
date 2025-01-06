@@ -277,6 +277,19 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
         System.exit(1);
     }
 
+    /**
+     * Method executed when the server times out. Goes back to the menu, and informs
+     * the user about it/
+     * 
+     */
+    @Override
+    public void timeout() {
+        goToMenu();
+        for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+            m.setErrorMessage("Server shut down. Please try again.");
+        }
+    }
+
     @Override
     public void handleMessage(String message) {
 
