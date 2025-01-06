@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set default TERM value if not set
+export TERM=${TERM:-xterm}
+
 # Shell scripts explained at -> https://medium.com/@wujido20/handling-flags-in-bash-scripts-4b06b4d0ed04
 
 #############

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set default TERM value if not set
+export TERM=${TERM:-xterm}
+
 ###############
 #  CONSTANTS  #
 ###############
