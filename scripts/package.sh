@@ -81,6 +81,16 @@ handle_options() {
   done
 }
 
+# Check Java version
+check_java_version() {
+  local java_version
+  java_version=$(java -version 2>&1 | awk -F[\"_] 'NR==1 {print $2}')
+  if [[ "$java_version" != "1.8.0" ]]; then
+    echo "Error: Java 8 is required to run this script. Current version: $java_version"
+    exit 1
+  fi
+}
+
 # Build the minimal JRE
 build_minimal_jre() {
   cd "$PROJECT_ROOT"
@@ -106,6 +116,7 @@ build_minimal_jre() {
 ###############
 
 set -e
+check_java_version
 
 # Handle options passed to the script
 handle_options "$@"
