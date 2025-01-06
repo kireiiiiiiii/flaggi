@@ -47,6 +47,7 @@ public class Logger {
     // Constants & Varibles
     ////////////////
 
+    private static final LogLevel[] ignore = new LogLevel[] { LogLevel.DEBUG, LogLevel.TCPREQUESTS };
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static File logFile = null;
 
@@ -62,6 +63,12 @@ public class Logger {
      * @param e       - (Optional) Exception details, if any.
      */
     public static void log(LogLevel level, String message, Exception e) {
+        for (LogLevel l : ignore) {
+            if (level == l) {
+                return;
+            }
+        }
+
         String timestamp = DATE_FORMAT.format(new Date()); // Current time
 
         // Calculate padding to center the level name

@@ -64,7 +64,7 @@ public class ClientStruct {
         return ID;
     }
 
-    public String getDISPLAY_NAME() {
+    public String getDisplayName() {
         return DISPLAY_NAME;
     }
 

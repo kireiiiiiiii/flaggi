@@ -79,10 +79,8 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         this.ipUserInput = ip == null ? "" : ip;
         try {
             this.font = FontUtil.loadFont("fonts/PixelifySans-VariableFont_wght.ttf").deriveFont(Font.PLAIN, 25);
-            System.out.println("yes");
         } catch (IOException | FontFormatException e) {
             App.LOGGER.addLog("Error loading font.", e);
-            System.out.println("no");
             this.font = new Font("Arial", Font.PLAIN, 25);
         }
         this.logo = ImageUtil.getImageFromFile("ui/logo.png");
@@ -264,7 +262,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
      * 
      * @return
      */
-    public String getName() {
+    public String getEnteredUsername() {
         return nameUserInput == null ? "" : nameUserInput;
     }
 
@@ -273,7 +271,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
      * 
      * @return
      */
-    public String getIP() {
+    public String getEnteredIP() {
         return ipUserInput == null ? "" : ipUserInput;
     }
 

@@ -44,7 +44,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.Iterator;
 
 import flaggiserver.common.Bullet;
@@ -72,11 +76,12 @@ public class Server {
     // Variables
     ////////////////
 
-    public static List<ClientStruct> clients;
-    public static List<Bullet> playerObjects;
+    public static final List<ClientStruct> clients = new CopyOnWriteArrayList<ClientStruct>();
+    public static final List<Bullet> playerObjects = new CopyOnWriteArrayList<Bullet>();
+    private static final ExecutorService tcpListenerThreads = Executors.newCachedThreadPool();
+    private static final Map<Integer, ClientHandler> clientHandlers = new ConcurrentHashMap<>();
 
     private static int maxClientID = 0;
-    private static List<Integer> deadClientIdQueue;
     private static GameLoop gameLoop;
 
     /////////////////
@@ -92,9 +97,6 @@ public class Server {
 
         // ---- Initialize & log
         logServerCreation();
-        clients = new CopyOnWriteArrayList<ClientStruct>();
-        playerObjects = new CopyOnWriteArrayList<Bullet>();
-        deadClientIdQueue = new CopyOnWriteArrayList<Integer>();
         gameLoop = new GameLoop(60);
         gameLoop.start();
 
@@ -106,124 +108,58 @@ public class Server {
 
     /////////////////
     // TCP Listener
-    ////////////////
+    /////////////////
 
     /**
-     * Starts the TCP listener for new client connections. Assigns IDs, handles
-     * requests, and provides UDP port information. Designed to run on a separate
-     * thread.
+     * Listenes for incoming TCP connections, and creates a new Client handeler
+     * running on a separate thread.
      * 
      */
     private static void startTCPListener() {
         Logger.log(LogLevel.INFO, "TCP listener started on port '" + TCP_PORT + "'. Waiting for clients...");
 
         try (ServerSocket serverSocket = new ServerSocket(TCP_PORT)) {
-
             while (true) {
-                try (Socket clientSocket = serverSocket.accept()) {
-                    handleClientConnection(clientSocket);
-                } catch (SocketTimeoutException e) {
-                    Logger.log(LogLevel.WARN, "TCP connection timed out.", e);
+                try {
+
+                    Socket clientSocket = serverSocket.accept();
+                    Logger.log(LogLevel.DEBUG, "New client connection established.");
+                    ClientHandler clientHandler = new ClientHandler(clientSocket);
+                    tcpListenerThreads.submit(clientHandler);
+
                 } catch (IOException e) {
                     Logger.log(LogLevel.ERROR, "IO exception occurred in TCP listener.", e);
-                    handleFatalError();
-                } catch (Exception e) {
-                    Logger.log(LogLevel.ERROR, "Unexpected error in TCP listener.", e);
-                    handleFatalError();
                 }
             }
-
         } catch (IOException e) {
             Logger.log(LogLevel.ERROR, "IO Exception while creating the TCP socket.", e);
-            handleFatalError();
         }
     }
 
     /**
-     * Handles an individual client connection over TCP.
-     * 
+     * Sends a message to a specific client by ID.
+     *
+     * @param clientId - The ID of the target client.
+     * @param message  - The message to send.
      */
-    private static void handleClientConnection(Socket clientSocket) throws IOException {
-        // Initialize I/O streams
-        clientSocket.setSoTimeout(500);
-        ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-        ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-
-        // Read the initial message
-        String initialMessage = in.readUTF();
-
-        if ("ping".equals(initialMessage)) {
-            handlePingRequest(out);
-        } else if (initialMessage.startsWith("get-idle-clients")) {
-            handleIdleClientsRequest(out, initialMessage);
-        } else if (initialMessage.startsWith("new-client:")) {
-            handleNewClientRequest(out, clientSocket, initialMessage);
+    public static void sendTCPMessageToClient(int clientId, String message) {
+        ClientHandler handler = clientHandlers.get(clientId);
+        if (handler != null) {
+            handler.sendMessage(message);
         } else {
-            Logger.log(LogLevel.WARN, "Invalid TCP message received: '" + initialMessage + "'");
+            Logger.log(LogLevel.WARN, "Attempted to send message to non-existent client " + clientId);
         }
     }
 
     /**
-     * Handles a ping request from a client.
-     * 
-     * @param out - target output stream.
-     * @throws IOException
+     * Broadcasts a message to all connected clients through TCP.
+     *
+     * @param message - The message to broadcast.
      */
-    private static void handlePingRequest(ObjectOutputStream out) throws IOException {
-        out.writeUTF("pong");
-        out.flush();
-        Logger.log(LogLevel.PING, "Handled 'is server running' check. Responded 'pong'");
-    }
-
-    /**
-     * Handles an 'get-idle-clients' request from a client. This is required for the
-     * lobby menu to work.
-     * 
-     * @param out     - target output stream.
-     * @param message - the initial message.
-     * @throws IOException
-     */
-    private static void handleIdleClientsRequest(ObjectOutputStream out, String message) throws IOException {
-        try {
-            int clientId = Integer.parseInt(message.split(":")[1]);
-            String clientsData = getPlayerNameData(clients, clientId);
-
-            out.writeUTF(clientsData);
-            out.flush();
-
-            Logger.log(LogLevel.TCPREQUESTS, "Handled 'get-idle-clients' request.");
-        } catch (NumberFormatException e) {
-            Logger.log(LogLevel.WARN, "Invalid client ID in 'get-idle-clients' request: " + message, e);
+    public static void tcpBroadcast(String message) {
+        for (ClientHandler handler : clientHandlers.values()) {
+            handler.sendMessage(message);
         }
-    }
-
-    /**
-     * Handles a new client connection to the server.
-     * 
-     * @param out          - target output stream.
-     * @param clientSocket - target client socket.
-     * @param message      - initial message.
-     * @throws IOException
-     */
-    private static void handleNewClientRequest(ObjectOutputStream out, Socket clientSocket, String message) throws IOException {
-        // Parse client name
-        String clientName = message.split(":")[1];
-        int clientId = maxClientID++;
-        InetAddress clientAddress = clientSocket.getInetAddress();
-
-        // Register the new client
-        synchronized (clients) {
-            clients.add(new ClientStruct(clientId, clientName, clientAddress));
-        }
-
-        Logger.log(LogLevel.CONNECTION, "Client '" + clientName + "' connected. Assigned ID: " + clientId);
-
-        // Send client ID and UDP port
-        out.writeInt(clientId);
-        out.writeInt(UDP_PORT);
-        out.flush();
-
-        Logger.log(LogLevel.CONNECTION, "Sent UDP port and ID back to client '" + clientName + "'");
     }
 
     /////////////////
@@ -242,8 +178,6 @@ public class Server {
             udpSocket.setSoTimeout(CLIENT_TIMEOUT_SECONDS * 1000);
 
             byte[] buffer = new byte[1024];
-            playerObjects = new ArrayList<>();
-            deadClientIdQueue = new ArrayList<>();
 
             while (true) {
 
@@ -275,12 +209,6 @@ public class Server {
         String message = new String(packet.getData(), 0, packet.getLength());
         String[] parts = message.split(",");
 
-        // Handle client disconnect
-        if (isDisconnectMessage(parts)) {
-            handleClientDisconnect(parts[0]);
-            return;
-        }
-
         // Validate packet structure
         if (parts.length < 6) {
             Logger.log(LogLevel.WARN, "Received malformed UDP message: " + Arrays.toString(parts));
@@ -304,36 +232,8 @@ public class Server {
         if (client != null) {
             updateClientData(client, x, y, health, animationFrame, playerObjectData);
 
-            String responseMessage = isClientRecentlyDead(clientId) ? "died" : getAllClientsData(clientId);
-            sendResponse(udpSocket, client, responseMessage, packet.getPort());
-        }
-    }
-
-    /**
-     * Checks if a client UDP message is a disconnect message.
-     * 
-     * @param parts - split recieved message from client.
-     * @return true if it is a disconnect message, false otherwise.
-     */
-    private static boolean isDisconnectMessage(String[] parts) {
-        return parts.length >= 2 && "disconnect".equals(parts[1]);
-    }
-
-    /**
-     * Handles player disconnects.
-     * 
-     * @param clientIdStr - client ID in a {@code String} form.
-     */
-    private static void handleClientDisconnect(String clientIdStr) {
-        int clientId = Integer.parseInt(clientIdStr);
-        synchronized (clients) { // Synchronize if needed
-            for (ClientStruct client : clients) {
-                if (client.getID() == clientId) {
-                    Logger.log(LogLevel.CONNECTION, "Client '" + client.getDISPLAY_NAME() + "' disconnected.");
-                    clients.remove(client); // Directly remove the client
-                    break;
-                }
-            }
+            String responseMessage = getAllClientsData(clientId);
+            sendUDPMessage(udpSocket, packet.getPort(), client, responseMessage);
         }
     }
 
@@ -376,34 +276,15 @@ public class Server {
     }
 
     /**
-     * Checks if a client recently died.
-     * 
-     * @param clientId - target client ID.
-     * @return true if the client is recently dead, false otherwise.
-     */
-    private static boolean isClientRecentlyDead(int clientId) {
-        synchronized (deadClientIdQueue) {
-            Iterator<Integer> iterator = deadClientIdQueue.iterator();
-            while (iterator.hasNext()) {
-                if (iterator.next() == clientId) {
-                    iterator.remove();
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Sends a response of all player data back to the client.
+     * Sends an UDP message.
      * 
      * @param udpSocket - target UDP socket.
+     * @param port      - port number.
      * @param client    - target client.
      * @param message   - response message/
-     * @param port      - port number.
      * @throws IOException if an error occurs.
      */
-    private static void sendResponse(DatagramSocket udpSocket, ClientStruct client, String message, int port) throws IOException {
+    private static void sendUDPMessage(DatagramSocket udpSocket, int port, ClientStruct client, String message) throws IOException {
         byte[] responseBuffer = message.getBytes();
         DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length, client.getINET_ADRESS(), port);
         udpSocket.send(responsePacket);
@@ -420,6 +301,20 @@ public class Server {
     private static void handleFatalError() {
         Logger.log(LogLevel.ERROR, "FATAL EXCEPTION CAUGHT! SHUTTING DOWN SERVER...");
         System.exit(0);
+    }
+
+    /**
+     * Removes a client from the list of clients.
+     * 
+     * 
+     */
+    private static void removeClient(int clientId) {
+        for (ClientStruct c : clients) {
+            if (c.getID() == clientId) {
+                clients.remove(c);
+                return;
+            }
+        }
     }
 
     /**
@@ -528,7 +423,7 @@ public class Server {
         String clientNames = "";
         for (ClientStruct client : tempClients) {
             if (client.getID() != blacklist) {
-                clientNames += client.getDISPLAY_NAME() + ",";
+                clientNames += client.getID() + client.getDisplayName() + ",";
             }
         }
         return clientNames;
@@ -572,8 +467,8 @@ public class Server {
                 long timeDifference = currentTime - client.getLastReceivedTime();
 
                 if (timeDifference > CLIENT_TIMEOUT_SECONDS * 1000) {
-                    Logger.log(LogLevel.WARN, "Client '" + client.getDISPLAY_NAME() + "' disconnected (Timed out!).");
-                    clients.remove(client);
+                    Logger.log(LogLevel.WARN, "Client '" + client.getDisplayName() + "' disconnected (Timed out!).");
+                    clientHandlers.get(client.getID()).disconnectClient();
                 }
             }
         }
@@ -617,7 +512,7 @@ public class Server {
         StringBuilder positions = new StringBuilder();
         synchronized (clients) {
             for (ClientStruct client : clients) {
-                positions.append(client.getID()).append(",").append(client.getX()).append(",").append(client.getY()).append(",").append(client.getHealth()).append(",").append(client.getDISPLAY_NAME()).append(",").append(client.getAnimationFrame()).append(";");
+                positions.append(client.getID()).append(",").append(client.getX()).append(",").append(client.getY()).append(",").append(client.getHealth()).append(",").append(client.getDisplayName()).append(",").append(client.getAnimationFrame()).append(";");
             }
         }
         positions.append("|").append(getAllPlayerObjectData(id));
@@ -688,43 +583,41 @@ public class Server {
 
     /**
      * Calculates and returns the hitbox for a given client.
+     * 
+     * @param client - target client.
      */
     private static Rectangle getPlayerHitbox(ClientStruct client) {
-        final int OFFSET_X = 7; // Offset for the X-coordinate
-        final int OFFSET_Y = 7; // Offset for the Y-coordinate
-        final int WIDTH = 53; // Width of the player's hitbox
-        final int HEIGHT = 93; // Height of the player's hitbox
+        final int OFFSET_X = 7;
+        final int OFFSET_Y = 7;
+        final int WIDTH = 53;
+        final int HEIGHT = 93;
 
         return new Rectangle(client.getX() + OFFSET_X, client.getY() + OFFSET_Y, WIDTH, HEIGHT);
     }
 
     /**
      * Handles the collision between a bullet and a player.
+     * 
      */
     private static void handleBulletCollision(Bullet bullet, ClientStruct target, List<Bullet> bulletsToRemove) {
-        // Remove the bullet from its owner's object list
         removeBulletFromOwner(bullet);
-
-        // Mark bullet for removal
         bulletsToRemove.add(bullet);
-
-        // Update player's health
-        int newHealth = Math.max(target.getHealth() - 10, 0); // Prevent negative health
+        int newHealth = Math.max(target.getHealth() - 10, 0);
         target.setHealth(newHealth);
 
-        // Mark player as dead if health is depleted
         if (newHealth == 0) {
-            deadClientIdQueue.add(target.getID());
+            clientHandlers.get(target.getID()).sendMessage("player-died");
         }
 
-        Logger.log(LogLevel.DEBUG, "Bullet hit player '" + target.getDISPLAY_NAME() + "'. Health: " + newHealth);
+        Logger.log(LogLevel.DEBUG, "Bullet hit player '" + target.getDisplayName() + "'. Health: " + newHealth);
     }
 
     /**
      * Removes a bullet from its owner's list of player objects.
+     * 
      */
     private static void removeBulletFromOwner(Bullet bullet) {
-        for (ClientStruct owner : new ArrayList<>(clients)) { // Avoid concurrent modification
+        for (ClientStruct owner : new ArrayList<>(clients)) {
             if (owner.getID() == bullet.getOwningPlaterId()) {
                 owner.removePlayerObject(bullet);
                 break;
@@ -734,6 +627,7 @@ public class Server {
 
     /**
      * Removes bullets that have collided with players.
+     * 
      */
     private static void removeBullets(List<Bullet> bulletsToRemove) {
         try {
@@ -817,34 +711,196 @@ public class Server {
         /**
          * Updates the game state by processing collisions between bullets and players,
          * updating health, and marking dead clients.
+         * 
          */
         private void update() {
-            // Check if there are active players and bullets to process
             if (playerObjects == null || clients == null || playerObjects.isEmpty() || clients.isEmpty()) {
                 return;
             }
 
-            // Bullets to be removed after processing
             List<Bullet> bulletsToRemove = new ArrayList<>();
 
-            // Process each bullet
-            for (Bullet bullet : new ArrayList<>(playerObjects)) { // Avoid concurrent modification
+            for (Bullet bullet : new ArrayList<>(playerObjects)) {
                 Rectangle bulletHitbox = bullet.getHitbox();
 
-                // Check collision with each client
-                for (ClientStruct client : new ArrayList<>(clients)) { // Avoid concurrent modification
+                for (ClientStruct client : new ArrayList<>(clients)) {
                     Rectangle playerHitbox = getPlayerHitbox(client);
 
-                    // Detect collision between bullet and player
                     if (bulletHitbox.intersects(playerHitbox) && bullet.getOwningPlaterId() != client.getID()) {
                         handleBulletCollision(bullet, client, bulletsToRemove);
-                        break; // Exit loop since collision has been processed
+                        break;
                     }
                 }
             }
 
-            // Remove bullets that hit players
             removeBullets(bulletsToRemove);
+        }
+
+    }
+
+    /////////////////
+    // Client handler
+    ////////////////
+
+    /**
+     * Handles individual client connections in separate threads.
+     * 
+     */
+    private static class ClientHandler implements Runnable {
+
+        private final Socket clientSocket;
+        private final ObjectOutputStream out;
+        private final ObjectInputStream in;
+        private int clientId = -1;
+
+        /**
+         * Default constructor for the client handler.
+         * 
+         * @param socket - client socket.
+         * @throws IOException - if initialization fails.
+         */
+        public ClientHandler(Socket socket) throws IOException {
+            this.clientSocket = socket;
+            this.out = new ObjectOutputStream(socket.getOutputStream());
+            this.in = new ObjectInputStream(socket.getInputStream());
+        }
+
+        /**
+         * Update method.
+         * 
+         */
+        @Override
+        public void run() {
+            boolean ping = false;
+            try {
+                clientSocket.setSoTimeout(500);
+
+                String initialMessage = in.readUTF();
+
+                if (initialMessage.startsWith("new-client:")) {
+                    handleNewClientRequest(initialMessage);
+                } else if (initialMessage.equals("ping")) {
+                    handleInitialPing();
+                    ping = true;
+                    return;
+                } else {
+                    Logger.log(LogLevel.WARN, "Invalid initial message: " + initialMessage);
+                    return;
+                }
+
+                clientHandlers.put(clientId, this);
+
+                clientSocket.setSoTimeout(0); // Unset timeout!
+                while ((initialMessage = in.readUTF()) != null) {
+                    Logger.log(LogLevel.DEBUG, "Received message from client " + clientId + ": " + initialMessage);
+
+                    if (initialMessage.equals("get-idle-clients")) {
+                        handleIdleClientsRequest();
+                    } else if (initialMessage.equals("disconnect")) {
+                        break;
+                    } else {
+                        Logger.log(LogLevel.WARN, "Invalid TCP message received: '" + initialMessage + "'");
+                    }
+                }
+            } catch (IOException e) {
+                Logger.log(LogLevel.WARN, "Client " + clientId + " disconnected without closing the TCP socket!");
+            } finally {
+                if (!ping) {
+                    disconnectClient();
+                }
+            }
+        }
+
+        /**
+         * Creates a new client.
+         * 
+         * @param message - initial message from client.
+         * @throws IOException
+         */
+        private void handleNewClientRequest(String message) throws IOException {
+            // Parse client name
+            String clientName = message.split(":")[1];
+            this.clientId = maxClientID++;
+            InetAddress clientAddress = clientSocket.getInetAddress();
+
+            // Register the new client
+            synchronized (clients) {
+                clients.add(new ClientStruct(clientId, clientName, clientAddress));
+            }
+
+            Logger.log(LogLevel.CONNECTION, "Client '" + clientName + "' connected. Assigned ID: " + clientId);
+
+            // Send client ID and UDP port
+            out.writeInt(clientId);
+            out.writeInt(UDP_PORT);
+            out.flush();
+
+            Logger.log(LogLevel.CONNECTION, "Sent UDP port and ID back to client '" + clientName + "'");
+        }
+
+        /**
+         * Handles the request for idle clients, or in other words cliets that are not
+         * connected in any lobbies, and can be invited into one.
+         * 
+         * @throws IOException
+         */
+        private void handleIdleClientsRequest() throws IOException {
+            String clientsData = getPlayerNameData(clients, clientId);
+
+            sendMessage("idle-clients:" + clientsData);
+            out.flush();
+
+            Logger.log(LogLevel.TCPREQUESTS, "Handled 'get-idle-clients' request from client " + clientId);
+        }
+
+        /**
+         * Handles a player ping by responding with a message the client expects to
+         * prove server works, and then disposes of this connection.
+         * 
+         * @throws IOException
+         */
+        private void handleInitialPing() throws IOException {
+            out.writeUTF("flaggi-pong");
+            out.flush();
+            clientSocket.close();
+            Logger.log(LogLevel.PING, "Received initial ping from client. Closing connection...");
+        }
+
+        /**
+         * Sends a message to this client.
+         *
+         * @param message The message to send.
+         */
+        public synchronized void sendMessage(String message) {
+            try {
+                out.writeUTF(message);
+                out.flush();
+                Logger.log(LogLevel.DEBUG, "Sent message to client " + clientId + ": " + message);
+            } catch (IOException e) {
+                Logger.log(LogLevel.ERROR, "Failed to send message to client " + clientId, e);
+            }
+        }
+
+        /**
+         * Disconnects the client and removes it from the handlers list.
+         * 
+         */
+        private void disconnectClient() {
+            try {
+                String log = "Disconnecting client " + clientId;
+                try {
+                    log = "Disconnecting client " + clients.get(clientId).getDisplayName() + " with ID " + clientId;
+                } catch (Exception e) {
+                }
+                Logger.log(LogLevel.CONNECTION, log);
+
+                removeClient(clientId);
+                clientSocket.close();
+                refreshIDNumberIfNoUsers();
+
+            } catch (IOException e) {
+                Logger.log(LogLevel.ERROR, "Failed to disconnect client " + clientId, e);
+            }
         }
 
     }
