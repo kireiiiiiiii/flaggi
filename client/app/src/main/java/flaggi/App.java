@@ -162,7 +162,7 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
         this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, PROJECT_NAME, new Color(229, 204, 255));
         this.gpanel.setIconOSDependend(ImageUtil.getImageFromFile("icons/icon_win.png"), ImageUtil.getImageFromFile("icons/icon_mac.png"), ImageUtil.getImageFromFile("icons/icon_win.png"), ImageUtil.getImageFromFile("icons/icon_win.png"));
         this.gpanel.setExitOperation(() -> {
-            exitGame();
+            exitServer();
         });
         initializeWidgets();
         LOGGER.addLog("UI window created");
@@ -178,7 +178,7 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
      * Starts the game (not the app).
      * 
      */
-    public void startGame() {
+    public void joinServer() {
 
         // ---- Set variables
         this.health = -1;
@@ -238,9 +238,11 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
         this.clientID = this.localClient.getId();
         this.localPlayer = new Player(new int[] { this.spawnPoint[0], this.spawnPoint[1] }, username, skinName, this.clientID);
         this.gpanel.add(this.localPlayer);
-
         this.gpanel.hideAllWidgets();
-        this.gpanel.showTaggedWidgets(WidgetTags.GAME_ELEMENTS);
+        this.gpanel.add(new Lobby(this, () -> {
+            this.localClient.sendTCPMessageToServer(ServerRequests.GET_IDLE_CLIENTS);
+        }));
+        this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
 
         // ------ Start game loop
         this.movementEnabled = true;
@@ -248,19 +250,32 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
         this.gameLoop.start();
         LOGGER.addLog("Game loop started");
 
-        // TODO Debug lobby widget
-        // this.gpanel.hideAllWidgets();
-        // this.gpanel.add(new Lobby(this, () -> {
-        // this.localClient.sendTCPMessageToServer(ServerRequests.GET_IDLE_CLIENTS);
-        // }));
-        // this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
+    }
+
+    /**
+     * Enters a match.
+     * 
+     */
+    public void enterGame() {
+        this.movementEnabled = true;
+        this.localPlayer.setPos(new int[] { this.spawnPoint[0], this.spawnPoint[1] });
+        this.localPlayer.setHealth(-1);
+        this.gpanel.hideAllWidgets();
+        this.gpanel.showTaggedWidgets(WidgetTags.GAME_ELEMENTS);
+    }
+
+    public void goIdle() {
+        this.movementEnabled = false;
+        this.gpanel.hideAllWidgets();
+        this.gpanel.showTaggedWidgets(WidgetTags.LOBBY); // TODO resume update task
+        // TODO stop game loop?
     }
 
     /**
      * Event done on exit the game.
      * 
      */
-    public void exitGame() {
+    public void exitServer() {
         if (this.gameLoop != null)
             this.gameLoop.stop();
         if (this.localClient != null)
@@ -298,9 +313,18 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
             updateLobbyList(data);
         } else if (ServerResponses.isDied(message)) {
             die();
+        } else if (message.equals(ServerResponses.ENTER_GAME)) {
+            enterGame();
+        } else if (message.equals(ServerResponses.GO_IDLE)) {
+            goIdle();
         } else {
             LOGGER.addLog("Received invalid message from server: " + message);
         }
+    }
+
+    @Override
+    public void invitePlayer(String playerName, int playerID) {
+        this.localClient.sendTCPMessageToServer(ServerRequests.invitePlayer(playerID));
     }
 
     /**
@@ -481,6 +505,9 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
         // Get the current players from the panel and their positions from the server
         ArrayList<Player> players = this.gpanel.getWidgetsByClass(Player.class);
         GameDataStruct struct = localClient.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.clientID, this.health, this.username, localAnimationFrame, getPlayerObjectDataString(true)));
+        if (struct == null) {
+            return;
+        }
 
         List<ClientStruct> serverPositions = struct.connectedClientsList;
         String playerObjectData = struct.playerObjectData;
@@ -574,7 +601,7 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
      */
     public void initializeWidgets() {
         ArrayList<Renderable> widgets = new ArrayList<Renderable>(Arrays.asList(new Background(), new MenuScreen(() -> {
-            startGame();
+            joinServer();
         }, this.appOptions.get().name, this.appOptions.get().ip), new PauseMenu(() -> {
             togglePauseMenu();
         }, () -> {
@@ -686,11 +713,6 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
             Interactable i = (Interactable) r;
             i.interact(e);
         }
-    }
-
-    @Override
-    public void joinToLobby(String playerName, int playerID) {
-        System.out.println("join to lobby request: " + playerName + " with ID: " + playerID);
     }
 
     @Override

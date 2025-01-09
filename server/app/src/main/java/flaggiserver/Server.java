@@ -377,10 +377,11 @@ public class Server {
      */
     private static String getAllPlayerObjectData(int id) {
         StringBuilder data = new StringBuilder();
+        int roomID = getClient(id).getRoomID();
 
         synchronized (playerObjects) {
             for (Bullet bullet : new ArrayList<>(playerObjects)) {
-                if (!bullet.wasCreationDataSendToClient(id)) {
+                if (!bullet.wasCreationDataSendToClient(id) && roomID == getClient(bullet.getOwningPlaterId()).getRoomID()) {
                     data.append(bullet.toString()).append("+");
                 }
                 bullet.setWasSendToClient(id);
@@ -397,8 +398,10 @@ public class Server {
         synchronized (clients) {
             for (ClientStruct client : new ArrayList<>(clients)) {
                 List<Bullet> playerObjects = new ArrayList<>(client.getPlayerObjects());
-                for (Bullet object : playerObjects) {
-                    data.append(client.getID()).append("-").append(object.getBulletId()).append(",");
+                if (roomID == client.getRoomID()) {
+                    for (Bullet object : playerObjects) {
+                        data.append(client.getID()).append("-").append(object.getBulletId()).append(",");
+                    }
                 }
             }
 
@@ -509,10 +512,16 @@ public class Server {
      * @return - a {@code String} of all client positions.
      */
     private static String getAllClientsData(int id) {
+        if (getClient(id).getRoomID() == -1) {
+            return "idle";
+        }
+        int roomID = getClient(id).getRoomID();
         StringBuilder positions = new StringBuilder();
         synchronized (clients) {
             for (ClientStruct client : clients) {
-                positions.append(client.getID()).append(",").append(client.getX()).append(",").append(client.getY()).append(",").append(client.getHealth()).append(",").append(client.getDisplayName()).append(",").append(client.getAnimationFrame()).append(";");
+                if (roomID == client.getRoomID()) {
+                    positions.append(client.getID()).append(",").append(client.getX()).append(",").append(client.getY()).append(",").append(client.getHealth()).append(",").append(client.getDisplayName()).append(",").append(client.getAnimationFrame()).append(";");
+                }
             }
         }
         positions.append("|").append(getAllPlayerObjectData(id));
@@ -726,7 +735,7 @@ public class Server {
                 for (ClientStruct client : new ArrayList<>(clients)) {
                     Rectangle playerHitbox = getPlayerHitbox(client);
 
-                    if (bulletHitbox.intersects(playerHitbox) && bullet.getOwningPlaterId() != client.getID()) {
+                    if (bulletHitbox.intersects(playerHitbox) && bullet.getOwningPlaterId() != client.getID() && client.getRoomID() == getClient(bullet.getOwningPlaterId()).getRoomID()) {
                         handleBulletCollision(bullet, client, bulletsToRemove);
                         break;
                     }
@@ -798,12 +807,16 @@ public class Server {
                         handleIdleClientsRequest();
                     } else if (initialMessage.equals("disconnect")) {
                         break;
+                    } else if (initialMessage.startsWith("invite-player:")) {
+                        handleJoinRequest(Integer.parseInt(initialMessage.split(":")[1]));
                     } else {
                         Logger.log(LogLevel.WARN, "Invalid TCP message received: '" + initialMessage + "'");
                     }
                 }
             } catch (IOException e) {
                 Logger.log(LogLevel.WARN, "Client " + clientId + " disconnected without closing the TCP socket!");
+            } catch (Exception e) {
+                Logger.log(LogLevel.ERROR, "Exception occurred in client handler.", e);
             } finally {
                 if (!ping) {
                     disconnectClient();
@@ -864,6 +877,24 @@ public class Server {
             out.flush();
             clientSocket.close();
             Logger.log(LogLevel.PING, "Received initial ping from client. Closing connection...");
+        }
+
+        /**
+         * Handles a player join request.
+         * 
+         * @param playerID - player ID of the client to invite.
+         */
+        private void handleJoinRequest(int playerID) {
+            ClientStruct targetClient = getClient(playerID);
+            ClientStruct localClient = getClient(this.clientId);
+            if (targetClient.getRoomID() != -1) {
+                localClient.setRoomID(targetClient.getRoomID());
+            } else {
+                targetClient.setRoomID(playerID);
+                localClient.setRoomID(playerID);
+            }
+            sendTCPMessageToClient(playerID, "enter-game");
+            sendTCPMessageToClient(this.clientId, "enter-game");
         }
 
         /**

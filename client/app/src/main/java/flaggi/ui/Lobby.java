@@ -150,7 +150,7 @@ public class Lobby implements Renderable, Scrollable, Interactable {
 
         for (ClientItem item : clientItems) {
             if (item.buttonBounds.contains(mouseX, mouseY)) {
-                handeler.joinToLobby(item.name, item.playerID);
+                handeler.invitePlayer(item.name, item.playerID);
                 return true;
             }
         }
@@ -231,7 +231,7 @@ public class Lobby implements Renderable, Scrollable, Interactable {
          * @param playerName - name of the player
          * @param playerID   - ID of the player.
          */
-        public void joinToLobby(String playerName, int playerID);
+        public void invitePlayer(String playerName, int playerID);
     }
 
     /**

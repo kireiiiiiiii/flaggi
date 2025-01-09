@@ -41,7 +41,7 @@ public class ClientStruct {
     private final InetAddress INET_ADRESS;
 
     private String animationFrame;
-    private int x, y, health;
+    private int x, y, health, roomID;
     private long lastReceivedTime;
     private List<Bullet> playerObjects;
 
@@ -54,6 +54,7 @@ public class ClientStruct {
      */
     public ClientStruct(int id, String displayName, InetAddress inetAddress) {
         this.playerObjects = new ArrayList<Bullet>();
+        this.roomID = -1;
         this.ID = id;
         this.DISPLAY_NAME = displayName;
         this.INET_ADRESS = inetAddress;
@@ -86,6 +87,14 @@ public class ClientStruct {
 
     public void setHealth(int health) {
         this.health = health;
+    }
+
+    public int getRoomID() {
+        return this.roomID;
+    }
+
+    public void setRoomID(int roomID) {
+        this.roomID = roomID;
     }
 
     public String getAnimationFrame() {

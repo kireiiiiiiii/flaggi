@@ -84,9 +84,17 @@ public class Client {
             return "new-client:" + clientName;
         }
 
+        public static String invitePlayer(int clientId) {
+            return "invite-player:" + clientId;
+        }
+
     }
 
     public static class ServerResponses {
+
+        public static final String GO_IDLE = "go-idle";
+        public static final String ENTER_GAME = "enter-game";
+        public static final String UDP_IDLE = "idle";
 
         public static boolean isPong(String message) {
             return message.equals("flaggi-pong");
@@ -282,6 +290,9 @@ public class Client {
             DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
             udpSocket.receive(receivePacket);
             String data = new String(receivePacket.getData(), 0, receivePacket.getLength());
+            if (data.equals(ServerResponses.UDP_IDLE)) {
+                return null;
+            }
 
             String[] splitData = data.split("\\|");
             playerPositions = parsePositions(splitData[0]);
