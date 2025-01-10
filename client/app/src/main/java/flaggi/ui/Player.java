@@ -71,10 +71,10 @@ public class Player implements Renderable {
     ////////////////
 
     private int[] pos = new int[2];
-    private boolean visible = true, inverted = false;
+    private boolean visible = true, inverted = false, hasFlag = false;
     private int id, health;
     private String name, animationFrame, localPlayerSkinName;
-    private Sprite sprite;
+    private Sprite avatar, flag;
 
     /////////////////
     // Constructor
@@ -96,9 +96,13 @@ public class Player implements Renderable {
 
         // ---- Set animation
         this.localPlayerSkinName = skinName;
-        this.sprite.setAnimation(localPlayerSkinName + "_idle");
-        this.sprite.setFps(2);
-        this.sprite.play();
+        this.avatar.setAnimation(localPlayerSkinName + "_idle");
+        this.avatar.setFps(2);
+        this.avatar.play();
+
+        this.flag.setAnimation("flag_blue");
+        this.flag.setFps(2);
+        this.flag.play();
     }
 
     /**
@@ -113,7 +117,11 @@ public class Player implements Renderable {
     public Player(int[] pos, String name, int id, String animationFrame) {
 
         // ---- Set variables
-        this.sprite = new Sprite();
+        this.avatar = new Sprite();
+        this.flag = new Sprite();
+        this.flag.addAnimation(Arrays.asList("flag_blue"), "flag_blue");
+        this.flag.addAnimation(Arrays.asList("flag_red"), "flag_red");
+        this.flag.setAnimation("flag_red");
         this.animationFrame = animationFrame;
         this.pos = pos;
         this.name = name;
@@ -121,9 +129,9 @@ public class Player implements Renderable {
 
         // ---- Initialize skins
         if (playerAnimationsLibrary == null) {
-            addAllPlayerAnimations();
+            addAllAvatarAnimations();
         }
-        this.sprite.setAnimations(playerAnimationsLibrary);
+        this.avatar.setAnimations(playerAnimationsLibrary);
     }
 
     /////////////////
@@ -134,7 +142,7 @@ public class Player implements Renderable {
      * Add all the downloaded sprite animations.
      * 
      */
-    private static void addAllPlayerAnimations() {
+    private static void addAllAvatarAnimations() {
         playerAnimationsLibrary = new HashMap<>();
         String[] skinTextures = FileUtil.listDirectoriesInJar("sprites/player");
 
@@ -161,9 +169,13 @@ public class Player implements Renderable {
     @Override
     public void render(Graphics2D g, int[] size, int[] offset, Container focusCycleRootAncestor) {
 
+        if (this.hasFlag) {
+            this.flag.render(g, this.pos[0], this.pos[1], focusCycleRootAncestor, this.inverted);
+        }
+
         // Render the player sprite
         if (!isEnemy()) {
-            this.sprite.render(g, this.pos[0], this.pos[1], focusCycleRootAncestor, this.inverted);
+            this.avatar.render(g, this.pos[0], this.pos[1], focusCycleRootAncestor, this.inverted);
             offset = new int[] { 0, 0 };
 
         } else {
@@ -171,7 +183,7 @@ public class Player implements Renderable {
             String animationName = parsedFrameData[0];
             int animationFrame = Integer.parseInt(parsedFrameData[1]);
             boolean inverted = Boolean.parseBoolean(parsedFrameData[2]);
-            this.sprite.render(g, this.pos[0] + offset[0], this.pos[1] + offset[1], focusCycleRootAncestor, animationName, animationFrame, inverted);
+            this.avatar.render(g, this.pos[0] + offset[0], this.pos[1] + offset[1], focusCycleRootAncestor, animationName, animationFrame, inverted);
         }
 
         // Render the nametag
@@ -289,7 +301,7 @@ public class Player implements Renderable {
      *         "current-animation-name:current-frame".
      */
     public String getAnimationFrame() {
-        return this.sprite.getAnimationFrame() + ":" + this.inverted;
+        return this.avatar.getAnimationFrame() + ":" + this.inverted;
     }
 
     /**
@@ -312,6 +324,14 @@ public class Player implements Renderable {
         this.inverted = invert;
     }
 
+    public void hasFlag(boolean hasFlag) {
+        this.hasFlag = hasFlag;
+    }
+
+    public void setHasFlag(boolean hasFlag) {
+        this.hasFlag = hasFlag;
+    }
+
     /**
      * Switches the player animation.
      * 
@@ -319,16 +339,16 @@ public class Player implements Renderable {
      */
     public void switchAnimation(String name) {
         String animationName = this.localPlayerSkinName + "_" + name;
-        if (this.sprite.getAnimationFrame().split(":")[0].equals(animationName)) {
+        if (this.avatar.getAnimationFrame().split(":")[0].equals(animationName)) {
             return;
         }
-        this.sprite.setAnimation(animationName);
+        this.avatar.setAnimation(animationName);
         switch (name) {
         case "idle":
-            this.sprite.setFps(2);
+            this.avatar.setFps(2);
             break;
         case "walk_side":
-            this.sprite.setFps(4);
+            this.avatar.setFps(4);
         default:
             break;
         }
