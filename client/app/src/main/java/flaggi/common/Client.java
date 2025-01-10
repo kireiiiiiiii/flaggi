@@ -88,6 +88,14 @@ public class Client {
             return "invite-player:" + clientId;
         }
 
+        public static String acceptInvite(int clientId) {
+            return "accept-invite:" + clientId;
+        }
+
+        public static String declineInvite(int clientId) {
+            return "decline-invite:" + clientId;
+        }
+
     }
 
     public static class ServerResponses {

@@ -60,6 +60,7 @@ import flaggi.struct.ClientStruct;
 import flaggi.struct.GameDataStruct;
 import flaggi.ui.Background;
 import flaggi.ui.Bullet;
+import flaggi.ui.ConfirmationWindow;
 import flaggi.ui.ConnectionWidget;
 import flaggi.ui.HUD;
 import flaggi.ui.InviteScreen;
@@ -103,6 +104,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
     private ArrayList<KeyEvent> pressedKeys;
     private ArrayList<Bullet> quedPlayerObjects;
     private ToastManager toasts;
+    private ConfirmationWindow yesnoToasts;
     private int[] pos, spawnPoint, windowSize;
     private boolean movementEnabled, paused;
 
@@ -159,6 +161,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         this.pressedKeys = new ArrayList<KeyEvent>();
         this.quedPlayerObjects = new ArrayList<Bullet>();
         this.toasts = new ToastManager();
+        this.yesnoToasts = new ConfirmationWindow();
         printHeader();
 
         // ------ Initialize UI
@@ -169,6 +172,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         });
         initializeWidgets();
         this.gpanel.add(this.toasts);
+        this.gpanel.add(this.yesnoToasts);
         LOGGER.addLog("UI window created");
         goToMenu();
 
@@ -373,6 +377,20 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         this.gpanel.showTaggedWidgets(WidgetTags.MENU_ELEMENTS);
         this.gpanel.setCameraPosition(new int[] { -this.pos[0] + spawnPoint[0], -this.pos[1] + spawnPoint[1] });
         LOGGER.addLog("Menu screen active.");
+    }
+
+    /**
+     * Handles a player invite.
+     * 
+     * @param playerName - player display name.
+     * @param playerID   - player ID.
+     */
+    public void handleInvite(String playerName, int playerID) {
+        this.yesnoToasts.show("Accept invite from: " + playerName + "?", () -> {
+            this.localClient.sendTCPMessageToServer(ServerRequests.acceptInvite(playerID));
+        }, () -> {
+            this.localClient.sendTCPMessageToServer(ServerRequests.declineInvite(playerID));
+        });
     }
 
     /**
