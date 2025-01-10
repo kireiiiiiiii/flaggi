@@ -62,19 +62,19 @@ import flaggi.ui.Background;
 import flaggi.ui.Bullet;
 import flaggi.ui.ConnectionWidget;
 import flaggi.ui.HUD;
-import flaggi.ui.Lobby;
+import flaggi.ui.InviteScreen;
+import flaggi.ui.InviteScreen.LobbyHandler;
 import flaggi.ui.MenuScreen;
 import flaggi.ui.PauseMenu;
 import flaggi.ui.Player;
 import flaggi.ui.Tree;
-import flaggi.ui.Lobby.LobbyHandeler;
 import flaggi.util.ImageUtil;
 import flaggi.util.ScreenUtil;
 
 /**
  * Main class for the LAN Game application.
  */
-public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHandeler {
+public class App implements InteractableHandeler, LobbyHandler, ServerMessageHandeler {
 
     /////////////////
     // Constants
@@ -239,7 +239,7 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
         this.localPlayer = new Player(new int[] { this.spawnPoint[0], this.spawnPoint[1] }, username, skinName, this.clientID);
         this.gpanel.add(this.localPlayer);
         this.gpanel.hideAllWidgets();
-        this.gpanel.add(new Lobby(this, () -> {
+        this.gpanel.add(new InviteScreen(this, () -> {
             this.localClient.sendTCPMessageToServer(ServerRequests.GET_IDLE_CLIENTS);
         }));
         this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
@@ -483,7 +483,7 @@ public class App implements InteractableHandeler, LobbyHandeler, ServerMessageHa
             }
         }
 
-        for (Lobby l : this.gpanel.getWidgetsByClass(Lobby.class)) {
+        for (InviteScreen l : this.gpanel.getWidgetsByClass(InviteScreen.class)) {
             l.setClients(clients);
         }
     }
