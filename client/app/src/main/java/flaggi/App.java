@@ -67,6 +67,7 @@ import flaggi.ui.InviteScreen.LobbyHandler;
 import flaggi.ui.MenuScreen;
 import flaggi.ui.PauseMenu;
 import flaggi.ui.Player;
+import flaggi.ui.ToastManager;
 import flaggi.ui.Tree;
 import flaggi.util.ImageUtil;
 import flaggi.util.ScreenUtil;
@@ -101,6 +102,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
     private AdvancedVariable<AppOptions> appOptions;
     private ArrayList<KeyEvent> pressedKeys;
     private ArrayList<Bullet> quedPlayerObjects;
+    private ToastManager toasts;
     private int[] pos, spawnPoint, windowSize;
     private boolean movementEnabled, paused;
 
@@ -156,6 +158,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         this.paused = false;
         this.pressedKeys = new ArrayList<KeyEvent>();
         this.quedPlayerObjects = new ArrayList<Bullet>();
+        this.toasts = new ToastManager();
         printHeader();
 
         // ------ Initialize UI
@@ -165,6 +168,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
             exitServer();
         });
         initializeWidgets();
+        this.gpanel.add(this.toasts);
         LOGGER.addLog("UI window created");
         goToMenu();
 
