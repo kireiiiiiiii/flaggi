@@ -925,9 +925,24 @@ public class Server {
                 }
                 Logger.log(LogLevel.CONNECTION, log);
 
+                int roomID = getClient(clientId).getRoomID();
+
                 removeClient(clientId);
                 clientSocket.close();
                 refreshIDNumberIfNoUsers();
+
+                List<ClientStruct> clientsInRoom = new ArrayList<ClientStruct>();
+                for (ClientStruct client : clients) {
+                    if (client.getRoomID() == roomID) {
+                        clientsInRoom.add(client);
+                    }
+                }
+                if (clientsInRoom.size() <= 1) {
+                    for (ClientStruct c : clientsInRoom) {
+                        c.setRoomID(-1);
+                        sendTCPMessageToClient(c.getID(), "go-idle");
+                    }
+                }
 
             } catch (IOException e) {
                 Logger.log(LogLevel.ERROR, "Failed to disconnect client " + clientId, e);
