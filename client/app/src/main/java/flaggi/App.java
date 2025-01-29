@@ -435,7 +435,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
     } else if ((moveDown && moveLeft) || (moveDown && moveRight)) {
       this.localPlayer.switchAnimation("idle"); // TODO ADD ANIMATIONS
     } else if (moveUp) {
-      // TODO ADD ANIMATIONS
+      this.localPlayer.switchAnimation("walk_up");
     } else if (moveDown) {
       // TODO ADD ANIMATIONS
     } else if (moveLeft) {
