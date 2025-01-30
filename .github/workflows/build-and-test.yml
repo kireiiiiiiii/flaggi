@@ -42,7 +42,7 @@ jobs:
         run: ./gradlew test
 
       - name: Upload Client Build Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: client-shadow-jar
           path: client/app/build/libs/*.jar
@@ -63,7 +63,7 @@ jobs:
         run: ./gradlew test
 
       - name: Upload Server Build Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: server-shadow-jar
           path: server/app/build/libs/*.jar
