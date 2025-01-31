@@ -610,7 +610,9 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
    *
    */
   public void die() {
-    goToMenu();
+    this.localClient.sendTCPMessageToServer(Client.ServerRequests.GO_IDLE);
+    this.gpanel.hideAllWidgets();
+    this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
   }
 
   /**

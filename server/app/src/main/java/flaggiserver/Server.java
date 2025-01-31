@@ -281,7 +281,7 @@ public class Server {
      * @param udpSocket - target UDP socket.
      * @param port      - port number.
      * @param client    - target client.
-     * @param message   - response message/
+     * @param message   - response message.
      * @throws IOException if an error occurs.
      */
     private static void sendUDPMessage(DatagramSocket udpSocket, int port, ClientStruct client, String message) throws IOException {
@@ -430,6 +430,32 @@ public class Server {
             }
         }
         return clientNames;
+    }
+
+    /**
+     * Idles all clients alone in a room.
+     * 
+     */
+    private static void checkForAloneInRoom(int roomID, int[] ignore) {
+
+        List<ClientStruct> clientsInRoom = new ArrayList<ClientStruct>();
+        for (ClientStruct client : clients) {
+            if (client.getRoomID() == roomID) {
+                for (int i : ignore) {
+                    if (client.getID() == i) {
+                        continue;
+                    }
+                }
+                clientsInRoom.add(client);
+            }
+        }
+        if (clientsInRoom.size() <= 1) {
+            for (ClientStruct c : clientsInRoom) {
+                c.setRoomID(-1);
+                sendTCPMessageToClient(c.getID(), "go-idle");
+            }
+        }
+
     }
 
     /**
@@ -807,6 +833,8 @@ public class Server {
                         handleIdleClientsRequest();
                     } else if (initialMessage.equals("disconnect")) {
                         break;
+                    } else if (initialMessage.equals("go-idle")) {
+                        handleGoIdleRequest();
                     } else if (initialMessage.startsWith("invite-player:")) {
                         handleJoinRequest(Integer.parseInt(initialMessage.split(":")[1]));
                     } else {
@@ -898,6 +926,16 @@ public class Server {
         }
 
         /**
+         * Makes the player idle.
+         * 
+         */
+        private void handleGoIdleRequest() {
+            ClientStruct c = getClient(this.clientId);
+            c.setRoomID(-1);
+            checkForAloneInRoom(c.getRoomID(), new int[] { this.clientId });
+        }
+
+        /**
          * Sends a message to this client.
          *
          * @param message The message to send.
@@ -931,18 +969,7 @@ public class Server {
                 clientSocket.close();
                 refreshIDNumberIfNoUsers();
 
-                List<ClientStruct> clientsInRoom = new ArrayList<ClientStruct>();
-                for (ClientStruct client : clients) {
-                    if (client.getRoomID() == roomID) {
-                        clientsInRoom.add(client);
-                    }
-                }
-                if (clientsInRoom.size() <= 1) {
-                    for (ClientStruct c : clientsInRoom) {
-                        c.setRoomID(-1);
-                        sendTCPMessageToClient(c.getID(), "go-idle");
-                    }
-                }
+                checkForAloneInRoom(roomID, new int[] { clientId });
 
             } catch (IOException e) {
                 Logger.log(LogLevel.ERROR, "Failed to disconnect client " + clientId, e);

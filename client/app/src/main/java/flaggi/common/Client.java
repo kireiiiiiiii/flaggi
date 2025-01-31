@@ -79,6 +79,7 @@ public class Client {
         public static final String PING = "ping";
         public static final String DISCONNECT = "disconnect";
         public static final String GET_IDLE_CLIENTS = "get-idle-clients";
+        public static final String GO_IDLE = "go-idle";
 
         public static String initialMessage(String clientName) {
             return "new-client:" + clientName;
