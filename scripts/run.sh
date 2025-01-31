@@ -11,28 +11,32 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 DIET_JRE="$PROJECT_ROOT/diet-jre"
 
-CLIENT_DIR="$PROJECT_ROOT/client"
-SERVER_DIR="$PROJECT_ROOT/server"
-EDITOR_DIR="$PROJECT_ROOT/editor"
+declare -A APP_DIRS=(
+  ["client"]="$PROJECT_ROOT/client"
+  ["server"]="$PROJECT_ROOT/server"
+  ["editor"]="$PROJECT_ROOT/editor"
+)
 
-CLIENT_JAR="$CLIENT_DIR/app/build/libs/Flaggi.jar"
-SERVER_JAR="$SERVER_DIR/app/build/libs/Flaggi-server.jar"
-EDITOR_JAR="$EDITOR_DIR/app/build/libs/flaggi-map-editor.jar"
+declare -A JAR_FILES=(
+  ["client"]="${APP_DIRS["client"]}/app/build/libs/Flaggi.jar"
+  ["server"]="${APP_DIRS["server"]}/app/build/libs/Flaggi-server.jar"
+  ["editor"]="${APP_DIRS["editor"]}/app/build/libs/flaggi-map-editor.jar"
+)
 
 ###############
 #  VARIABLES  #
 ###############
 
-diet=true
-mode=""
+use_diet_jre=true
+selected_mode=""
 host_ip=""
-clear_screen=false
+should_clear_screen=false
 
 ###############
 #   METHODS   #
 ###############
 
-# Help message
+# Display help message
 usage() {
   echo "Usage: $0 <client|server|docker|editor> [OPTIONS]"
   echo "Options:"
@@ -42,36 +46,24 @@ usage() {
   exit 0
 }
 
-# Handle options and arguments
+# Handle command-line options and arguments
 handle_options() {
   local mode_count=0
 
   while [ $# -gt 0 ]; do
     case $1 in
-    client)
+    client | server | docker | editor)
       mode_count=$((mode_count + 1))
-      mode="client"
-      ;;
-    server)
-      mode_count=$((mode_count + 1))
-      mode="server"
-      ;;
-    docker)
-      mode_count=$((mode_count + 1))
-      mode="docker"
-      ;;
-    editor)
-      mode_count=$((mode_count + 1))
-      mode="editor"
+      selected_mode="$1"
       ;;
     -h | --help)
       usage
       ;;
     -n | --nodiet)
-      diet=false
+      use_diet_jre=false
       ;;
     -c | --clear)
-      clear_screen=true
+      should_clear_screen=true
       ;;
     *)
       echo "Invalid option: $1" >&2
@@ -81,19 +73,20 @@ handle_options() {
     shift
   done
 
-  # Check if more than one mode is specified
+  # Ensure only one mode is specified
   if [ "$mode_count" -gt 1 ]; then
-    echo "Error: Cannot specify multiple modes (client, server, docker) at once."
+    echo "Error: Cannot specify multiple modes (client, server, docker, editor) at once."
     usage
   fi
 }
 
+# Print a divider line
 print_divider() {
   width=$(tput cols)
   printf '%*s\n' "$width" '' | tr ' ' '-'
 }
 
-# Build the minimal JRE
+# Build the minimal JRE using jlink
 build_minimal_jre() {
   cd "$PROJECT_ROOT"
 
@@ -113,7 +106,7 @@ build_minimal_jre() {
   echo "JRE created at $DIET_JRE"
 }
 
-# Check Java version
+# Check if the Java version is 1.8.0
 check_java_version() {
   local java_version
   java_version=$(java -version 2>&1 | awk -F[\"_] 'NR==1 {print $2}')
@@ -123,11 +116,11 @@ check_java_version() {
   fi
 }
 
-# Build and run application
+# Build and run the specified application
 build_and_run() {
-  local app_dir=$1
-  local jar_file=$2
-  local app_name=$3
+  local app_name=$1
+  local app_dir=${APP_DIRS[$app_name]}
+  local jar_file=${JAR_FILES[$app_name]}
 
   # Build JAR
   echo "Building the $app_name JAR..."
@@ -136,7 +129,7 @@ build_and_run() {
 
   # Run the JAR
   if [ -f "$jar_file" ]; then
-    if [ "$diet" = true ]; then
+    if [ "$use_diet_jre" = true ]; then
       echo "Making the diet JRE ..."
       cd "$SCRIPT_DIR"
       build_minimal_jre
@@ -158,15 +151,14 @@ build_and_run() {
   fi
 }
 
-# Run Docker container
+# Run the Docker container for the server
 run_docker() {
-
   # Get the host's IP address
   host_ip=$(ifconfig | grep 'inet ' | awk '/inet / {print $2}' | grep -Ev '^(127\.|::)')
 
   # Build server JAR
-  echo "Building the $app_name JAR..."
-  cd "$SERVER_DIR"
+  echo "Building the server JAR..."
+  cd "${APP_DIRS["server"]}"
   ./gradlew shadowjar
 
   # Build the docker image
@@ -188,7 +180,6 @@ run_docker() {
     -p 54322:54322/udp \
     -e HOST_IP=$host_ip \
     flaggi-server
-
 }
 
 ###############
@@ -199,21 +190,17 @@ set -e
 check_java_version
 handle_options "$@"
 
-if [ -z "$mode" ]; then
-  echo "Error: No mode specified. Use 'client', 'server', or 'docker'."
+if [ -z "$selected_mode" ]; then
+  echo "Error: No mode specified. Use 'client', 'server', 'docker', or 'editor'."
   usage
 fi
 
-if [ "$clear_screen" = true ]; then
+if [ "$should_clear_screen" = true ]; then
   clear
 fi
 
-if [ "$mode" = "client" ]; then
-  build_and_run "$CLIENT_DIR" "$CLIENT_JAR" "client application"
-elif [ "$mode" = "server" ]; then
-  build_and_run "$SERVER_DIR" "$SERVER_JAR" "server application"
-elif [ "$mode" = "editor" ]; then
-  build_and_run "$EDITOR_DIR" "$EDITOR_JAR" "editor application"
-elif [ "$mode" = "docker" ]; then
+if [ "$selected_mode" = "client" ] || [ "$selected_mode" = "server" ] || [ "$selected_mode" = "editor" ]; then
+  build_and_run "$selected_mode"
+elif [ "$selected_mode" = "docker" ]; then
   run_docker
 fi
