@@ -9,12 +9,15 @@ export TERM=${TERM:-xterm}
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
+DIET_JRE="$PROJECT_ROOT/diet-jre"
+
 CLIENT_DIR="$PROJECT_ROOT/client"
 SERVER_DIR="$PROJECT_ROOT/server"
-DIET_JRE="$PROJECT_ROOT/diet-jre"
+EDITOR_DIR="$PROJECT_ROOT/editor"
 
 CLIENT_JAR="$CLIENT_DIR/app/build/libs/Flaggi.jar"
 SERVER_JAR="$SERVER_DIR/app/build/libs/Flaggi-server.jar"
+EDITOR_JAR="$EDITOR_DIR/app/build/libs/flaggi-map-editor.jar"
 
 ###############
 #  VARIABLES  #
@@ -31,7 +34,7 @@ clear_screen=false
 
 # Help message
 usage() {
-  echo "Usage: $0 <client|server|docker> [OPTIONS]"
+  echo "Usage: $0 <client|server|docker|editor> [OPTIONS]"
   echo "Options:"
   echo "  -h, --help      Display this help message."
   echo "  -n, --nodiet    Don't use diet JRE, but a normal one."
@@ -56,6 +59,10 @@ handle_options() {
     docker)
       mode_count=$((mode_count + 1))
       mode="docker"
+      ;;
+    editor)
+      mode_count=$((mode_count + 1))
+      mode="editor"
       ;;
     -h | --help)
       usage
@@ -205,6 +212,8 @@ if [ "$mode" = "client" ]; then
   build_and_run "$CLIENT_DIR" "$CLIENT_JAR" "client application"
 elif [ "$mode" = "server" ]; then
   build_and_run "$SERVER_DIR" "$SERVER_JAR" "server application"
+elif [ "$mode" = "editor" ]; then
+  build_and_run "$EDITOR_DIR" "$EDITOR_JAR" "editor application"
 elif [ "$mode" = "docker" ]; then
   run_docker
 fi

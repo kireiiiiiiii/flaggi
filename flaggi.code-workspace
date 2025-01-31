@@ -7,6 +7,7 @@
                 "files.exclude": {
                     "client": true,
 					"server": true,
+					"editor": true,
                 }
             }
 		},
@@ -17,6 +18,10 @@
 		{
 			"path": "server",
 			"name": "Server",
+		},
+		{
+			"path": "editor",
+			"name": "Map Editor",
 		}
 	],
 
