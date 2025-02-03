@@ -11,17 +11,13 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 DIET_JRE="$PROJECT_ROOT/diet-jre"
 
-declare -A APP_DIRS=(
-  ["client"]="$PROJECT_ROOT/client"
-  ["server"]="$PROJECT_ROOT/server"
-  ["editor"]="$PROJECT_ROOT/editor"
-)
+APP_DIRS_CLIENT="$PROJECT_ROOT/client"
+APP_DIRS_SERVER="$PROJECT_ROOT/server"
+APP_DIRS_EDITOR="$PROJECT_ROOT/editor"
 
-declare -A JAR_FILES=(
-  ["client"]="${APP_DIRS["client"]}/app/build/libs/Flaggi.jar"
-  ["server"]="${APP_DIRS["server"]}/app/build/libs/Flaggi-server.jar"
-  ["editor"]="${APP_DIRS["editor"]}/app/build/libs/flaggi-map-editor.jar"
-)
+JAR_FILES_CLIENT="${APP_DIRS_CLIENT}/app/build/libs/Flaggi.jar"
+JAR_FILES_SERVER="${APP_DIRS_SERVER}/app/build/libs/Flaggi-server.jar"
+JAR_FILES_EDITOR="${APP_DIRS_EDITOR}/app/build/libs/flaggi-map-editor.jar"
 
 ###############
 #  VARIABLES  #
@@ -119,8 +115,23 @@ check_java_version() {
 # Build and run the specified application
 build_and_run() {
   local app_name=$1
-  local app_dir=${APP_DIRS[$app_name]}
-  local jar_file=${JAR_FILES[$app_name]}
+  local app_dir
+  local jar_file
+
+  case $app_name in
+    client)
+      app_dir="$APP_DIRS_CLIENT"
+      jar_file="$JAR_FILES_CLIENT"
+      ;;
+    server)
+      app_dir="$APP_DIRS_SERVER"
+      jar_file="$JAR_FILES_SERVER"
+      ;;
+    editor)
+      app_dir="$APP_DIRS_EDITOR"
+      jar_file="$JAR_FILES_EDITOR"
+      ;;
+  esac
 
   # Build JAR
   echo "Building the $app_name JAR..."
@@ -158,7 +169,7 @@ run_docker() {
 
   # Build server JAR
   echo "Building the server JAR..."
-  cd "${APP_DIRS["server"]}"
+  cd "$APP_DIRS_SERVER"
   ./gradlew shadowjar
 
   # Build the docker image

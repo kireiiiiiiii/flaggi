@@ -4,38 +4,45 @@
 export TERM=${TERM:-xterm}
 
 #############
-# VARIABLES #
+# CONSTANTS #
 #############
 
 # Directories
-ROOT=$(cd "$(dirname "$0")/.." && pwd)
-SCRIPTS_DIR="$ROOT/scripts"
-CLIENT_DIR="$ROOT/client"
+ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
+SCRIPTS_DIR="$ROOT_DIR/scripts"
+ICONS_DIR="$ROOT_DIR/public/icons"
+DIET_JRE_DIR="$ROOT_DIR/diet-jre"
+
+APP_DIRS_CLIENT="$ROOT_DIR/client"
+APP_DIRS_EDITOR="$ROOT_DIR/editor"
+
+JAR_PATHS_CLIENT="${APP_DIRS_CLIENT}/app/build/libs"
+JAR_PATHS_EDITOR="${APP_DIRS_EDITOR}/app/build/libs"
+
+JAR_NAMES_CLIENT="Flaggi.jar"
+JAR_NAMES_EDITOR="flaggi-map-editor.jar"
 
 # Resources
-ABOUT_LINK="https://github.com/kireiiiiiiii/flaggi"
-INPUT_PATH="$CLIENT_DIR/app/build/libs"
+ABOUT_URL="https://github.com/kireiiiiiiii/flaggi"
 APP_NAME="Flaggi"
 SHADOWJAR_TASK="shadowjar"
-JAR_NAME="Flaggi.jar"
-ICONS="$ROOT/public/icons"
-DIET_JRE="$ROOT/diet-jre"
 
 # Default options
-diet=true
+use_diet_jre=true
 output_type=""
-output_path=""
-icon=""
-jpackage_path="jpackage"
-jlink_path="jlink"
+output_dir=""
+icon_path=""
+jpackage_exec="jpackage"
+jlink_exec="jlink"
+mode=""
 
 ###########
 # METHODS #
 ###########
 
-# Help message print
+# Print help message
 usage() {
-  echo "Usage: $0 [OPTIONS]"
+  echo "Usage: $0 <client|editor> [OPTIONS]"
   echo "Options:"
   echo " -h, --help            Display this help message"
   echo " -n, --nodiet          Package without using the diet JRE"
@@ -44,33 +51,36 @@ usage() {
   exit 0
 }
 
-# Function to handle arguments
+# Handle script options
 handle_options() {
   while [ $# -gt 0 ]; do
     case $1 in
+    client | editor)
+      mode="$1"
+      ;;
     -h | --help)
       usage
       ;;
     -n | --nodiet)
-      diet=false
+      use_diet_jre=false
       ;;
     --jpackage)
       shift
       if [[ -z "$1" || "$1" == -* ]]; then
-        echo "Error: -jpackage requires a valid path to the jpackage executable." >&2
+        echo "Error: --jpackage requires a valid path to the jpackage executable." >&2
         usage
         exit 1
       fi
-      jpackage_path="$1"
+      jpackage_exec="$1"
       ;;
     --jlink)
       shift
       if [[ -z "$1" || "$1" == -* ]]; then
-        echo "Error: -jlink requires a valid path to the jlink executable." >&2
+        echo "Error: --jlink requires a valid path to the jlink executable." >&2
         usage
         exit 1
       fi
-      jlink_path="$1"
+      jlink_exec="$1"
       ;;
     *)
       echo "Invalid option: $1" >&2
@@ -80,6 +90,11 @@ handle_options() {
     esac
     shift
   done
+
+  if [ -z "$mode" ]; then
+    echo "Error: No mode specified. Use 'client' or 'editor'."
+    usage
+  fi
 }
 
 # Check Java version
@@ -94,22 +109,22 @@ check_java_version() {
 
 # Build the minimal JRE
 build_minimal_jre() {
-  cd "$PROJECT_ROOT"
+  cd "$ROOT_DIR"
 
   # Delete existing JRE if it exists
-  if [ -d "$DIET_JRE" ]; then
-    rm -rf "$DIET_JRE"
+  if [ -d "$DIET_JRE_DIR" ]; then
+    rm -rf "$DIET_JRE_DIR"
   fi
 
   # Use jlink to create the JRE
   echo "Creating minimal JRE..."
 
-  "$jlink_path" \
+  "$jlink_exec" \
     --add-modules java.base,java.desktop \
-    --output "$DIET_JRE" \
+    --output "$DIET_JRE_DIR" \
     --no-header-files
 
-  echo "JRE created at $DIET_JRE"
+  echo "JRE created at $DIET_JRE_DIR"
 }
 
 ###############
@@ -126,13 +141,13 @@ handle_options "$@"
 case "$OSTYPE" in
 darwin*)
   output_type="dmg"
-  output_path="$CLIENT_DIR/app/build/mac"
-  icon="$ICONS/mac.icns"
+  output_dir="$ROOT_DIR/build/mac"
+  icon_path="$ICONS_DIR/mac.icns"
   ;;
 msys* | cygwin*)
   output_type="exe"
-  output_path="$CLIENT_DIR/app/build/win"
-  icon="$ICONS/win.ico"
+  output_dir="$ROOT_DIR/build/win"
+  icon_path="$ICONS_DIR/win.ico"
   ;;
 *)
   echo "Unsupported OS: $OSTYPE"
@@ -140,18 +155,29 @@ msys* | cygwin*)
   ;;
 esac
 
-# Build the client JAR
-echo "Building the client JAR..."
-cd "$CLIENT_DIR"
+# Set paths based on mode
+if [ "$mode" = "client" ]; then
+  app_dir="$APP_DIRS_CLIENT"
+  jar_path="$JAR_PATHS_CLIENT"
+  jar_name="$JAR_NAMES_CLIENT"
+elif [ "$mode" = "editor" ]; then
+  app_dir="$APP_DIRS_EDITOR"
+  jar_path="$JAR_PATHS_EDITOR"
+  jar_name="$JAR_NAMES_EDITOR"
+fi
+
+# Build the JAR
+echo "Building the $mode JAR..."
+cd "$app_dir"
 ./gradlew "app:$SHADOWJAR_TASK"
 
 # Ensure the output directory exists
-echo "Ensuring build directory exists at $output_path..."
-mkdir -p "$output_path"
+echo "Ensuring build directory exists at $output_dir..."
+mkdir -p "$output_dir"
 
 # Create the output package
-if [ -f "$INPUT_PATH/$JAR_NAME" ]; then
-  if [ "$diet" = true ]; then
+if [ -f "$jar_path/$jar_name" ]; then
+  if [ "$use_diet_jre" = true ]; then
     # Create the minimal JRE if diet mode is enabled
     echo "Creating minimal JRE for diet packaging..."
     cd "$SCRIPTS_DIR"
@@ -159,46 +185,44 @@ if [ -f "$INPUT_PATH/$JAR_NAME" ]; then
 
     # Package the app with a diet JRE
     echo "Creating $output_type with diet JRE..."
-    "$jpackage_path" \
-      --input "$INPUT_PATH" \
-      --main-jar "$JAR_NAME" \
+    "$jpackage_exec" \
+      --input "$jar_path" \
+      --main-jar "$jar_name" \
       --name "$APP_NAME" \
       --type "$output_type" \
-      --dest "$output_path" \
-      --icon "$icon" \
+      --dest "$output_dir" \
+      --icon "$icon_path" \
       --app-version 1.0 \
-      --about-url "$ABOUT_LINK" \
-      --runtime-image "$DIET_JRE"
-
+      --about-url "$ABOUT_URL" \
+      --runtime-image "$DIET_JRE_DIR"
   else
     # Package the app without a diet JRE
     echo "Creating $output_type without diet JRE..."
-    "$jpackage_path" \
-      --input "$INPUT_PATH" \
-      --main-jar "$JAR_NAME" \
+    "$jpackage_exec" \
+      --input "$jar_path" \
+      --main-jar "$jar_name" \
       --name "$APP_NAME" \
       --type "$output_type" \
-      --dest "$output_path" \
-      --icon "$icon" \
-      --about-url "$ABOUT_LINK" \
+      --dest "$output_dir" \
+      --icon "$icon_path" \
+      --about-url "$ABOUT_URL" \
       --app-version 1.0
   fi
 
   # Handle the created file based on the OS
   case "$output_type" in
   dmg)
-    echo "DMG created at $output_path/$APP_NAME.dmg"
+    echo "DMG created at $output_dir/$APP_NAME.dmg"
     ;;
   exe)
-    echo "EXE created at $output_path/$APP_NAME.exe"
+    echo "EXE created at $output_dir/$APP_NAME.exe"
     ;;
   *)
     echo "Error: Unsupported output format ($output_type)"
     exit 1
     ;;
   esac
-
 else
-  echo "Error: JAR file not found at $INPUT_PATH/$JAR_NAME"
+  echo "Error: JAR file not found at $jar_path/$jar_name"
   exit 1
 fi
