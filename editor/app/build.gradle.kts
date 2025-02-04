@@ -26,6 +26,10 @@ dependencies {
 
     // This dependency is used by the application.
     implementation(libs.guava)
+
+    // Jackson
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.15.0")
+
 }
 
 java {
