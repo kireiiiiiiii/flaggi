@@ -26,6 +26,7 @@
 package flaggi.common;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -39,12 +40,11 @@ import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 
 /**
- * <h1>Advanced Variable</h1>
- * A utility class for managing variables and persisting them to JSON files.
- * This class allows storing variables of any type and saving them to JSON files
- * for later retrieval. It leverages the <code>com.fasterxml.jackson</code>
- * library for
- * serialization and deserialization.
+ * <h1>Advanced Variable</h1> A utility class for managing variables and
+ * persisting them to JSON files. This class allows storing variables of any
+ * type and saving them to JSON files for later retrieval. It leverages the
+ * <code>com.fasterxml.jackson</code> library for serialization and
+ * deserialization.
  * <hr>
  * <h3><b>Dependencies:</b></h3>
  * <ul>
@@ -83,13 +83,12 @@ public class AdvancedVariable<T> {
     private AdvancedVariable() {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-        this.objectWriter = this.objectMapper.writer(
-                new DefaultPrettyPrinter() {
-                    @Override
-                    public DefaultPrettyPrinter createInstance() {
-                        return new CustomPrettyPrinter();
-                    }
-                });
+        this.objectWriter = this.objectMapper.writer(new DefaultPrettyPrinter() {
+            @Override
+            public DefaultPrettyPrinter createInstance() {
+                return new CustomPrettyPrinter();
+            }
+        });
     }
 
     /**
@@ -234,8 +233,7 @@ public class AdvancedVariable<T> {
      */
     public String readResource(String resourceName) throws IOException {
         StringBuilder content = new StringBuilder();
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourceName);
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourceName); BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             if (inputStream == null) {
                 throw new IOException("Resource not found: " + resourceName);
             }
@@ -255,10 +253,22 @@ public class AdvancedVariable<T> {
      * @throws IOException if an I/O error occurs
      */
     public void writeObject(String filePath, String contents) throws IOException {
-        try (FileOutputStream fileOut = new FileOutputStream(filePath);
-                ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+        try (FileOutputStream fileOut = new FileOutputStream(filePath); ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
             out.writeObject(contents);
         }
+    }
+
+    /////////////////
+    // Test methods
+    ////////////////
+
+    /**
+     * Pritns the JSON data of this object into the console.
+     * 
+     * @throws JsonProcessingException
+     */
+    public void printJsonData() throws JsonProcessingException {
+        this.objectMapper.writeValueAsString(this.storedValue);
     }
 
     /////////////////
