@@ -49,7 +49,7 @@ import flaggi.util.FontUtil;
 
 /**
  * Player widget class.
- * 
+ *
  */
 public class Player implements Renderable {
 
@@ -57,6 +57,8 @@ public class Player implements Renderable {
     // Constants
     ////////////////
 
+    public static final int TEXTURE_HEIGHT = 20 * Sprite.SPRITE_SCALING;
+    public static final int TEXTURE_WIDTH = 13 * Sprite.SPRITE_SCALING;
     public static final String DEFAULT_SKIN = "default_blue";
     public static final String DEFAULT_ENEMY_SKIN = "default_red";
 
@@ -82,7 +84,7 @@ public class Player implements Renderable {
 
     /**
      * Default constructor.
-     * 
+     *
      * @param pos      - position of the player.
      * @param name     - name of the player.
      * @param skinName - the name of the skin the player is using.
@@ -107,7 +109,7 @@ public class Player implements Renderable {
 
     /**
      * Constructor for players with a specific animationFrame
-     * 
+     *
      * @param pos     - position of the player.
      * @param name    - name of the player.
      * @param isEnemy - is the player an enemy?
@@ -140,7 +142,7 @@ public class Player implements Renderable {
 
     /**
      * Add all the downloaded sprite animations.
-     * 
+     *
      */
     private static void addAllAvatarAnimations() {
         playerAnimationsLibrary = new HashMap<>();
@@ -274,7 +276,7 @@ public class Player implements Renderable {
 
     /**
      * Set a new player position.
-     * 
+     *
      * @param pos - value.
      */
     public void setPos(int[] pos) {
@@ -284,7 +286,7 @@ public class Player implements Renderable {
     /**
      * Returns {@code true} if the player is an enemy. Otherwise, returns
      * {@code false}.
-     * 
+     *
      * @return - {@code boolean}.
      */
     public boolean isEnemy() {
@@ -293,7 +295,7 @@ public class Player implements Renderable {
 
     /**
      * Returns the {@code ID} of this player, given by the server.
-     * 
+     *
      * @return - {@code int} of the ID.
      */
     public int getId() {
@@ -302,7 +304,7 @@ public class Player implements Renderable {
 
     /**
      * Makes the current animation frame to send to the server.
-     * 
+     *
      * @return - {@code String} in the form of
      *         "current-animation-name:current-frame".
      */
@@ -313,7 +315,7 @@ public class Player implements Renderable {
     /**
      * Sets the animation frame value. This is used to render an exact animation
      * state of enemy players.
-     * 
+     *
      * @param animationFrame - {@code String} in the form of
      *                       "current-animation-name:current-frame".
      */
@@ -323,7 +325,7 @@ public class Player implements Renderable {
 
     /**
      * Sets the invert value.
-     * 
+     *
      * @param invert - {@code boolean}.
      */
     public void setFacingRight(boolean invert) {
@@ -340,7 +342,7 @@ public class Player implements Renderable {
 
     /**
      * Switches the player animation.
-     * 
+     *
      * @param name - name of the player animation. (skin name not needed)
      */
     public void switchAnimation(String name) {
@@ -372,7 +374,7 @@ public class Player implements Renderable {
      * Parses the animation frame format {@code String} into an animation name
      * value, and frame value. If the skin data is the default skin, it will be
      * changed to use the default enemy skin.
-     * 
+     *
      * @param animationFrame - target message.
      * @return - {@code String} array, index 0 with animation name, index 1 with
      *         animation frame.
@@ -390,7 +392,7 @@ public class Player implements Renderable {
 
     /**
      * Formats a list of animation names to be player sprite animations.
-     * 
+     *
      * @param animationName - name of the animation.
      * @param skinName      - name of the skin the animation is for.
      * @param frameNames    - frame names.

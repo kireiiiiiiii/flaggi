@@ -43,6 +43,7 @@ import flaggieditor.common.GPanel;
 import flaggieditor.common.MapData;
 import flaggieditor.common.GPanel.InteractableHandeler;
 import flaggieditor.common.MapData.ObjectType;
+import flaggieditor.widgets.MapRender;
 
 /**
  * Main application class.
@@ -64,9 +65,9 @@ public class App implements InteractableHandeler {
      * Main method.
      */
     public static void main(String[] args) {
-        // SwingUtilities.invokeLater(App::new);
-        validateMapDataSerialization();
-        validateMapDataDeserialization();
+        SwingUtilities.invokeLater(App::new);
+        // validateMapDataSerialization();
+        // validateMapDataDeserialization();
     }
 
     /**
@@ -77,6 +78,9 @@ public class App implements InteractableHandeler {
         // ----- Variable init
         int[] windowSize = getScreenSize();
         this.gpanel = new GPanel(this, 60, windowSize[0], windowSize[1], false, "Flaggi Editor", Color.BLACK);
+
+        // ----- Widgets
+        gpanel.add(new MapRender(getPlaceholderMap()));
 
     }
 
@@ -147,6 +151,21 @@ public class App implements InteractableHandeler {
     ////////////////
 
     /**
+     * Gets example map data.
+     * 
+     * @return a placeholder {@code MapData} object.
+     */
+    public static MapData getPlaceholderMap() {
+        MapData map = new MapData("My Awsome Map", 5_000, 10_000);
+
+        map.setSpawn(100, 200, 670, 240);
+        map.newGameObject(ObjectType.TREE, 500, 1000);
+        map.newGameObject(ObjectType.TREE, 720, 976);
+
+        return map;
+    }
+
+    /**
      * Test the map data serialization proccess.
      * 
      */
@@ -156,12 +175,7 @@ public class App implements InteractableHandeler {
             String filePath = System.getenv("HOME") + File.separator + "flaggimap.json";
 
             AdvancedVariable<MapData> map = new AdvancedVariable<MapData>(filePath);
-            map.set(new MapData("My Awsome Map", 10_000, 5_000));
-
-            map.get().setSpawn(100, 200, 670, 240);
-            map.get().newGameObject(ObjectType.TREE, 500, 1000);
-            map.get().newGameObject(ObjectType.TREE, 720, 976);
-
+            map.set(getPlaceholderMap());
             map.save();
             map.printJsonData();
 

@@ -272,7 +272,6 @@ public class Client {
             App.LOGGER.addLog("IOException while disconnecting from server.", e);
         }
     }
-
     /////////////////
     // UDP
     ////////////////

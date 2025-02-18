@@ -59,7 +59,7 @@ import flaggiserver.common.Logger.LogLevel;
 
 /**
  * Server class for the LAN Game application.
- * 
+ *
  */
 public class Server {
 
@@ -90,7 +90,7 @@ public class Server {
 
     /**
      * Main method.
-     * 
+     *
      * @param args
      */
     public static void main(String[] args) {
@@ -113,7 +113,7 @@ public class Server {
     /**
      * Listenes for incoming TCP connections, and creates a new Client handeler
      * running on a separate thread.
-     * 
+     *
      */
     private static void startTCPListener() {
         Logger.log(LogLevel.INFO, "TCP listener started on port '" + TCP_PORT + "'. Waiting for clients...");
@@ -169,7 +169,7 @@ public class Server {
     /**
      * Starts the UDP listener for receiving client position data and handling
      * heartbeat messages. Usually meant to be run on a separate thread.
-     * 
+     *
      */
     private static void startUDPListener() {
         Logger.log(LogLevel.INFO, "UDP listener started on port '" + UDP_PORT + "'. Waiting for data...");
@@ -203,7 +203,7 @@ public class Server {
 
     /**
      * Processes an incoming UDP packet and handles client messages.
-     * 
+     *
      */
     private static void processIncomingPacket(DatagramSocket udpSocket, DatagramPacket packet) throws IOException {
         String message = new String(packet.getData(), 0, packet.getLength());
@@ -239,7 +239,7 @@ public class Server {
 
     /**
      * Updates the data of a client.
-     * 
+     *
      * @param client           - target {@code Client} object.
      * @param x                - X position.
      * @param y                - Y position.
@@ -263,7 +263,7 @@ public class Server {
 
     /**
      * Adds all new bullets reported by the client.
-     * 
+     *
      * @param dataString - recipe for the bullet.
      * @param client     - owning client.
      */
@@ -277,7 +277,7 @@ public class Server {
 
     /**
      * Sends an UDP message.
-     * 
+     *
      * @param udpSocket - target UDP socket.
      * @param port      - port number.
      * @param client    - target client.
@@ -296,7 +296,7 @@ public class Server {
 
     /**
      * Method handeling the occurance of a fatal unrecoverable error.
-     * 
+     *
      */
     private static void handleFatalError() {
         Logger.log(LogLevel.ERROR, "FATAL EXCEPTION CAUGHT! SHUTTING DOWN SERVER...");
@@ -305,8 +305,8 @@ public class Server {
 
     /**
      * Removes a client from the list of clients.
-     * 
-     * 
+     *
+     *
      */
     private static void removeClient(int clientId) {
         for (ClientStruct c : clients) {
@@ -319,7 +319,7 @@ public class Server {
 
     /**
      * Logs the server creation message and the IP it was created on.
-     * 
+     *
      */
     private static void logServerCreation() {
         Logger.setLogFile(getApplicationDataFolder() + File.separator + "logs" + File.separator + "latest.log");
@@ -334,7 +334,7 @@ public class Server {
     /**
      * Gets the program Application Data Folder path. If it doesn't exist, it will
      * create one.
-     * 
+     *
      * @return - {@code String} of the application data folder path.
      */
     private static String getApplicationDataFolder() {
@@ -372,7 +372,7 @@ public class Server {
 
     /**
      * Gets the {@code String} of player object data to send to server.
-     * 
+     *
      * @return - data.
      */
     private static String getAllPlayerObjectData(int id) {
@@ -417,7 +417,7 @@ public class Server {
     /**
      * Gets a data {@code String} of names of clients from input list, and separates
      * them by a comma.
-     * 
+     *
      * @param clients - target client list.
      * @return client names separated by a comma.
      */
@@ -434,7 +434,7 @@ public class Server {
 
     /**
      * Idles all clients alone in a room.
-     * 
+     *
      */
     private static void checkForAloneInRoom(int roomID, int[] ignore) {
 
@@ -460,7 +460,7 @@ public class Server {
 
     /**
      * Coverts bullet creation data into a bullet object
-     * 
+     *
      * @param data
      * @return
      */
@@ -484,7 +484,7 @@ public class Server {
     /**
      * Checks, if any clients reached the timeout limit => disconnected. If so,
      * removes them.
-     * 
+     *
      */
     private static void checkForDisconnectedClients() {
         synchronized (clients) {
@@ -506,7 +506,7 @@ public class Server {
     /**
      * Checks if any users are connected, if not, resets the max client id back to 0
      * to avoid huge id numbers.
-     * 
+     *
      */
     private static void refreshIDNumberIfNoUsers() {
         if (clients.isEmpty() && maxClientID > 0) {
@@ -517,7 +517,7 @@ public class Server {
 
     /**
      * Accesor for the client using the client ID.
-     * 
+     *
      * @param id - client ID
      * @return a {@code Client} object reference. If not found, returns null.
      */
@@ -534,7 +534,7 @@ public class Server {
 
     /**
      * Gets all positions of all connected clients.
-     * 
+     *
      * @return - a {@code String} of all client positions.
      */
     private static String getAllClientsData(int id) {
@@ -556,7 +556,7 @@ public class Server {
 
     /**
      * Gets the local IP adress.
-     * 
+     *
      * @return - {@code InetAdress} of the local IP.
      */
     private static InetAddress getLocalIPv4Address() {
@@ -585,7 +585,7 @@ public class Server {
 
     /**
      * Gets the host's IP when running from a Docker container.
-     * 
+     *
      * @return = - {@code String} of the host IP, null if not accesible.
      */
     private static String getHostIP() {
@@ -595,7 +595,7 @@ public class Server {
 
     /**
      * Checks if a program is running in a Docker container or not.
-     * 
+     *
      * @return - true if running in a Docker container, false otherwise.
      */
     private static boolean isRunningInDocker() {
@@ -618,7 +618,7 @@ public class Server {
 
     /**
      * Calculates and returns the hitbox for a given client.
-     * 
+     *
      * @param client - target client.
      */
     private static Rectangle getPlayerHitbox(ClientStruct client) {
@@ -632,7 +632,7 @@ public class Server {
 
     /**
      * Handles the collision between a bullet and a player.
-     * 
+     *
      */
     private static void handleBulletCollision(Bullet bullet, ClientStruct target, List<Bullet> bulletsToRemove) {
         removeBulletFromOwner(bullet);
@@ -649,7 +649,7 @@ public class Server {
 
     /**
      * Removes a bullet from its owner's list of player objects.
-     * 
+     *
      */
     private static void removeBulletFromOwner(Bullet bullet) {
         for (ClientStruct owner : new ArrayList<>(clients)) {
@@ -662,7 +662,7 @@ public class Server {
 
     /**
      * Removes bullets that have collided with players.
-     * 
+     *
      */
     private static void removeBullets(List<Bullet> bulletsToRemove) {
         try {
@@ -678,7 +678,7 @@ public class Server {
 
     /**
      * Game loop for the application.
-     * 
+     *
      */
     @SuppressWarnings("unused")
     private static class GameLoop implements Runnable {
@@ -688,7 +688,7 @@ public class Server {
 
         /**
          * Gameloop constructor. WILL NOT START THE GAME LOOP AUTOMATICALLY!!
-         * 
+         *
          * @param fps
          */
         public GameLoop(int fps) {
@@ -697,7 +697,7 @@ public class Server {
 
         /**
          * Starts the rendering loop.
-         * 
+         *
          */
         public void start() {
             Logger.log(LogLevel.INFO, "Started game loop.");
@@ -707,7 +707,7 @@ public class Server {
 
         /**
          * Stops the rendering loop.
-         * 
+         *
          */
         public void stop() {
             running = false;
@@ -736,7 +736,7 @@ public class Server {
 
         /**
          * Set a new FPS value.
-         * 
+         *
          * @param value - new FPS value.
          */
         public void setFps(int value) {
@@ -746,7 +746,7 @@ public class Server {
         /**
          * Updates the game state by processing collisions between bullets and players,
          * updating health, and marking dead clients.
-         * 
+         *
          */
         private void update() {
             if (playerObjects == null || clients == null || playerObjects.isEmpty() || clients.isEmpty()) {
@@ -779,7 +779,7 @@ public class Server {
 
     /**
      * Handles individual client connections in separate threads.
-     * 
+     *
      */
     private static class ClientHandler implements Runnable {
 
@@ -790,7 +790,7 @@ public class Server {
 
         /**
          * Default constructor for the client handler.
-         * 
+         *
          * @param socket - client socket.
          * @throws IOException - if initialization fails.
          */
@@ -802,7 +802,7 @@ public class Server {
 
         /**
          * Update method.
-         * 
+         *
          */
         @Override
         public void run() {
@@ -854,7 +854,7 @@ public class Server {
 
         /**
          * Creates a new client.
-         * 
+         *
          * @param message - initial message from client.
          * @throws IOException
          */
@@ -882,7 +882,7 @@ public class Server {
         /**
          * Handles the request for idle clients, or in other words cliets that are not
          * connected in any lobbies, and can be invited into one.
-         * 
+         *
          * @throws IOException
          */
         private void handleIdleClientsRequest() throws IOException {
@@ -897,7 +897,7 @@ public class Server {
         /**
          * Handles a player ping by responding with a message the client expects to
          * prove server works, and then disposes of this connection.
-         * 
+         *
          * @throws IOException
          */
         private void handleInitialPing() throws IOException {
@@ -909,7 +909,7 @@ public class Server {
 
         /**
          * Handles a player join request.
-         * 
+         *
          * @param playerID - player ID of the client to invite.
          */
         private void handleJoinRequest(int playerID) {
@@ -927,7 +927,7 @@ public class Server {
 
         /**
          * Makes the player idle.
-         * 
+         *
          */
         private void handleGoIdleRequest() {
             ClientStruct c = getClient(this.clientId);
@@ -952,7 +952,7 @@ public class Server {
 
         /**
          * Disconnects the client and removes it from the handlers list.
-         * 
+         *
          */
         private void disconnectClient() {
             try {

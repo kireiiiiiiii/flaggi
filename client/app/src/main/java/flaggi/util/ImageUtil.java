@@ -37,7 +37,7 @@ import flaggi.App;
 
 /**
  * A utillity method class designed to handle images
- * 
+ *
  */
 public class ImageUtil {
 
@@ -47,7 +47,7 @@ public class ImageUtil {
 
     /**
      * Loads an image from the resources folder and returns it as an Image object.
-     * 
+     *
      * @param imageName - file name of the image relative to the resources folder.
      * @return the loaded Image object or {@code null} if {@code IOExeption} occurs,
      *         or the {@code InputStream} is {@code null}
@@ -72,7 +72,7 @@ public class ImageUtil {
 
     /**
      * Scales an {@code Image} object to the desired width and height.
-     * 
+     *
      * @param image            - target {@code Image} object.
      * @param width            - target width of the image.
      * @param height           - target height of the image.
@@ -99,7 +99,7 @@ public class ImageUtil {
     /**
      * Scales an {@code Image} object to a desired width, while maintaining the
      * original aspect ratio of the image.
-     * 
+     *
      * @param image            - target {@code Image} object.
      * @param width            - target width.
      * @param useSmoothScaling - {@code true} to enable smooth scaling;
@@ -119,7 +119,7 @@ public class ImageUtil {
     /**
      * Scales an {@code Image} object to a desired height, while maintaining the
      * original aspect ratio of the image.
-     * 
+     *
      * @param image            - target {@code Image} object.
      * @param height           - target height.
      * @param useSmoothScaling - {@code true} to enable smooth scaling;
@@ -140,7 +140,7 @@ public class ImageUtil {
      * Scales the image to fit the desired dimensions. If the image has a bigger
      * width difference, it will scale to fit, it has a bigger height difference, it
      * will scale to height.
-     * 
+     *
      * @param image            - target image.
      * @param height           - desired height.
      * @param width            - desired width.
@@ -164,7 +164,7 @@ public class ImageUtil {
     /**
      * Scales an {@code Image} object to a desired width, while leaving the original
      * height of the image.
-     * 
+     *
      * @param image - target {@code Image} object.
      * @param width - target width.
      * @return a new {@code Image} object reference of the scaled image.
@@ -189,7 +189,7 @@ public class ImageUtil {
     /**
      * Scales an {@code Image} object to a desired height, while leaving the
      * original width of the image.
-     * 
+     *
      * @param image  - target {@code Image} object.
      * @param height - target height.
      * @return a new {@code Image} object reference of the scaled image.
@@ -240,17 +240,46 @@ public class ImageUtil {
     }
 
     /////////////////
-    // Image scaling methods
+    // Image conversion
     ////////////////
 
     /**
+     * Repeats a picture to create a new tiled picture.
+     *
+     * @param imagePath
+     * @param width
+     * @param height
+     * @return
+     * @throws IOException
+     */
+    public static BufferedImage createRepeatedImage(String imageName, int width, int height) throws IOException {
+        // Load the original image
+        BufferedImage originalImage = ImageUtil.toBufferedImage(ImageUtil.getImageFromFile(imageName));
+
+        // Create a new BufferedImage with the desired dimensions
+        BufferedImage repeatedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = repeatedImage.createGraphics();
+
+        // Repeat the image both horizontally and vertically
+        for (int y = 0; y < height; y += originalImage.getHeight()) {
+            for (int x = 0; x < width; x += originalImage.getWidth()) {
+                // Draw the image at the correct position
+                g2d.drawImage(originalImage, x, y, null);
+            }
+        }
+
+        g2d.dispose(); // Release resources
+        return repeatedImage;
+    }
+
+    /**
      * Gets the input stream of an image.
-     * 
+     *
      * @param filePath - file name of the target image relative to the resources
      *                 folder.
      * @return a new {@code Image} object.
      */
-    private static InputStream getImageInputStream(String filePath) {
+    public static InputStream getImageInputStream(String filePath) {
         filePath = App.FILE_JAR_SEPARATOR + filePath;
         InputStream resourceStream = ImageUtil.class.getResourceAsStream(filePath);
         String exists = resourceStream != null ? "File exists." : "File does not exist.";
@@ -264,7 +293,7 @@ public class ImageUtil {
      * @param img - The Image to convert.
      * @return A BufferedImage representation of the input Image.
      */
-    private static BufferedImage toBufferedImage(Image img) {
+    public static BufferedImage toBufferedImage(Image img) {
         if (img instanceof BufferedImage) {
             return (BufferedImage) img;
         }
@@ -287,7 +316,7 @@ public class ImageUtil {
     /**
      * Crops the image to desired dimension. The entered following param dimensions
      * are relative to 0,0 being the upper left corner of the image.
-     * 
+     *
      * @param image  - target image.
      * @param startX - starting x coordinate of the crop.
      * @param startY - starting y coordinate of the crop.
