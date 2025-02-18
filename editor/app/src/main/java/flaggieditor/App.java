@@ -35,6 +35,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.Scanner;
 
 import javax.swing.SwingUtilities;
 
@@ -47,7 +48,7 @@ import flaggieditor.widgets.MapRender;
 
 /**
  * Main application class.
- * 
+ *
  */
 public class App implements InteractableHandeler {
 
@@ -56,6 +57,7 @@ public class App implements InteractableHandeler {
     ////////////////
 
     private GPanel gpanel;
+    private AdvancedVariable<MapData> map;
 
     /////////////////
     // MM & Constr
@@ -74,14 +76,16 @@ public class App implements InteractableHandeler {
      * Constructor.
      */
     public App() {
-
         // ----- Variable init
         int[] windowSize = getScreenSize();
+        Scanner console = new Scanner(System.in);
+
+        // ----- Console
+        this.map = setupMap(console);
         this.gpanel = new GPanel(this, 60, windowSize[0], windowSize[1], false, "Flaggi Editor", Color.BLACK);
-
-        // ----- Widgets
-        gpanel.add(new MapRender(getPlaceholderMap()));
-
+        this.gpanel.add(new MapRender(map.get()));
+        console(console, this.map);
+        console.close();
     }
 
     /////////////////
@@ -90,12 +94,113 @@ public class App implements InteractableHandeler {
 
     /**
      * Gets the screen size.
-     * 
+     *
      * @return
      */
     private static int[] getScreenSize() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         return new int[] { (int) screenSize.getWidth(), (int) screenSize.getHeight() };
+    }
+
+    /**
+     * User input method.
+     *
+     * @param console - System in scanner.
+     */
+    private static void console(Scanner console, AdvancedVariable<MapData> map) {
+        while (true) {
+            System.out.print("\n --> Command: ");
+            String command = console.nextLine();
+            switch (command) {
+            case "exit":
+                console.close();
+                try {
+                    map.save();
+                    System.out.println("Map saved successfully.");
+                } catch (IOException e) {
+                    System.out.println("There was an error while saving the map. Map data might be lost.");
+                }
+                return;
+            case "new":
+                System.out.println("Creating new object...");
+                System.out.println("Select the type:");
+                int i = 1;
+                for (ObjectType type : ObjectType.values()) {
+                    System.out.println("    " + i + " - " + type.name());
+                    i++;
+                }
+                int typeNum = console.nextInt();
+                if (typeNum > i - 1 || typeNum < 0) {
+                    System.out.println("Invalid type number.");
+                    break;
+                }
+                ObjectType type = ObjectType.values()[typeNum - 1];
+                System.out.print("Position (x y): ");
+                int x = console.nextInt();
+                int y = console.nextInt();
+                map.get().newGameObject(type, x, y);
+                System.out.println("Object created.");
+                console.nextLine();
+                break;
+            case "help":
+                System.out.println("Commands: exit, help, new");
+                break;
+            default:
+                System.out.println("Commands: exit, help, new");
+                System.out.println("Unknown command.");
+                break;
+            }
+        }
+    }
+
+    /**
+     * The setup of a new map data object
+     *
+     * @param console - System in scanner.
+     * @return - a new {@code AdvancedVariable} object for the map data.
+     */
+    private static AdvancedVariable<MapData> setupMap(Scanner console) {
+        AdvancedVariable<MapData> map;
+
+        // Map file ---------------
+        while (true) {
+            System.out.print("Enter the path to the map file (relative to home directory): ");
+            String mapPath = System.getenv("HOME") + File.separator + console.nextLine();
+            File mapFile = new File(mapPath);
+            try {
+                mapFile.createNewFile();
+            } catch (IOException e) {
+                System.out.println("There was an error while creating the file.");
+                continue;
+            }
+            map = new AdvancedVariable<MapData>(mapFile);
+            break;
+        }
+
+        // Base map data -----------
+        while (true) {
+            System.out.print("Name of the map: ");
+            String mapName = console.nextLine();
+            System.out.print("Size of the map (width height): ");
+            String[] mapSize = console.nextLine().split(" ");
+            map.set(new MapData(mapName, Integer.parseInt(mapSize[0]), Integer.parseInt(mapSize[1])));
+            break;
+        }
+
+        // Spawnpoint --------------
+        while (true) {
+            System.out.print("Spawnpoint (x1 y1 x2 y2): ");
+            String[] spawnData = console.nextLine().split(" ");
+            try {
+                map.get().setSpawn(Integer.parseInt(spawnData[0]), Integer.parseInt(spawnData[1]), Integer.parseInt(spawnData[2]), Integer.parseInt(spawnData[3]));
+            } catch (IllegalArgumentException e) {
+                System.out.println("Position is outside the map borders.");
+                continue;
+            }
+            break;
+        }
+
+        return map;
     }
 
     /////////////////
@@ -152,7 +257,7 @@ public class App implements InteractableHandeler {
 
     /**
      * Gets example map data.
-     * 
+     *
      * @return a placeholder {@code MapData} object.
      */
     public static MapData getPlaceholderMap() {
@@ -167,7 +272,7 @@ public class App implements InteractableHandeler {
 
     /**
      * Test the map data serialization proccess.
-     * 
+     *
      */
     public static void validateMapDataSerialization() {
         try {
@@ -186,7 +291,7 @@ public class App implements InteractableHandeler {
 
     /**
      * Test the map data serialization proccess.
-     * 
+     *
      */
     public static void validateMapDataDeserialization() {
         try {
