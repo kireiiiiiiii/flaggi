@@ -1,50 +1,47 @@
-////////////////
-// VARIABLES ///
-////////////////
+// VARIABLES -------------------------------------------------------------
 
 val mainClassName = "flaggiserver.Server"
 val projectName = "Flaggi-server"
 
-///////////////////
-// BUILD SCRIPT ///
-///////////////////
+// DEPENDENCIES ----------------------------------------------------------
 
 plugins {
-    id("application")
-    id("java")
+    application
+    java
     id("com.github.johnrengelman.shadow") version "8.1.1"
-} 
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    // Use JUnit Jupiter for testing.
-    testImplementation(libs.junit.jupiter)
+    // JUnit for testing
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    // This dependency is used by the application.
-    implementation(libs.guava)
-
-    // Jackson
+    // Application dependencies
+    implementation("com.google.guava:guava:31.1-jre")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.0")
-    
 }
+
+// JAVA ------------------------------------------------------------------
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(8)) // Use Java 8
+        languageVersion.set(JavaLanguageVersion.of(8))
     }
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+// BUILD -----------------------------------------------------------------
+
 application {
     mainClass.set(mainClassName)
 }
 
-tasks.named<Test>("test") {
+tasks.test {
     useJUnitPlatform()
     testLogging {
         events("passed", "failed", "skipped")
@@ -52,14 +49,25 @@ tasks.named<Test>("test") {
     }
 }
 
-tasks.processResources {
-    from("../LICENSES") {
-        into("licenses")
-    }
-}
-
 tasks.shadowJar {
     mergeServiceFiles()
     archiveClassifier.set("")
     archiveFileName.set(projectName + ".jar")
+
+    // Inluce the maps data in the jar
+    val mapsDir = File(rootProject.projectDir, "../maps")
+    if (!mapsDir.exists()) {
+        throw GradleException("Build failed: Maps directory not found at ${mapsDir.absolutePath}")
+    }
+    from(mapsDir) {
+        into("maps")
+    }
+}
+
+tasks.build {
+    dependsOn(tasks.shadowJar)
+}
+
+tasks.jar {
+    enabled = false
 }
