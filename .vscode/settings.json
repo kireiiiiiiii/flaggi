@@ -1,5 +1,7 @@
 {
   "java.configuration.updateBuildConfiguration": "automatic",
   "java.import.gradle.enabled": true,
-  "java.project.referencedLibraries": ["shared/build/libs/*.jar"]
+  "java.project.referencedLibraries": [
+    "${workspaceFolder}/app/shared/build/libs/*.jar"
+  ]
 }
