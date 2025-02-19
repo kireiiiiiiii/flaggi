@@ -33,9 +33,9 @@ subprojects {
 
     afterEvaluate {
         val mapsDir = File(rootProject.projectDir, "../maps")
-        // if (!mapsDir.exists()) {
-        //     throw GradleException("Build failed: Maps directory not found at ${mapsDir.absolutePath}")
-        // }
+        if (!mapsDir.exists()) {
+            throw GradleException("Build failed: Maps directory not found at ${mapsDir.absolutePath}")
+        }
         tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
             enabled = true
             mergeServiceFiles()
