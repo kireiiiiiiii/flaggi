@@ -20,5 +20,8 @@ build/
 # JRE build files
 diet-jre/
 
+# Shadowjar build files
+app/shadowjar
+
 # Include the wrapper jar
 !gradle-wrapper.jar

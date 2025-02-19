@@ -58,6 +58,7 @@ import flaggi.ui.Tree;
 import flaggi.util.ImageUtil;
 import flaggi.util.ScreenUtil;
 import java.awt.Color;
+import java.awt.Image;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -166,7 +167,9 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
 
         // ------ Initialize UI
         this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, PROJECT_NAME, new Color(229, 204, 255));
-        this.gpanel.setIconOSDependend(ImageUtil.getImageFromFile("icons/icon_win.png"), ImageUtil.getImageFromFile("icons/icon_mac.png"), ImageUtil.getImageFromFile("icons/icon_win.png"), ImageUtil.getImageFromFile("icons/icon_win.png"));
+        Image iconWin = ImageUtil.getImageFromFile("icons/icon_win.png");
+        Image iconMac = ImageUtil.getImageFromFile("icons/icon_mac.png");
+        this.gpanel.setIconOSDependend(iconWin, iconMac, iconWin, iconWin);
         this.gpanel.setExitOperation(() -> {
             exitServer();
         });
@@ -295,7 +298,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         } catch (IOException e) {
             LOGGER.addLog("Saving menu fields data not succesful.", e);
         }
-        System.exit(1);
+        System.exit(0);
     }
 
     /**

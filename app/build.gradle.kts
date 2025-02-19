@@ -37,9 +37,15 @@ subprojects {
         //     throw GradleException("Build failed: Maps directory not found at ${mapsDir.absolutePath}")
         // }
         tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+            enabled = true
             mergeServiceFiles()
             archiveClassifier.set("")
             destinationDirectory.set(file("$rootDir/shadowjar"))
+
+            doLast {
+                println("Shadow JAR has been created at: ${archiveFile.get().asFile.absolutePath}")
+            }
+
             from(mapsDir) {
                 into("maps")
             }
