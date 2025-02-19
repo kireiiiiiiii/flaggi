@@ -4,7 +4,6 @@ plugins {
 }
 
 dependencies {
-
     // Shared dependencies
     implementation(project(":shared"))
 
@@ -15,7 +14,7 @@ dependencies {
     // Application dependencies
     implementation(libs.guava)
 
-    //---- JSON file manipulation ----
+    // JSON file manipulation
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.0")
 }
 
@@ -25,4 +24,17 @@ application {
 
 tasks.build {
     dependsOn(tasks.shadowJar)
+}
+
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+    enabled = true
+    archiveBaseName.set("Flaggi-editor")
+    archiveVersion.set("1.0.0")
+    archiveClassifier.set("") // Removes the "-all" suffix
+
+    destinationDirectory.set(file("$rootDir/shadowjar"))
+
+    doLast {
+        println("Editor Shadow JAR has been created at: ${archiveFile.get().asFile.absolutePath}")
+    }
 }

@@ -1,6 +1,5 @@
 plugins {
-    id("java")
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("java-library")
 }
 
 dependencies {
@@ -20,6 +19,8 @@ dependencies {
     implementation(libs.guava)
 }
 
-tasks.build {
-    dependsOn(tasks.shadowJar)
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(8))
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }

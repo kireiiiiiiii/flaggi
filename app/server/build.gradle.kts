@@ -4,7 +4,6 @@ plugins {
 }
 
 dependencies {
-
     // Shared dependencies
     implementation(project(":shared"))
 
@@ -23,4 +22,17 @@ application {
 
 tasks.build {
     dependsOn(tasks.shadowJar)
+}
+
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+    enabled = true
+    archiveBaseName.set("Flaggi-server")
+    archiveVersion.set("1.0.0")
+    archiveClassifier.set("") // Removes the "-all" suffix
+
+    destinationDirectory.set(file("$rootDir/shadowjar"))
+
+    doLast {
+        println("Server Shadow JAR has been created at: ${archiveFile.get().asFile.absolutePath}")
+    }
 }
