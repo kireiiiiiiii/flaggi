@@ -4,7 +4,7 @@ build/
 *bin
 
 # vscode
-.vscode/settings.json
+.qodo
 
 # Java specific
 *.class
