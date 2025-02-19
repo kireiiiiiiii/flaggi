@@ -34,16 +34,16 @@ import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
-import flaggi.common.GPanel.Interactable;
-import flaggi.common.GPanel.Renderable;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
 import flaggi.util.FontUtil;
+import flaggishared.GPanel.Interactable;
+import flaggishared.GPanel.Renderable;
 
 /**
  * Pause menu screen UI with fade-in and fade-out animation. Contains 2 buttons:
  * "Quit" and "Resume".
- * 
+ *
  */
 public class PauseMenu implements Renderable, Interactable {
 
@@ -68,7 +68,7 @@ public class PauseMenu implements Renderable, Interactable {
 
     /**
      * Default constructor.
-     * 
+     *
      * @param resume - resume button action
      * @param quit   - quit button action
      */
@@ -109,7 +109,7 @@ public class PauseMenu implements Renderable, Interactable {
 
     /**
      * Calculates the fade progress (0 to 1).
-     * 
+     *
      * @return - A float representing the fade progress.
      */
     private float getFadeProgress() {

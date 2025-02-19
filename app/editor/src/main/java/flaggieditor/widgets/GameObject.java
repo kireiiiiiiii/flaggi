@@ -31,12 +31,12 @@ import java.awt.Container;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
-import flaggieditor.common.GPanel.Renderable;
-import flaggieditor.common.MapData.ObjectData;
+import flaggishared.GPanel.Renderable;
+import flaggishared.MapData.ObjectData;
 
 /**
  * Map object to be rendered on the map.
- * 
+ *
  */
 public class GameObject implements Renderable {
 
@@ -53,7 +53,7 @@ public class GameObject implements Renderable {
 
     /**
      * Default constructor.
-     * 
+     *
      * @param data - data of the game object.
      */
     public GameObject(ObjectData data) {

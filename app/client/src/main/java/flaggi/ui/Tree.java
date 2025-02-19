@@ -31,14 +31,14 @@ import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import flaggi.common.GPanel.Renderable;
 import flaggi.common.Sprite;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
+import flaggishared.GPanel.Renderable;
 
 /**
  * Tree object.
- * 
+ *
  */
 public class Tree implements Renderable {
 
@@ -56,7 +56,7 @@ public class Tree implements Renderable {
 
     /**
      * Code default constructor.
-     * 
+     *
      * @param position
      */
     public Tree(int[] position) {

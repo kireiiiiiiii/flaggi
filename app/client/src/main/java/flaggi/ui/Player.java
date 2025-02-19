@@ -39,13 +39,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import flaggi.common.GPanel.Renderable;
 import flaggi.App;
 import flaggi.common.Sprite;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
 import flaggi.util.FileUtil;
 import flaggi.util.FontUtil;
+import flaggishared.GPanel.Renderable;
 
 /**
  * Player widget class.

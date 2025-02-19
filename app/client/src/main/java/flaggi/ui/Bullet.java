@@ -39,10 +39,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import flaggi.App;
-import flaggi.common.GPanel.Renderable;
 import flaggi.common.Sprite;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
+import flaggishared.GPanel.Renderable;
 
 public class Bullet implements Renderable, Runnable {
 
@@ -70,7 +70,7 @@ public class Bullet implements Renderable, Runnable {
 
     /**
      * Constructor for enemy plater objects.
-     * 
+     *
      * @param initialPosition - Initial position of the bullet [x, y].
      * @param targetPosition  - Target position the bullet heads to [x, y].
      * @param velocity        - Velocity in points per second.
@@ -190,7 +190,7 @@ public class Bullet implements Renderable, Runnable {
     /**
      * Sets the after decay runnable, ran after the bullet decays. Used for removing
      * the bullet from the player bullet list in App.
-     * 
+     *
      * @param afterDecay - {@code Runnable} to be ran after decay.
      */
     public void setAfterDecayRunnable(Runnable afterDecay) {
@@ -204,7 +204,7 @@ public class Bullet implements Renderable, Runnable {
 
     /**
      * Returns the player object ID in list [bulletId, clientId].
-     * 
+     *
      * @return - player object ID.
      */
     public String getObjectId() {

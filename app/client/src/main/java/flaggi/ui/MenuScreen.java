@@ -32,17 +32,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import flaggi.App;
-import flaggi.common.GPanel.Interactable;
-import flaggi.common.GPanel.Renderable;
-import flaggi.common.GPanel.Typable;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
 import flaggi.util.FontUtil;
 import flaggi.util.ImageUtil;
+import flaggishared.GPanel.Interactable;
+import flaggishared.GPanel.Renderable;
+import flaggishared.GPanel.Typable;
 
 /**
  * The main menu screen for Flaggi.
- * 
+ *
  */
 public class MenuScreen implements Renderable, Interactable, Typable {
 
@@ -66,7 +66,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
     /**
      * Default widget constructor.
-     * 
+     *
      * @param startAction - {@code Runnable} to be executed when the start button is
      *                    clicked.
      */
@@ -238,7 +238,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
     /**
      * Displays an error message on the menu screen.
-     * 
+     *
      * @param errorMessage
      */
     public void setErrorMessage(String errorMessage) {
@@ -249,7 +249,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
     /**
      * Clears the error message field.
-     * 
+     *
      */
     public void clearErrorMessage() {
         synchronized (this.errorMessage) {
@@ -259,7 +259,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
     /**
      * Returns the entered user name.
-     * 
+     *
      * @return
      */
     public String getEnteredUsername() {
@@ -268,7 +268,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
     /**
      * Gets the entered IP address.
-     * 
+     *
      * @return
      */
     public String getEnteredIP() {

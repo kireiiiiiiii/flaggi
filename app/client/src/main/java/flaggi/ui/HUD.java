@@ -31,14 +31,14 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.util.ArrayList;
 
-import flaggi.common.GPanel.Renderable;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
 import flaggi.util.ImageUtil;
+import flaggishared.GPanel.Renderable;
 
 /**
  * Player HUD widget class.
- * 
+ *
  */
 public class HUD implements Renderable {
 
@@ -57,7 +57,7 @@ public class HUD implements Renderable {
 
     /**
      * Default constructor for the player HUD widget.
-     * 
+     *
      */
     public HUD() {
         // ---- Default variable values
@@ -126,7 +126,7 @@ public class HUD implements Renderable {
 
     /**
      * Sets the health data for the widget to render.
-     * 
+     *
      * @param health - new health value.
      */
     public void setHealth(float health) {

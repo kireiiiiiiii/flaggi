@@ -33,15 +33,15 @@ import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import flaggi.common.GPanel.Renderable;
 import flaggi.constants.ZIndex;
+import flaggishared.GPanel.Renderable;
 
 /**
  * A manager class for displaying toast messages on the screen. Toasts are small
  * pop-up messages that appear on the screen for a short period of time. The
  * ToastManager class is responsible for rendering the toasts and managing their
  * display duration.
- * 
+ *
  */
 public class ToastManager implements Renderable {
 
@@ -66,7 +66,7 @@ public class ToastManager implements Renderable {
 
     /**
      * Default constructor for the ToastManager.
-     * 
+     *
      */
     public ToastManager() {
         this.toasts = new ArrayList<>();
@@ -150,7 +150,7 @@ public class ToastManager implements Renderable {
 
     /**
      * A structure class holding the data of an individual toast message.
-     * 
+     *
      */
     private static class Toast {
 

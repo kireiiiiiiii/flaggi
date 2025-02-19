@@ -25,7 +25,7 @@
  *
  */
 
-package flaggiserver.common;
+package flaggishared;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 
 /**
  * Data class to hold all the data of the world map.
- * 
+ *
  */
 public class MapData {
 
@@ -61,7 +61,7 @@ public class MapData {
 
     /**
      * Default constructor.
-     * 
+     *
      * @param name   - display name of the map.
      * @param width  - width of the map.
      * @param height - height of the map.
@@ -77,7 +77,7 @@ public class MapData {
 
     /**
      * Empty constructor for Jackson serialization.
-     * 
+     *
      */
     public MapData() {
         this("Untitled Map", 1000, 1000);
@@ -89,7 +89,7 @@ public class MapData {
 
     /**
      * Prints debug data about the map into the console.
-     * 
+     *
      */
     public void printData() {
         System.out.println("Map Name: " + this.name);
@@ -104,7 +104,7 @@ public class MapData {
 
     /**
      * Adds a new game object to the map.
-     * 
+     *
      * @param type - type of the game object.
      * @param x    - X position.
      * @param y    - Y position.
@@ -164,7 +164,7 @@ public class MapData {
 
     /**
      * Validates the coordinates to ensure they are within the map boundaries.
-     * 
+     *
      * @param x - X coordinate.
      * @param y - Y coordinate.
      */
@@ -189,7 +189,7 @@ public class MapData {
 
     /**
      * Data class for the individual game objects.
-     * 
+     *
      */
     public static class ObjectData {
 
@@ -200,7 +200,7 @@ public class MapData {
 
         /**
          * Default constructor.
-         * 
+         *
          * @param objectType - type of the game object.
          * @param x          - X position.
          * @param y          - Y position.
@@ -266,7 +266,7 @@ public class MapData {
 
     /**
      * Enum class with constants for different game object types.
-     * 
+     *
      */
     @JsonDeserialize(using = ObjectTypeDeserializer.class)
     public enum ObjectType {
@@ -320,7 +320,7 @@ public class MapData {
 
     /**
      * Deseriliazer for the {@code ObjectType} enum.
-     * 
+     *
      * @see ObjectType
      */
     public static class ObjectTypeDeserializer extends JsonDeserializer<ObjectType> {
@@ -337,7 +337,7 @@ public class MapData {
 
     /**
      * Spawnpoint data class.
-     * 
+     *
      */
     public static class Spawnpoint {
 
@@ -345,7 +345,7 @@ public class MapData {
 
         /**
          * Default constructor.
-         * 
+         *
          * @param oneX - X coordinate of the first spawn point.
          * @param oneY - Y coordinate of the first spawn point.
          * @param twoX - X coordinate of the second spawn point.

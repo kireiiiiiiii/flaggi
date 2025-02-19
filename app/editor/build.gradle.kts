@@ -4,6 +4,10 @@ plugins {
 }
 
 dependencies {
+
+    // Shared dependencies
+    implementation(project(":shared"))
+
     // Use JUnit Jupiter for testing.
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

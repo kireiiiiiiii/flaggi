@@ -25,7 +25,7 @@
  *
  */
 
-package flaggi.common;
+package flaggishared;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -80,13 +80,13 @@ import javax.swing.SwingUtilities;
  * drawn in a layered order based on their {@code z-index}. The higher the
  * index, the more on top they are. The object must implement the interface
  * {@code Renderable}. This is how the objects are added:
- * 
+ *
  * <pre>
  * <code>
- * public void add(Renderable renderable); 
+ * public void add(Renderable renderable);
  * </code>
  * </pre>
- * 
+ *
  * </p>
  * <hr>
  * <h3>Rendering</h3> The rendering loop can be controlled with {@code start()}
@@ -102,7 +102,7 @@ import javax.swing.SwingUtilities;
  * on classes that handle these events. Widgets that can be interacted with need
  * to implement the {@code Interactable} interface also contained in this class.
  * <hr>
- * 
+ *
  * @author Matěj Šťastný aka
  *         <a href="https://github.com/kireiiiiiiii">@kireiiiiiiii</a>
  * @since 7/23/2024
@@ -126,7 +126,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Standard constructor.
-     * 
+     *
      * @param handeler               - {@code InteractableHandeler} object, that
      *                               will handle panel interaction.
      * @param fps                    - frames per second.
@@ -173,7 +173,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     /**
      * Constructor without loading color. Useful for {@code GPanel}s without
      * difficult initial calculations.
-     * 
+     *
      * @param handeler     - {@code InteractableHandeler} object, that will handle
      *                     panel interaction.
      * @param fps          - frames per second.
@@ -194,7 +194,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     /**
      * Starts the rendering loop in its own thread. If already rendering will do
      * nothing.
-     * 
+     *
      */
     public void startRendering() {
         if (!this.isRendering) {
@@ -206,7 +206,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     /**
      * Stops the rendering by terminating the thread. If not rendering will do
      * nothing.
-     * 
+     *
      */
     public void stopRendering() {
         if (this.isRendering) {
@@ -320,7 +320,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Accesor method of the {@code JFrame} owner of this {@code JPanel}.
-     * 
+     *
      * @return - {JFrame} object of the owner.
      */
     public JFrame getAppFrame() {
@@ -329,7 +329,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Makes a list of widgets of given class.
-     * 
+     *
      * @param <T>
      * @param targetClass - target class.
      * @return list of {@code T} objects.
@@ -349,7 +349,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     /**
      * This method makes a list of {@code Renderable} objects in the {@code widgets}
      * list that are also implementing the {@code Interacteble} inteface.
-     * 
+     *
      * @return - list of {@code Renderable} object, that are implementing the
      *         {@code Interactable} interface.
      */
@@ -368,7 +368,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     /**
      * This method makes a list of {@code Renderable} objects in the {@code widgets}
      * list that are also implementing the {@code Interacteble} inteface.
-     * 
+     *
      * @return - list of {@code Renderable} object, that are implementing the
      *         {@code Interactable} interface.
      */
@@ -387,7 +387,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     /**
      * This method makes a list of {@code Renderable} objects in the {@code widgets}
      * list that are also implementing the {@code Scrollable} inteface.
-     * 
+     *
      * @return - list of {@code Renderable} object, that are implementing the
      *         {@code Scrollable} interface.
      */
@@ -410,7 +410,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     /**
      * Add method, that will add an element into the list of elements rendered by
      * this {@code GPanel} object.
-     * 
+     *
      * @param renderable
      */
     public void add(Renderable renderable) {
@@ -429,7 +429,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Clears the widgets list, and sets it to the one given as parameter.
-     * 
+     *
      * @param widgets - target widget list.
      */
     public void setWidgets(ArrayList<Renderable> widgets) {
@@ -443,7 +443,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Sets the camera position. 0,0 is the standard position.
-     * 
+     *
      * @param playerPos - {@code int[]} 2D position of the camera.
      */
     public void setCameraPosition(int[] playerPos) {
@@ -452,7 +452,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Removes all widgets of the specified class.
-     * 
+     *
      * @param <T>
      * @param targetClass - the class of widgets to remove.
      * @return the number of widgets removed.
@@ -474,7 +474,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Removes widgets with a tag.
-     * 
+     *
      * @param tag - target tag.
      */
     public void removeWidgetsWithTags(String tag) {
@@ -495,7 +495,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     /**
      * Adds all the widgets in a list using the {@code add()} method for all of
      * them.
-     * 
+     *
      * @param widgets - list of {@code Renderable} objects.
      */
     public void add(List<Renderable> widgets) {
@@ -507,7 +507,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     /**
      * Removes a specified widget from the list of widgets being rendered by this
      * {@code GPanel}.
-     * 
+     *
      * @param renderable - the {@code Renderable} object to be removed.
      * @return {@code true} if the widget was removed, {@code false} otherwise.
      */
@@ -535,7 +535,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * OS specific icon setter, that sets a different icon depeending on the OS.
-     * 
+     *
      * @param winIcon   - icon for Window OS.
      * @param macIcon   - icon for MacOS.
      * @param linuxIcon - icon for Linux based OS.
@@ -558,7 +558,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Sets an action meant to be performed when the JPanel window is closed.
-     * 
+     *
      * @param operation - {@code Runnable} executed on window close.
      */
     public void setExitOperation(Runnable operation) {
@@ -577,7 +577,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Prevents a widget being rendered.
-     * 
+     *
      * @param index - index of the widget in the array.
      */
     public void hide(int index) {
@@ -588,7 +588,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Sets a widget to be rendered.
-     * 
+     *
      * @param index - index of the object in the array.
      */
     public void show(int index) {
@@ -599,7 +599,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Prevents all widgets to be rendered.
-     * 
+     *
      */
     public void hideAllWidgets() {
         for (Renderable r : this.widgets) {
@@ -609,7 +609,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Sets all widgets to be rendered.
-     * 
+     *
      */
     public void showAllWidgets() {
         for (Renderable r : this.widgets) {
@@ -619,7 +619,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Prevents all widgets with target tag to be rendered.
-     * 
+     *
      * @param tag - target tag.
      */
     public void hideTaggedWidgets(String tag) {
@@ -634,7 +634,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Sets all widgets with target tag to be rendered.
-     * 
+     *
      * @param tag - target tag.
      */
     public void showTaggedWidgets(String tag) {
@@ -662,7 +662,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * automatically changed
      * <li>{@code stop()} that terminates the thread with the rendering loop.
      * <ul>
-     * 
+     *
      */
     private class Renderer implements Runnable {
 
@@ -671,7 +671,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
         /**
          * Constructor, sets the target fps the renderer should work at.
-         * 
+         *
          * @param fps - fps value.
          */
         public Renderer(int fps) {
@@ -680,7 +680,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
         /**
          * Starts the rendering of the UI elements.
-         * 
+         *
          */
         public void start() {
             running = true;
@@ -690,7 +690,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
         /**
          * Stops the rendering of the UI elements.
-         * 
+         *
          */
         public void stop() {
             running = false;
@@ -720,7 +720,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
         /**
          * Rerenders the JPanel.
-         * 
+         *
          */
         private void render() {
             SwingUtilities.invokeLater(() -> {
@@ -730,7 +730,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
         /**
          * Sets a new FPS value.
-         * 
+         *
          * @param value - new value.
          */
         public void setFps(int value) {
@@ -795,13 +795,13 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Interface for interactable UI elements.
-     * 
+     *
      */
     public interface Interactable {
 
         /**
          * Checks, if the button was clicked with the target mouse event.
-         * 
+         *
          * @param e - target {@code MouseEvent}.
          * @return {@code true} if interacted, and {@code false} if not.
          */
@@ -811,13 +811,13 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     /**
      * Interface for typable UI elements.
-     * 
+     *
      */
     public interface Typable {
 
         /**
          * Sends the key event to be handeled by the widget.
-         * 
+         *
          * @param k - target {@code KeyEvent}.
          */
         public void type(KeyEvent k);
@@ -827,7 +827,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
         /**
          * Sends the mouse wheel event to be handeled by the widget.
-         * 
+         *
          * @param e - target {@code MouseWheelEvent}.
          */
         public void scroll(MouseWheelEvent e);
@@ -837,7 +837,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * Interface for a class that handeles user {@code JPanel} interactions. It is
      * used to forward interaction method calls from the {@code JPanel} to the main
      * app object.
-     * 
+     *
      */
     public interface InteractableHandeler {
         public void mouseDragged(MouseEvent e);

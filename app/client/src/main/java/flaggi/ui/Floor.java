@@ -34,10 +34,10 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import flaggi.common.GPanel.Renderable;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
 import flaggi.util.ImageUtil;
+import flaggishared.GPanel.Renderable;
 
 /**
  * Tileable floor texture

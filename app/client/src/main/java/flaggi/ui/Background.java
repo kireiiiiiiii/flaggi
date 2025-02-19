@@ -31,13 +31,13 @@ import java.awt.Container;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
-import flaggi.common.GPanel.Renderable;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
+import flaggishared.GPanel.Renderable;
 
 /**
  * Background widget.
- * 
+ *
  */
 public class Background implements Renderable {
 

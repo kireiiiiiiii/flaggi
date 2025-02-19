@@ -32,12 +32,12 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import flaggi.common.GPanel.Interactable;
-import flaggi.common.GPanel.Renderable;
-import flaggi.common.GPanel.Scrollable;
 import flaggi.common.RepeatedTask;
 import flaggi.constants.WidgetTags;
 import flaggi.constants.ZIndex;
+import flaggishared.GPanel.Interactable;
+import flaggishared.GPanel.Renderable;
+import flaggishared.GPanel.Scrollable;
 
 /**
  * Lobby
@@ -76,7 +76,7 @@ public class InviteScreen implements Renderable, Scrollable, Interactable {
 
     /**
      * Default constructor for the lobby widget.
-     * 
+     *
      * @param handler - lobby handeler.
      * @param update  - the update lobby function.
      */

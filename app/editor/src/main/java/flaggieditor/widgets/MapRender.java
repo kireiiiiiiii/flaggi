@@ -33,12 +33,12 @@ import java.awt.Container;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
-import flaggieditor.common.GPanel.Renderable;
-import flaggieditor.common.MapData;
+import flaggishared.GPanel.Renderable;
+import flaggishared.MapData;
 
 /**
  * UI widget for rendering the main map.
- * 
+ *
  */
 public class MapRender implements Renderable {
 
@@ -56,7 +56,7 @@ public class MapRender implements Renderable {
 
     /**
      * Default constructor.
-     * 
+     *
      * @param map - data object of the map that is being rendered.
      */
     public MapRender(MapData map) {
@@ -85,11 +85,11 @@ public class MapRender implements Renderable {
      * the biggest that can fit in the screen while maintaining aspect ratio of the
      * map sides. It also gets the position the map needs to be drawn on the screen
      * to be centered in the middle the screen.
-     * 
+     *
      * The returned array is in the following format:
-     * 
+     *
      * Index 0 - x pos Index 1 - y pos Index 2 - width Index 3 - height
-     * 
+     *
      * @param screenWidth  Width of the screen
      * @param screenHeight Height of the screen
      * @param mapWidth     Width of the map

@@ -39,12 +39,12 @@ import java.util.Scanner;
 
 import javax.swing.SwingUtilities;
 
-import flaggieditor.common.AdvancedVariable;
-import flaggieditor.common.GPanel;
-import flaggieditor.common.MapData;
-import flaggieditor.common.GPanel.InteractableHandeler;
-import flaggieditor.common.MapData.ObjectType;
 import flaggieditor.widgets.MapRender;
+import flaggishared.AdvancedVariable;
+import flaggishared.GPanel;
+import flaggishared.GPanel.InteractableHandeler;
+import flaggishared.MapData;
+import flaggishared.MapData.ObjectType;
 
 /**
  * Main application class.
@@ -112,43 +112,43 @@ public class App implements InteractableHandeler {
             System.out.print("\n --> Command: ");
             String command = console.nextLine();
             switch (command) {
-            case "exit":
-                console.close();
-                try {
-                    map.save();
-                    System.out.println("Map saved successfully.");
-                } catch (IOException e) {
-                    System.out.println("There was an error while saving the map. Map data might be lost.");
-                }
-                return;
-            case "new":
-                System.out.println("Creating new object...");
-                System.out.println("Select the type:");
-                int i = 1;
-                for (ObjectType type : ObjectType.values()) {
-                    System.out.println("    " + i + " - " + type.name());
-                    i++;
-                }
-                int typeNum = console.nextInt();
-                if (typeNum > i - 1 || typeNum < 0) {
-                    System.out.println("Invalid type number.");
+                case "exit":
+                    console.close();
+                    try {
+                        map.save();
+                        System.out.println("Map saved successfully.");
+                    } catch (IOException e) {
+                        System.out.println("There was an error while saving the map. Map data might be lost.");
+                    }
+                    return;
+                case "new":
+                    System.out.println("Creating new object...");
+                    System.out.println("Select the type:");
+                    int i = 1;
+                    for (ObjectType type : ObjectType.values()) {
+                        System.out.println("    " + i + " - " + type.name());
+                        i++;
+                    }
+                    int typeNum = console.nextInt();
+                    if (typeNum > i - 1 || typeNum < 0) {
+                        System.out.println("Invalid type number.");
+                        break;
+                    }
+                    ObjectType type = ObjectType.values()[typeNum - 1];
+                    System.out.print("Position (x y): ");
+                    int x = console.nextInt();
+                    int y = console.nextInt();
+                    map.get().newGameObject(type, x, y);
+                    System.out.println("Object created.");
+                    console.nextLine();
                     break;
-                }
-                ObjectType type = ObjectType.values()[typeNum - 1];
-                System.out.print("Position (x y): ");
-                int x = console.nextInt();
-                int y = console.nextInt();
-                map.get().newGameObject(type, x, y);
-                System.out.println("Object created.");
-                console.nextLine();
-                break;
-            case "help":
-                System.out.println("Commands: exit, help, new");
-                break;
-            default:
-                System.out.println("Commands: exit, help, new");
-                System.out.println("Unknown command.");
-                break;
+                case "help":
+                    System.out.println("Commands: exit, help, new");
+                    break;
+                default:
+                    System.out.println("Commands: exit, help, new");
+                    System.out.println("Unknown command.");
+                    break;
             }
         }
     }
@@ -192,7 +192,8 @@ public class App implements InteractableHandeler {
             System.out.print("Spawnpoint (x1 y1 x2 y2): ");
             String[] spawnData = console.nextLine().split(" ");
             try {
-                map.get().setSpawn(Integer.parseInt(spawnData[0]), Integer.parseInt(spawnData[1]), Integer.parseInt(spawnData[2]), Integer.parseInt(spawnData[3]));
+                map.get().setSpawn(Integer.parseInt(spawnData[0]), Integer.parseInt(spawnData[1]),
+                        Integer.parseInt(spawnData[2]), Integer.parseInt(spawnData[3]));
             } catch (IllegalArgumentException e) {
                 System.out.println("Position is outside the map borders.");
                 continue;

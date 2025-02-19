@@ -23,7 +23,7 @@
  *
  */
 
-package flaggi.common;
+package flaggishared;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -53,10 +53,10 @@ import java.io.ObjectOutputStream;
  * </ul>
  * <p>
  * <hr>
- * 
+ *
  * @param <T> The type of the variable to be stored and managed.
- * 
- * 
+ *
+ *
  */
 
 public class AdvancedVariable<T> {
@@ -78,7 +78,7 @@ public class AdvancedVariable<T> {
      * Default empty constructor. Initializes the default {@code ObjectMapper} and a
      * custom {@code ObjectWritter} with pretty writing (custom class shown below in
      * this file).
-     * 
+     *
      */
     private AdvancedVariable() {
         this.objectMapper = new ObjectMapper();
@@ -94,7 +94,7 @@ public class AdvancedVariable<T> {
     /**
      * Initializes the save file and loads the value of the class type given from
      * the file.
-     * 
+     *
      * @param saveFile - save file.
      * @param type     - class type of the variable.
      * @throws IOException
@@ -107,7 +107,7 @@ public class AdvancedVariable<T> {
     /**
      * Initializes the save file and loads the value of the class type given from
      * the file.
-     * 
+     *
      * @param saveFilePath - save file path.
      * @param type         - class type of the variable.
      * @throws IOException
@@ -118,7 +118,7 @@ public class AdvancedVariable<T> {
 
     /**
      * Initializes the save file, doesn't set the value.
-     * 
+     *
      * @param saveFile - save file.
      */
     public AdvancedVariable(File saveFile) {
@@ -128,7 +128,7 @@ public class AdvancedVariable<T> {
 
     /**
      * Initializes the save file, doesn't set the value.
-     * 
+     *
      * @param saveFilePath - save file path.
      */
     public AdvancedVariable(String saveFilePath) {
@@ -137,7 +137,7 @@ public class AdvancedVariable<T> {
 
     /**
      * Initializes the save file, and sets the variable value.
-     * 
+     *
      * @param saveFile - save file.
      * @param value    - value that this variable was set to.
      */
@@ -149,7 +149,7 @@ public class AdvancedVariable<T> {
 
     /**
      * Initializes the save file, and sets the default value.
-     * 
+     *
      * @param saveFilePath - save file path.
      * @param value        - value that this variable was set to.
      */
@@ -163,7 +163,7 @@ public class AdvancedVariable<T> {
 
     /**
      * Variable getter. Returns the value of this variable.
-     * 
+     *
      * @return stored variable.
      */
     public T get() {
@@ -176,7 +176,7 @@ public class AdvancedVariable<T> {
 
     /**
      * Sets a new value to this variable.
-     * 
+     *
      * @param value - new value of the variable.
      */
     public void set(T value) {
@@ -185,7 +185,7 @@ public class AdvancedVariable<T> {
 
     /**
      * Sets a new value to this variable, and saves it into the save file.
-     * 
+     *
      * @param value - new value of the variable.
      * @throws IOException
      */
@@ -200,7 +200,7 @@ public class AdvancedVariable<T> {
 
     /**
      * Saves the current stored value of this variable into it's save file.
-     * 
+     *
      * @throws IOException
      */
     public void save() throws IOException {
@@ -210,7 +210,7 @@ public class AdvancedVariable<T> {
     /**
      * Loads a value from this variables save file, and than saves it into this
      * variable. Returns if the read was successful.
-     * 
+     *
      * @param valueType - {@code Class} of the variable this object is reading.
      * @return if the read was successful.
      * @throws IOException
@@ -226,7 +226,7 @@ public class AdvancedVariable<T> {
 
     /**
      * Reads the content of a resource file as a String.
-     * 
+     *
      * @param resourceName The name of the resource.
      * @return The content of the resource as a String.
      * @throws IOException if an I/O error occurs.
@@ -247,7 +247,7 @@ public class AdvancedVariable<T> {
 
     /**
      * Writes an object to a file.
-     * 
+     *
      * @param filePath the path of the file to write to
      * @param contents - the {@code String} object of the contents
      * @throws IOException if an I/O error occurs
@@ -264,7 +264,7 @@ public class AdvancedVariable<T> {
 
     /**
      * Pritns the JSON data of this object into the console.
-     * 
+     *
      * @throws JsonProcessingException
      */
     public void printJsonData() throws JsonProcessingException {
@@ -278,7 +278,7 @@ public class AdvancedVariable<T> {
     /**
      * Custom pretty writer to make the {@code JSON} file more readable, it puts
      * brackets on new lines.
-     * 
+     *
      */
     private static class CustomPrettyPrinter extends DefaultPrettyPrinter {
         @Override

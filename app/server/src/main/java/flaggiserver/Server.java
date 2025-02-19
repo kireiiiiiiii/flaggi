@@ -45,6 +45,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,16 +54,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.Iterator;
 
-import flaggiserver.common.AdvancedVariable;
 import flaggiserver.common.Bullet;
 import flaggiserver.common.ClientStruct;
 import flaggiserver.common.Logger;
-import flaggiserver.common.MapData;
-import flaggiserver.common.Rectangle;
 import flaggiserver.common.Logger.LogLevel;
-import flaggiserver.common.MapData.Spawnpoint;
+import flaggiserver.common.Rectangle;
+import flaggishared.MapData;
+import flaggishared.MapData.Spawnpoint;
 
 /**
  * Server class for the LAN Game application.
@@ -258,7 +257,8 @@ public class Server {
      * @param animationFrame   - animation daya.
      * @param playerObjectData - player objects.
      */
-    private static void updateClientData(ClientStruct client, int x, int y, int health, String animationFrame, String playerObjectData) {
+    private static void updateClientData(ClientStruct client, int x, int y, int health, String animationFrame,
+            String playerObjectData) {
         client.setPosition(x, y);
         client.setAnimationFrame(animationFrame);
         client.updateLastReceivedTime();
@@ -295,9 +295,11 @@ public class Server {
      * @param message   - response message.
      * @throws IOException if an error occurs.
      */
-    private static void sendUDPMessage(DatagramSocket udpSocket, int port, ClientStruct client, String message) throws IOException {
+    private static void sendUDPMessage(DatagramSocket udpSocket, int port, ClientStruct client, String message)
+            throws IOException {
         byte[] responseBuffer = message.getBytes();
-        DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length, client.getINET_ADRESS(), port);
+        DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length,
+                client.getINET_ADRESS(), port);
         udpSocket.send(responsePacket);
     }
 
@@ -357,7 +359,8 @@ public class Server {
             appDataFolder = System.getenv("APPDATA");
         } else if (os.contains("mac")) {
             // macOS: Use ~/Library/Application Support/
-            appDataFolder = System.getProperty("user.home") + File.separator + "Library" + File.separator + "Application Support";
+            appDataFolder = System.getProperty("user.home") + File.separator + "Library" + File.separator
+                    + "Application Support";
         } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
             // Linux/Unix: Use ~/.config/
             appDataFolder = System.getProperty("user.home") + File.separator + ".config";
@@ -407,7 +410,8 @@ public class Server {
                             JarEntry entry = entries.nextElement();
                             String entryName = entry.getName();
                             // Check for files with .json extension in the target directory
-                            if (entryName.startsWith(path) && (entryName.endsWith("." + extension) || extension.equals("*"))) {
+                            if (entryName.startsWith(path)
+                                    && (entryName.endsWith("." + extension) || extension.equals("*"))) {
                                 jsonFiles.add(entryName.substring(path.length()));
                             }
                         }
@@ -447,7 +451,8 @@ public class Server {
 
         synchronized (playerObjects) {
             for (Bullet bullet : new ArrayList<>(playerObjects)) {
-                if (!bullet.wasCreationDataSendToClient(id) && roomID == getClient(bullet.getOwningPlaterId()).getRoomID()) {
+                if (!bullet.wasCreationDataSendToClient(id)
+                        && roomID == getClient(bullet.getOwningPlaterId()).getRoomID()) {
                     data.append(bullet.toString()).append("+");
                 }
                 bullet.setWasSendToClient(id);
@@ -533,7 +538,8 @@ public class Server {
     private static Bullet dataToBullet(String data, int clientId) {
         String[] parsedData = data.split(":");
         if (parsedData.length != 6) {
-            Logger.log(LogLevel.WARN, "Recieved invalid data format for creating a bullet object: " + Arrays.toString(parsedData));
+            Logger.log(LogLevel.WARN,
+                    "Recieved invalid data format for creating a bullet object: " + Arrays.toString(parsedData));
             return null;
         }
         int bulletNum = Integer.parseInt(parsedData[1]);
@@ -612,7 +618,9 @@ public class Server {
         synchronized (clients) {
             for (ClientStruct client : clients) {
                 if (roomID == client.getRoomID()) {
-                    positions.append(client.getID()).append(",").append(client.getX()).append(",").append(client.getY()).append(",").append(client.getHealth()).append(",").append(client.getDisplayName()).append(",").append(client.getAnimationFrame()).append(";");
+                    positions.append(client.getID()).append(",").append(client.getX()).append(",").append(client.getY())
+                            .append(",").append(client.getHealth()).append(",").append(client.getDisplayName())
+                            .append(",").append(client.getAnimationFrame()).append(";");
                 }
             }
         }
@@ -836,7 +844,8 @@ public class Server {
                 for (ClientStruct client : new ArrayList<>(clients)) {
                     Rectangle playerHitbox = getPlayerHitbox(client);
 
-                    if (bulletHitbox.intersects(playerHitbox) && bullet.getOwningPlaterId() != client.getID() && client.getRoomID() == getClient(bullet.getOwningPlaterId()).getRoomID()) {
+                    if (bulletHitbox.intersects(playerHitbox) && bullet.getOwningPlaterId() != client.getID()
+                            && client.getRoomID() == getClient(bullet.getOwningPlaterId()).getRoomID()) {
                         handleBulletCollision(bullet, client, bulletsToRemove);
                         break;
                     }

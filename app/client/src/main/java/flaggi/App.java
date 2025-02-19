@@ -26,18 +26,28 @@
 
 package flaggi;
 
-import flaggi.common.AdvancedVariable;
+import java.awt.Color;
+import java.awt.Image;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.SwingUtilities;
+
 import flaggi.common.AppOptions;
 import flaggi.common.Client;
 import flaggi.common.Client.ServerMessageHandeler;
 import flaggi.common.Client.ServerRequests;
 import flaggi.common.Client.ServerResponses;
-import flaggi.common.GPanel;
-import flaggi.common.GPanel.Interactable;
-import flaggi.common.GPanel.InteractableHandeler;
-import flaggi.common.GPanel.Renderable;
-import flaggi.common.GPanel.Scrollable;
-import flaggi.common.GPanel.Typable;
 import flaggi.common.Logger;
 import flaggi.constants.WidgetTags;
 import flaggi.struct.ClientStruct;
@@ -57,21 +67,13 @@ import flaggi.ui.ToastManager;
 import flaggi.ui.Tree;
 import flaggi.util.ImageUtil;
 import flaggi.util.ScreenUtil;
-import java.awt.Color;
-import java.awt.Image;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.swing.SwingUtilities;
+import flaggishared.AdvancedVariable;
+import flaggishared.GPanel;
+import flaggishared.GPanel.Interactable;
+import flaggishared.GPanel.InteractableHandeler;
+import flaggishared.GPanel.Renderable;
+import flaggishared.GPanel.Scrollable;
+import flaggishared.GPanel.Typable;
 
 /**
  * Main class for the LAN Game application.
