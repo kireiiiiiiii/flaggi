@@ -1,0 +1,8 @@
+{
+  "java.format.settings.url": "./.vscode/java-formatter.xml",
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.import.gradle.enabled": true,
+  "java.project.referencedLibraries": [
+    "${workspaceFolder}/app/shared/build/libs/*.jar"
+  ]
+}

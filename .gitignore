@@ -4,7 +4,7 @@ build/
 *bin
 
 # vscode
-.vscode/settings.json
+.qodo
 
 # Java specific
 *.class
@@ -19,6 +19,9 @@ build/
 
 # JRE build files
 diet-jre/
+
+# Shadowjar build files
+app/shadowjar
 
 # Include the wrapper jar
 !gradle-wrapper.jar
