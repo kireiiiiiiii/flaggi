@@ -223,6 +223,7 @@ public class Player implements Renderable {
 
         // Border for the health bar
         g.setColor(Color.BLACK);
+        g.setStroke(new BasicStroke(1));
         g.drawRect(x, y, barWidth, barHeight);
 
         // ---- Hitboxes if turned on
