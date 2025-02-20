@@ -17,15 +17,17 @@ public class Flag implements Renderable {
     int[] position;
 
     public Flag(int[] position, boolean isBlue) {
+        this.position = position;
         this.sprite = new Sprite();
         this.sprite.addAnimation(Arrays.asList("flag-blue"), "flag-blue");
         this.sprite.addAnimation(Arrays.asList("flag-red"), "flag-red");
+        this.sprite.setAnimation(isBlue ? "flag-blue" : "flag-red");
         this.visible = true;
     }
 
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
-        // this.sprite.render(g, position[0], position[1], focusCycleRootAncestor);
+        this.sprite.render(g, this.position[0] + origin[0], this.position[1] + origin[1], focusCycleRootAncestor);
     }
 
     @Override
