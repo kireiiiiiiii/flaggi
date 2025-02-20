@@ -67,7 +67,7 @@ import flaggiclient.ui.Tree;
 import flaggiclient.ui.InviteScreen.LobbyHandler;
 import flaggiclient.util.ImageUtil;
 import flaggiclient.util.ScreenUtil;
-import flaggishared.AdvancedVariable;
+import flaggishared.PersistentValue;
 import flaggishared.GPanel;
 import flaggishared.GPanel.Interactable;
 import flaggishared.GPanel.InteractableHandeler;
@@ -103,7 +103,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
     private int clientID, health, speed;
     private GPanel gpanel;
     private GameLoop gameLoop;
-    private AdvancedVariable<AppOptions> appOptions;
+    private PersistentValue<AppOptions> appOptions;
     private ArrayList<KeyEvent> pressedKeys;
     private ArrayList<Bullet> quedPlayerObjects;
     private ToastManager toasts;
@@ -136,11 +136,11 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
 
         // ------ Get user settings
         try {
-            this.appOptions = new AdvancedVariable<AppOptions>(getApplicationDataFolder() + File.separator + "user-options.json", AppOptions.class);
+            this.appOptions = new PersistentValue<AppOptions>(getApplicationDataFolder() + File.separator + "user-options.json", AppOptions.class);
         } catch (IOException e) {
             LOGGER.addLog("Error loading app options.", e);
             new File(getApplicationDataFolder() + File.separator + "user-options.json").delete();
-            this.appOptions = new AdvancedVariable<AppOptions>(getApplicationDataFolder() + File.separator + "user-options.json");
+            this.appOptions = new PersistentValue<AppOptions>(getApplicationDataFolder() + File.separator + "user-options.json");
             this.appOptions.set(getDefaultOptions());
             try {
                 this.appOptions.save();
