@@ -56,8 +56,10 @@ subprojects {
                 doLast {
                     println("Shadow JAR has been created at: ${archiveFile.get().asFile.absolutePath}")
                 }
-                from(mapsDir) {
-                    into("maps")
+                if (project.name == "server") {
+                    from(mapsDir) {
+                        into("maps")
+                    }
                 }
                 from(licensesDir) {
                     into("licenses")
