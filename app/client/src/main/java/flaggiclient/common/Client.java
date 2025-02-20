@@ -102,8 +102,11 @@ public class Client {
     public static class ServerResponses {
 
         public static final String GO_IDLE = "go-idle";
-        public static final String ENTER_GAME = "enter-game";
         public static final String UDP_IDLE = "idle";
+
+        public static boolean isEnterGame(String message) {
+            return message.startsWith("enter-game");
+        }
 
         public static boolean isPong(String message) {
             return message.equals("flaggi-pong");

@@ -169,6 +169,19 @@ public class PersistentValue<T> {
     }
 
     /**
+     * Converts an object to a single line JSON {@code String}.
+     *
+     * @param <T>    - The type of the object to be converted.
+     * @param object - The object to be converted.
+     * @return The JSON {@code String} representation of the object.
+     * @throws JsonProcessingException If the object cannot be converted to JSON.
+     */
+    public static <T> String toJson(T object) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.writeValueAsString(object);
+    }
+
+    /**
      * Reads the contents of a resource file bundled with the application (e.g.,
      * inside the resources folder in a JAR) and returns it as a {@code String}.
      *

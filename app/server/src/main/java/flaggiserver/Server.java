@@ -55,6 +55,8 @@ import java.util.concurrent.Executors;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import flaggiserver.common.Bullet;
 import flaggiserver.common.ClientStruct;
 import flaggiserver.common.Logger;
@@ -718,11 +720,11 @@ public class Server {
             Spawnpoint spawn = activeMaps.get(target.getID()).getSpawnpoint();
             int[] spawnPos = new int[2];
             if (target.getID() == target.getRoomID()) {
-                spawnPos[0] = spawn.oneX;
-                spawnPos[1] = spawn.oneY;
-            } else {
                 spawnPos[0] = spawn.twoX;
                 spawnPos[1] = spawn.twoY;
+            } else {
+                spawnPos[0] = spawn.oneX;
+                spawnPos[1] = spawn.oneY;
             }
             clientHandlers.get(target.getID()).sendMessage("player-died:" + spawnPos[0] + "," + spawnPos[1]);
         }
@@ -998,21 +1000,23 @@ public class Server {
         private void handleJoinRequest(int playerID) {
             ClientStruct targetClient = getClient(playerID);
             ClientStruct localClient = getClient(this.clientId);
-            if (targetClient.getRoomID() != -1) {
-                localClient.setRoomID(targetClient.getRoomID());
-            } else {
-                int randomMapIndex = (int) (Math.random() * maps.size());
-                if (maps.isEmpty()) {
-                    Logger.log(LogLevel.ERROR, "No maps loaded, cannot create a game room.");
+            if (targetClient.getRoomID() == -1) {
+                MapData map = maps.get((int) (Math.random() * maps.size()));
+                activeMaps.put(targetClient.getID(), map);
+                activeMaps.put(localClient.getID(), map);
+                String json = "";
+                try {
+                    json = PersistentValue.toJson(map);
+                } catch (JsonProcessingException e) {
+                    Logger.log(LogLevel.ERROR, "Failed to serialize map data.", e);
                     handleFatalError();
                 }
-                activeMaps.put(targetClient.getID(), maps.get(randomMapIndex));
-                activeMaps.put(localClient.getID(), maps.get(randomMapIndex));
+                Logger.log(LogLevel.INFO, json);
                 targetClient.setRoomID(playerID);
                 localClient.setRoomID(playerID);
+                sendTCPMessageToClient(playerID, "enter-game/" + json + "/false");
+                sendTCPMessageToClient(this.clientId, "enter-game/" + json + "/true");
             }
-            sendTCPMessageToClient(playerID, "enter-game");
-            sendTCPMessageToClient(this.clientId, "enter-game");
         }
 
         /**

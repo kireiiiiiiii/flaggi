@@ -51,7 +51,7 @@ public class MapData {
 
     private int objectIdCounter;
     private String name;
-    private final int width, height;
+    private int width, height;
     private Spawnpoint spawnpoint;
     private List<ObjectData> gameObjects = new ArrayList<ObjectData>();
 
@@ -156,6 +156,25 @@ public class MapData {
         validateCoordinates(spawnpoint1X, spawnpoint1Y);
         validateCoordinates(spawnpoint2X, spawnpoint2Y);
         this.spawnpoint = new Spawnpoint(spawnpoint1X, spawnpoint1Y, spawnpoint2X, spawnpoint2Y);
+    }
+
+    public void setSize(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
+
+    public MapData scaleMap(int scale) {
+        this.width *= scale;
+        this.height *= scale;
+        this.spawnpoint.oneX *= scale;
+        this.spawnpoint.oneY *= scale;
+        this.spawnpoint.twoX *= scale;
+        this.spawnpoint.twoY *= scale;
+        for (ObjectData o : this.gameObjects) {
+            o.setX(o.getX() * scale);
+            o.setY(o.getY() * scale);
+        }
+        return this;
     }
 
     /////////////////

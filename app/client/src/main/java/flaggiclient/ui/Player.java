@@ -121,8 +121,8 @@ public class Player implements Renderable {
         // ---- Set variables
         this.avatar = new Sprite();
         this.flag = new Sprite();
-        this.flag.addAnimation(Arrays.asList("flag_blue"), "flag_blue");
-        this.flag.addAnimation(Arrays.asList("flag_red"), "flag_red");
+        this.flag.addAnimation(Arrays.asList("flag-blue"), "flag_blue");
+        this.flag.addAnimation(Arrays.asList("flag-red"), "flag_red");
         this.flag.setAnimation("flag_red");
         this.animationFrame = animationFrame;
         this.pos = pos;

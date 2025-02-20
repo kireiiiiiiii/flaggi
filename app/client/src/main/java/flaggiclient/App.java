@@ -46,6 +46,7 @@ import javax.swing.SwingUtilities;
 import flaggiclient.common.AppOptions;
 import flaggiclient.common.Client;
 import flaggiclient.common.Logger;
+import flaggiclient.common.Sprite;
 import flaggiclient.common.Client.ServerMessageHandeler;
 import flaggiclient.common.Client.ServerRequests;
 import flaggiclient.common.Client.ServerResponses;
@@ -56,6 +57,7 @@ import flaggiclient.ui.Background;
 import flaggiclient.ui.Bullet;
 import flaggiclient.ui.ConfirmationWindow;
 import flaggiclient.ui.ConnectionWidget;
+import flaggiclient.ui.Flag;
 import flaggiclient.ui.Floor;
 import flaggiclient.ui.HUD;
 import flaggiclient.ui.InviteScreen;
@@ -69,11 +71,14 @@ import flaggiclient.util.ImageUtil;
 import flaggiclient.util.ScreenUtil;
 import flaggishared.PersistentValue;
 import flaggishared.GPanel;
+import flaggishared.MapData;
 import flaggishared.GPanel.Interactable;
 import flaggishared.GPanel.InteractableHandeler;
 import flaggishared.GPanel.Renderable;
 import flaggishared.GPanel.Scrollable;
 import flaggishared.GPanel.Typable;
+import flaggishared.MapData.ObjectData;
+import flaggishared.MapData.ObjectType;
 
 /**
  * Main class for the LAN Game application.
@@ -91,7 +96,6 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
     public static final int TCP_PORT = 54321;
     public static final int FPS = 60;
     public static final boolean SHOW_HITBOXES = false;
-    public static final int[] MAP_SIZE = { 3_500, 2_500 };
 
     /////////////////
     // Variables
@@ -108,8 +112,9 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
     private ArrayList<Bullet> quedPlayerObjects;
     private ToastManager toasts;
     private ConfirmationWindow yesnoToasts;
-    private int[] pos, spawnPoint, windowSize;
+    private int[] pos, windowSize;
     private boolean movementEnabled, paused;
+    private MapData currentMap;
 
     /////////////////
     // Main & Constructor
@@ -158,7 +163,6 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         this.pos[0] = 0;
         this.pos[1] = 0;
         this.speed = 10;
-        this.spawnPoint = new int[] { this.windowSize[0] / 2, this.windowSize[1] / 2 };
         this.movementEnabled = false;
         this.paused = false;
         this.pressedKeys = new ArrayList<KeyEvent>();
@@ -248,7 +252,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         // ------ Initialize client & change UI
         this.localClient = new Client(username, serverAddress, this);
         this.clientID = this.localClient.getId();
-        this.localPlayer = new Player(new int[] { this.spawnPoint[0], this.spawnPoint[1] }, username, skinName, this.clientID);
+        this.localPlayer = new Player(new int[] { ScreenUtil.getScreenDimensions()[0] / 2, ScreenUtil.getScreenDimensions()[1] / 2 }, username, skinName, this.clientID);
         this.gpanel.add(this.localPlayer);
         this.gpanel.hideAllWidgets();
         this.gpanel.add(new InviteScreen(this, () -> {
@@ -267,12 +271,38 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
      * Enters a match.
      *
      */
-    public void enterGame() {
+    public void enterGame(String message) {
+        String[] parts = message.split("/");
+        String jsonMapData = parts[1];
+        boolean first = parts[2].equals("true");
+        this.currentMap = PersistentValue.fromJson(jsonMapData, MapData.class).scaleMap(Sprite.SPRITE_SCALING);
+
+        // ---- Remove old widgets
+        for (Floor f : this.gpanel.getWidgetsByClass(Floor.class)) {
+            this.gpanel.remove(f);
+        }
+        for (Tree t : this.gpanel.getWidgetsByClass(Tree.class)) {
+            this.gpanel.remove(t);
+        }
+        for (Flag f : this.gpanel.getWidgetsByClass(Flag.class)) {
+            this.gpanel.remove(f);
+        }
+
+        // ---- Add new widgets
+        this.gpanel.add(new Floor(new int[] { this.currentMap.getWidth(), this.currentMap.getHeight() }));
+        this.gpanel.add(gameObjectDataToUI(this.currentMap.getGameObjects()));
+
+        // ---- Set the local player's position
+        this.pos[0] = first ? this.currentMap.getSpawnpoint().oneX : this.currentMap.getSpawnpoint().twoX;
+        this.pos[1] = first ? this.currentMap.getSpawnpoint().oneY : this.currentMap.getSpawnpoint().twoY;
+        this.localPlayer.setPos(new int[] { ScreenUtil.getScreenDimensions()[0] / 2, ScreenUtil.getScreenDimensions()[1] / 2 });
+
+        // ---- Set render
         this.movementEnabled = true;
-        this.localPlayer.setPos(new int[] { this.spawnPoint[0], this.spawnPoint[1] });
         this.localPlayer.setHealth(-1);
         this.gpanel.hideAllWidgets();
         this.gpanel.showTaggedWidgets(WidgetTags.GAME_ELEMENTS);
+        updateCameraPosition();
     }
 
     public void goIdle() {
@@ -318,17 +348,17 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
 
     @Override
     public void handleMessage(String message) {
-
         if (ServerResponses.isLobbyList(message) != null) {
             String data = ServerResponses.isLobbyList(message);
             updateLobbyList(data);
         } else if (ServerResponses.isDied(message)) {
             int[] pos = new int[2];
-            pos[0] = Integer.parseInt(message.split(":")[0].split(",")[0]);
-            pos[1] = Integer.parseInt(message.split(":")[0].split(",")[1]);
+            pos[0] = Integer.parseInt(message.split(":")[1].split(",")[0]);
+            pos[1] = Integer.parseInt(message.split(":")[1].split(",")[1]);
             die(pos);
-        } else if (message.equals(ServerResponses.ENTER_GAME)) {
-            enterGame();
+        } else if (ServerResponses.isEnterGame(message)) {
+            System.out.println("Enter game: " + message);
+            enterGame(message);
         } else if (message.equals(ServerResponses.GO_IDLE)) {
             goIdle();
         } else {
@@ -381,7 +411,6 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         // ------ Initialize UI
         this.gpanel.hideAllWidgets();
         this.gpanel.showTaggedWidgets(WidgetTags.MENU_ELEMENTS);
-        this.gpanel.setCameraPosition(new int[] { -this.pos[0] + spawnPoint[0], -this.pos[1] + spawnPoint[1] });
         LOGGER.addLog("Menu screen active.");
     }
 
@@ -477,11 +506,15 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         double tempX = this.pos[0] + deltaX;
         double tempY = this.pos[1] + deltaY;
 
+        if (this.currentMap == null) {
+            return;
+        }
+
         // Validate new pos
-        if (tempX < 0 || tempX > MAP_SIZE[0] - Player.TEXTURE_WIDTH) {
+        if (tempX < 0 || tempX > this.currentMap.getWidth() - Player.TEXTURE_WIDTH) {
             deltaX = 0;
         }
-        if (tempY < 0 || tempY > MAP_SIZE[1] - Player.TEXTURE_HEIGHT) {
+        if (tempY < 0 || tempY > this.currentMap.getHeight() - Player.TEXTURE_HEIGHT) {
             deltaY = 0;
         }
 
@@ -490,7 +523,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         this.pos[1] += deltaY;
 
         // Update the viewport
-        this.gpanel.setCameraPosition(new int[] { -this.pos[0] + this.spawnPoint[0], -this.pos[1] + this.spawnPoint[1] });
+        updateCameraPosition();
     }
 
     /**
@@ -631,7 +664,9 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
      *
      */
     public void die(int spawnPoint[]) {
-        this.pos = spawnPoint;
+        this.health = -1;
+        this.pos[0] = spawnPoint[0] * Sprite.SPRITE_SCALING;
+        this.pos[1] = spawnPoint[1] * Sprite.SPRITE_SCALING;
     }
 
     /**
@@ -645,7 +680,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
             togglePauseMenu();
         }, () -> {
             goToMenu();
-        }), new Tree(new int[] { 100, 100 }), new HUD(), new Floor(MAP_SIZE)));
+        }), new HUD()));
 
         // Add all the widgets
         this.gpanel.add(widgets);
@@ -933,6 +968,39 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         }
 
         return data.toString();
+    }
+
+    /**
+     * Converts the game object data into UI objects.
+     *
+     * @param objectData - {@code List<ObjectData>} of the game objects.
+     * @return
+     */
+    private static List<Renderable> gameObjectDataToUI(List<ObjectData> objectData) {
+        List<Renderable> objects = new ArrayList<>();
+        for (ObjectData data : objectData) {
+            int[] pos = new int[] { data.getX(), data.getY() };
+            // ObjectType.
+            switch (data.getObjectType()) {
+            case TREE:
+                objects.add(new Tree(pos));
+                break;
+            case FLAG:
+                objects.add(new Flag(pos, true));
+                break;
+            default:
+                break;
+            }
+        }
+        return objects;
+    }
+
+    /**
+     * Updates the camera position.
+     */
+    private void updateCameraPosition() {
+        int[] screen = ScreenUtil.getScreenDimensions();
+        this.gpanel.setCameraPosition(new int[] { -this.pos[0] + screen[0] / 2, -this.pos[1] + screen[1] / 2 });
     }
 
     /////////////////
