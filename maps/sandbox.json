@@ -1,0 +1,27 @@
+{
+  "name" : "Sandbox",
+  "width" : 500,
+  "height" : 1000,
+  "spawnpoint" : {
+    "oneX" : 250,
+    "oneY" : 100,
+    "twoX" : 250,
+    "twoY" : 900
+  },
+  "gameObjects" : [ {
+    "objectType" : "flag",
+    "x" : 150,
+    "y" : 200,
+    "id" : 0
+  }, {
+    "objectType" : "flag",
+    "x" : 350,
+    "y" : 800,
+    "id" : 1
+  }, {
+    "objectType" : "tree",
+    "x" : 250,
+    "y" : 450,
+    "id" : 2
+  } ]
+}

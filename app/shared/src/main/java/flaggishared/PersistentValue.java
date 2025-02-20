@@ -177,11 +177,13 @@ public class PersistentValue<T> {
      * @throws IOException If the resource file cannot be read.
      */
     public static String readResource(String resourceName) throws IOException {
+        InputStream inputStream = PersistentValue.class.getClassLoader().getResourceAsStream(resourceName);
+        if (inputStream == null) {
+            return null;
+        }
+
         StringBuilder content = new StringBuilder();
-        try (InputStream inputStream = PersistentValue.class.getClassLoader().getResourceAsStream(resourceName); BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-            if (inputStream == null) {
-                throw new IOException("Resource not found: " + resourceName);
-            }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 content.append(line).append(System.lineSeparator());

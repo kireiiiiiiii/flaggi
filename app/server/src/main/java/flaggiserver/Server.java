@@ -62,6 +62,7 @@ import flaggiserver.common.Logger.LogLevel;
 import flaggiserver.common.Rectangle;
 import flaggishared.GPanel;
 import flaggishared.MapData;
+import flaggishared.PersistentValue;
 import flaggishared.MapData.Spawnpoint;
 
 /**
@@ -420,19 +421,27 @@ public class Server {
         return jsonFiles.toArray(new String[0]);
     }
 
+    /**
+     * Initializes the maps data from the maps directory.
+     *
+     */
     private static void initializeMaps() {
-        // String[] mapFiles = listFilesInJar("maps", "json");
-        // for (String mapFile : mapFiles) {
-        // try {
-        // AdvancedVariable<MapData> map = new AdvancedVariable<MapData>(mapFile);
-
-        // maps.add(map);
-        // } catch (IOException e) {
-        // Logger.log(LogLevel.ERROR, "Failed to load map data from file: " + mapFile,
-        // e);
-        // }
-        // }
-        Logger.log(LogLevel.ERROR, "Map loading not implemented!");
+        String dir = "maps";
+        String[] mapFiles = listFilesInJar(dir, "json");
+        for (String mapFile : mapFiles) {
+            Logger.log(LogLevel.INFO, "Found map file: " + mapFile);
+            String json;
+            try {
+                json = PersistentValue.readResource(dir + "/" + mapFile);
+                maps.add(PersistentValue.fromJson(json, MapData.class));
+            } catch (IOException e) {
+                Logger.log(LogLevel.ERROR, "Failed to read map file: " + mapFile, e);
+            }
+        }
+        if (maps.isEmpty()) {
+            Logger.log(LogLevel.ERROR, "No maps found in the maps directory!");
+            handleFatalError();
+        }
     }
 
     /**
