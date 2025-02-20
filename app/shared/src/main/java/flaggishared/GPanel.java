@@ -823,6 +823,10 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         public void type(KeyEvent k);
     }
 
+    /**
+     * Interface for scrollable UI elements.
+     *
+     */
     public interface Scrollable {
 
         /**

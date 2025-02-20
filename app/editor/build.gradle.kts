@@ -28,6 +28,7 @@ tasks.build {
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     enabled = true
+    from(project(":shared").sourceSets["main"].output)
     archiveBaseName.set("Flaggi-editor")
     archiveVersion.set("1.0.0")
     archiveClassifier.set("") // Removes the "-all" suffix

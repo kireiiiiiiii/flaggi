@@ -60,6 +60,7 @@ import flaggiserver.common.ClientStruct;
 import flaggiserver.common.Logger;
 import flaggiserver.common.Logger.LogLevel;
 import flaggiserver.common.Rectangle;
+import flaggishared.GPanel;
 import flaggishared.MapData;
 import flaggishared.MapData.Spawnpoint;
 
@@ -107,7 +108,9 @@ public class Server {
         logServerCreation();
         gameLoop = new GameLoop(60);
         gameLoop.start();
-        System.exit(0);
+
+        new GPanel(null, 60, 100, 200, true, "nya");
+
         initializeMaps();
 
         // ---- Start listener threads
@@ -310,7 +313,7 @@ public class Server {
      */
     private static void handleFatalError() {
         Logger.log(LogLevel.ERROR, "FATAL EXCEPTION CAUGHT! SHUTTING DOWN SERVER...");
-        System.exit(0);
+        System.exit(1);
     }
 
     /**
@@ -995,7 +998,7 @@ public class Server {
                 int randomMapIndex = (int) (Math.random() * maps.size());
                 if (maps.isEmpty()) {
                     Logger.log(LogLevel.ERROR, "No maps loaded, cannot create a game room.");
-                    System.exit(0); // TODO
+                    handleFatalError();
                 }
                 activeMaps.put(targetClient.getID(), maps.get(randomMapIndex));
                 activeMaps.put(localClient.getID(), maps.get(randomMapIndex));
