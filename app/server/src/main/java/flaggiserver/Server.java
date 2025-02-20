@@ -108,9 +108,6 @@ public class Server {
         logServerCreation();
         gameLoop = new GameLoop(60);
         gameLoop.start();
-
-        new GPanel(null, 60, 100, 200, true, "nya");
-
         initializeMaps();
 
         // ---- Start listener threads
