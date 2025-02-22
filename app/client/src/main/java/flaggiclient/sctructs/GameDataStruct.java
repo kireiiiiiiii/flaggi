@@ -24,7 +24,7 @@
  *
  */
 
-package flaggiclient.struct;
+package flaggiclient.sctructs;
 
 import java.util.List;
 

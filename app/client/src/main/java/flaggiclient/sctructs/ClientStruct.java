@@ -24,7 +24,7 @@
  *
  */
 
-package flaggiclient.struct;
+package flaggiclient.sctructs;
 
 /**
  * A read only structure class for a client.

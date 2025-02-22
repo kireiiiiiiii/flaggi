@@ -39,8 +39,8 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
 import flaggiclient.App;
-import flaggiclient.struct.ClientStruct;
-import flaggiclient.struct.GameDataStruct;
+import flaggiclient.sctructs.ClientStruct;
+import flaggiclient.sctructs.GameDataStruct;
 
 public class Client {
 
