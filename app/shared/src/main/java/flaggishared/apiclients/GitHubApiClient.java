@@ -50,7 +50,7 @@ public class GitHubApiClient {
     // Variables -----------------------------------------------------------------
 
     public static boolean disableLogging = false;
-    private static final Logger slogger = Logger.getLogger(GitHubApiClient.class.getName());
+    private static final Logger logger = Logger.getLogger(GitHubApiClient.class.getName());
     private static final String API_BASE_URL = "https://api.github.com/repos/";
 
     // Data fetching -------------------------------------------------------------
@@ -83,7 +83,7 @@ public class GitHubApiClient {
         int responseCode = connection.getResponseCode();
         if (responseCode != 200) {
             if (!disableLogging) {
-                slogger.log(Level.SEVERE, "Failed to fetch the releases. HTTP Response Code: {0}", responseCode);
+                logger.log(Level.SEVERE, "Failed to fetch the releases. HTTP Response Code: {0}", responseCode);
             }
             throw new Exception("Failed to fetch latest release. HTTP Response Code: " + responseCode);
         }
@@ -121,7 +121,7 @@ public class GitHubApiClient {
         }
 
         if (!disableLogging) {
-            slogger.log(Level.WARNING, "No release tags found.");
+            logger.log(Level.WARNING, "No release tags found.");
         }
         return null;
     }
