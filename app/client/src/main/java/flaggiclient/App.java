@@ -69,16 +69,16 @@ import flaggiclient.ui.Tree;
 import flaggiclient.ui.InviteScreen.LobbyHandler;
 import flaggiclient.util.ImageUtil;
 import flaggiclient.util.ScreenUtil;
-import flaggishared.PersistentValue;
-import flaggishared.GPanel;
-import flaggishared.MapData;
-import flaggishared.GPanel.Interactable;
-import flaggishared.GPanel.InteractableHandeler;
-import flaggishared.GPanel.Renderable;
-import flaggishared.GPanel.Scrollable;
-import flaggishared.GPanel.Typable;
-import flaggishared.MapData.ObjectData;
-import flaggishared.MapData.ObjectType;
+import flaggishared.common.GPanel;
+import flaggishared.common.MapData;
+import flaggishared.common.PersistentValue;
+import flaggishared.common.GPanel.Interactable;
+import flaggishared.common.GPanel.InteractableHandeler;
+import flaggishared.common.GPanel.Renderable;
+import flaggishared.common.GPanel.Scrollable;
+import flaggishared.common.GPanel.Typable;
+import flaggishared.common.MapData.ObjectData;
+import flaggishared.common.MapData.ObjectType;
 
 /**
  * Main class for the LAN Game application.

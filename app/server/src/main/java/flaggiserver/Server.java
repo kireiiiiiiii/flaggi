@@ -61,13 +61,13 @@ import flaggiserver.common.Bullet;
 import flaggiserver.common.ClientStruct;
 import flaggiserver.common.Logger;
 import flaggiserver.common.Logger.LogLevel;
+import flaggishared.common.GPanel;
+import flaggishared.common.MapData;
+import flaggishared.common.PersistentValue;
+import flaggishared.common.MapData.ObjectData;
+import flaggishared.common.MapData.ObjectType;
+import flaggishared.common.MapData.Spawnpoint;
 import flaggiserver.common.Rectangle;
-import flaggishared.GPanel;
-import flaggishared.MapData;
-import flaggishared.PersistentValue;
-import flaggishared.MapData.ObjectData;
-import flaggishared.MapData.ObjectType;
-import flaggishared.MapData.Spawnpoint;
 
 /**
  * Server class for the LAN Game application.

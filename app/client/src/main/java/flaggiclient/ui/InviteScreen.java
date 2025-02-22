@@ -35,9 +35,9 @@ import java.util.concurrent.TimeUnit;
 import flaggiclient.common.RepeatedTask;
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
-import flaggishared.GPanel.Interactable;
-import flaggishared.GPanel.Renderable;
-import flaggishared.GPanel.Scrollable;
+import flaggishared.common.GPanel.Interactable;
+import flaggishared.common.GPanel.Renderable;
+import flaggishared.common.GPanel.Scrollable;
 
 /**
  * Lobby

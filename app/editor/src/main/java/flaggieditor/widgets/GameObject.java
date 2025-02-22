@@ -31,8 +31,8 @@ import java.awt.Container;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
-import flaggishared.GPanel.Renderable;
-import flaggishared.MapData.ObjectData;
+import flaggishared.common.GPanel.Renderable;
+import flaggishared.common.MapData.ObjectData;
 
 /**
  * Map object to be rendered on the map.

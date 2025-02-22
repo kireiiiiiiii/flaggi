@@ -42,7 +42,7 @@ import flaggiclient.App;
 import flaggiclient.common.Sprite;
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
-import flaggishared.GPanel.Renderable;
+import flaggishared.common.GPanel.Renderable;
 
 public class Bullet implements Renderable, Runnable {
 

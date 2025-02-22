@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import flaggiclient.constants.ZIndex;
-import flaggishared.GPanel.Renderable;
+import flaggishared.common.GPanel.Renderable;
 
 /**
  * A manager class for displaying toast messages on the screen. Toasts are small

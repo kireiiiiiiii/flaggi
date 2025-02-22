@@ -40,11 +40,11 @@ import java.util.Scanner;
 import javax.swing.SwingUtilities;
 
 import flaggieditor.widgets.MapRender;
-import flaggishared.PersistentValue;
-import flaggishared.GPanel;
-import flaggishared.GPanel.InteractableHandeler;
-import flaggishared.MapData;
-import flaggishared.MapData.ObjectType;
+import flaggishared.common.GPanel;
+import flaggishared.common.MapData;
+import flaggishared.common.PersistentValue;
+import flaggishared.common.GPanel.InteractableHandeler;
+import flaggishared.common.MapData.ObjectType;
 
 /**
  * Main application class.

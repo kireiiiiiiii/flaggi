@@ -45,7 +45,7 @@ import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
 import flaggiclient.util.FileUtil;
 import flaggiclient.util.FontUtil;
-import flaggishared.GPanel.Renderable;
+import flaggishared.common.GPanel.Renderable;
 
 /**
  * Player widget class.

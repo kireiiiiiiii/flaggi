@@ -25,7 +25,7 @@
  *
  */
 
-package flaggishared;
+package flaggishared.common;
 
 import java.io.IOException;
 import java.util.ArrayList;

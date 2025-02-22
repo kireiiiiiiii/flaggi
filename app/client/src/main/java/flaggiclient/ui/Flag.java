@@ -8,7 +8,7 @@ import java.util.Arrays;
 import flaggiclient.common.Sprite;
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
-import flaggishared.GPanel.Renderable;
+import flaggishared.common.GPanel.Renderable;
 
 public class Flag implements Renderable {
 

@@ -36,9 +36,9 @@ import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
 import flaggiclient.util.FontUtil;
 import flaggiclient.util.ImageUtil;
-import flaggishared.GPanel.Interactable;
-import flaggishared.GPanel.Renderable;
-import flaggishared.GPanel.Typable;
+import flaggishared.common.GPanel.Interactable;
+import flaggishared.common.GPanel.Renderable;
+import flaggishared.common.GPanel.Typable;
 
 /**
  * The main menu screen for Flaggi.

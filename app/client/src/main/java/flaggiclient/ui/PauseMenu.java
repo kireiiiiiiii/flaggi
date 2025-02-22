@@ -37,8 +37,8 @@ import java.util.ArrayList;
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
 import flaggiclient.util.FontUtil;
-import flaggishared.GPanel.Interactable;
-import flaggishared.GPanel.Renderable;
+import flaggishared.common.GPanel.Interactable;
+import flaggishared.common.GPanel.Renderable;
 
 /**
  * Pause menu screen UI with fade-in and fade-out animation. Contains 2 buttons:

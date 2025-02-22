@@ -25,7 +25,7 @@
  *
  */
 
-package flaggishared;
+package flaggishared.common;
 
 import java.awt.Dimension;
 import java.awt.Graphics;

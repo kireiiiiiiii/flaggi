@@ -4,7 +4,7 @@
  * Github link: https://github.com/kireiiiiiiii/Flaggi
  */
 
-package flaggishared;
+package flaggishared.common;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

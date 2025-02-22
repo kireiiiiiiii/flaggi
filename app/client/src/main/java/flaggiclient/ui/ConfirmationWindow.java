@@ -9,8 +9,8 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 import flaggiclient.constants.ZIndex;
-import flaggishared.GPanel.Interactable;
-import flaggishared.GPanel.Renderable;
+import flaggishared.common.GPanel.Interactable;
+import flaggishared.common.GPanel.Renderable;
 
 public class ConfirmationWindow implements Renderable, Interactable {
 

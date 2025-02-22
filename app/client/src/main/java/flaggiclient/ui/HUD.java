@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
 import flaggiclient.util.ImageUtil;
-import flaggishared.GPanel.Renderable;
+import flaggishared.common.GPanel.Renderable;
 
 /**
  * Player HUD widget class.

@@ -33,7 +33,7 @@ import java.util.ArrayList;
 
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
-import flaggishared.GPanel.Renderable;
+import flaggishared.common.GPanel.Renderable;
 
 /**
  * Background widget.

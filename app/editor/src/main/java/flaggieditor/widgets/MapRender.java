@@ -33,8 +33,8 @@ import java.awt.Container;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
-import flaggishared.GPanel.Renderable;
-import flaggishared.MapData;
+import flaggishared.common.MapData;
+import flaggishared.common.GPanel.Renderable;
 
 /**
  * UI widget for rendering the main map.
