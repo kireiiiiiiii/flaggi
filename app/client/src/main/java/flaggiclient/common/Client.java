@@ -103,6 +103,7 @@ public class Client {
 
         public static final String GO_IDLE = "go-idle";
         public static final String UDP_IDLE = "idle";
+        public static final String FLAG_GRAB = "flag-grabbed";
 
         public static boolean isEnterGame(String message) {
             return message.startsWith("enter-game");

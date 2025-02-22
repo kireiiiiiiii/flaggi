@@ -291,7 +291,8 @@ public class MapData {
     public enum ObjectType {
 
         TREE("tree", 0, 0, 0, 0), //
-        FLAG("flag", 0, 0, 0, 0);
+        RED_FLAG("red_flag", 0, 0, 0, 0), //
+        BLUE_FLAG("blue_flag", 0, 0, 0, 0); //
 
         private final String name;
         private final int collisionX, collisionY, collisionWidth, collisionHeight;

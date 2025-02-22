@@ -65,6 +65,8 @@ import flaggiserver.common.Rectangle;
 import flaggishared.GPanel;
 import flaggishared.MapData;
 import flaggishared.PersistentValue;
+import flaggishared.MapData.ObjectData;
+import flaggishared.MapData.ObjectType;
 import flaggishared.MapData.Spawnpoint;
 
 /**
@@ -732,6 +734,15 @@ public class Server {
         Logger.log(LogLevel.DEBUG, "Bullet hit player '" + target.getDisplayName() + "'. Health: " + newHealth);
     }
 
+    private static void handleFlagCollision(ObjectData flag, ClientStruct target) {
+        boolean isBlue = target.getRoomID() == target.getID();
+        if (flag.getObjectType() == ObjectType.BLUE_FLAG && !isBlue) {
+            sendTCPMessageToClient(target.getID(), "flag-grabbed");
+        } else if (flag.getObjectType() == ObjectType.RED_FLAG && isBlue) {
+            sendTCPMessageToClient(target.getID(), "flag-grabbed");
+        }
+    }
+
     /**
      * Removes a bullet from its owner's list of player objects.
      *
@@ -849,6 +860,28 @@ public class Server {
                     if (bulletHitbox.intersects(playerHitbox) && bullet.getOwningPlaterId() != client.getID() && client.getRoomID() == getClient(bullet.getOwningPlaterId()).getRoomID()) {
                         handleBulletCollision(bullet, client, bulletsToRemove);
                         break;
+                    }
+                }
+            }
+
+            for (Map.Entry<Integer, MapData> entry : activeMaps.entrySet()) {
+                int mapId = entry.getKey();
+                MapData mapData = entry.getValue();
+
+                for (ObjectData object : mapData.getGameObjects()) {
+                    if (object.getObjectType() == ObjectType.BLUE_FLAG || object.getObjectType() == ObjectType.RED_FLAG) {
+                        Rectangle flagHitbox = new Rectangle(object.getX(), object.getY(), 112, 128);
+
+                        for (ClientStruct client : new ArrayList<>(clients)) {
+                            if (client.getRoomID() == mapId) {
+                                Rectangle playerHitbox = getPlayerHitbox(client);
+
+                                if (flagHitbox.intersects(playerHitbox)) {
+                                    Logger.log(LogLevel.INFO, "Flag collision detected.");
+                                    handleFlagCollision(object, client);
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -290,7 +290,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
 
         // ---- Add new widgets
         this.gpanel.add(new Floor(new int[] { this.currentMap.getWidth(), this.currentMap.getHeight() }));
-        this.gpanel.add(gameObjectDataToUI(this.currentMap.getGameObjects()));
+        this.gpanel.add(gameObjectDataToUI(this.currentMap.getGameObjects(), first));
 
         // ---- Set the local player's position
         this.pos[0] = first ? this.currentMap.getSpawnpoint().oneX : this.currentMap.getSpawnpoint().twoX;
@@ -361,6 +361,8 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
             enterGame(message);
         } else if (message.equals(ServerResponses.GO_IDLE)) {
             goIdle();
+        } else if (message.equals(ServerResponses.FLAG_GRAB)) {
+            localPlayer.hasFlag(true);
         } else {
             LOGGER.addLog("Received invalid message from server: " + message);
         }
@@ -976,7 +978,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
      * @param objectData - {@code List<ObjectData>} of the game objects.
      * @return
      */
-    private static List<Renderable> gameObjectDataToUI(List<ObjectData> objectData) {
+    private static List<Renderable> gameObjectDataToUI(List<ObjectData> objectData, boolean blue) {
         List<Renderable> objects = new ArrayList<>();
         for (ObjectData data : objectData) {
             int[] pos = new int[] { data.getX(), data.getY() };
@@ -985,8 +987,11 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
             case TREE:
                 objects.add(new Tree(pos));
                 break;
-            case FLAG:
-                objects.add(new Flag(pos, true));
+            case BLUE_FLAG:
+                objects.add(new Flag(pos, !blue));
+                break;
+            case RED_FLAG:
+                objects.add(new Flag(pos, blue));
                 break;
             default:
                 break;
