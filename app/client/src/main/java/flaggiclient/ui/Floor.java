@@ -36,8 +36,8 @@ import java.util.ArrayList;
 
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
-import flaggiclient.util.ImageUtil;
 import flaggishared.common.GPanel.Renderable;
+import flaggishared.util.ImageUtil;
 
 /**
  * Tileable floor texture

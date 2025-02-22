@@ -12,4 +12,6 @@ dependencies {
     // JSON file manipulation
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.0")
 
+    implementation("org.json:json:20230618") // GitHub api client
+
 }

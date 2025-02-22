@@ -34,11 +34,11 @@ import java.util.ArrayList;
 import flaggiclient.App;
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
-import flaggiclient.util.FontUtil;
-import flaggiclient.util.ImageUtil;
 import flaggishared.common.GPanel.Interactable;
 import flaggishared.common.GPanel.Renderable;
 import flaggishared.common.GPanel.Typable;
+import flaggishared.util.FontUtil;
+import flaggishared.util.ImageUtil;
 
 /**
  * The main menu screen for Flaggi.
@@ -78,15 +78,20 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         this.nameUserInput = name == null ? "" : name;
         this.ipUserInput = ip == null ? "" : ip;
         try {
-            this.font = FontUtil.loadFont("fonts/PixelifySans-VariableFont_wght.ttf").deriveFont(Font.PLAIN, 25);
+            this.font = FontUtil.createFontFromResource("fonts/PixelifySans-VariableFont_wght.ttf").deriveFont(Font.PLAIN, 25);
         } catch (IOException | FontFormatException e) {
             App.LOGGER.addLog("Error loading font.", e);
             this.font = new Font("Arial", Font.PLAIN, 25);
         }
-        this.logo = ImageUtil.getImageFromFile("ui/logo.png");
-        this.background = ImageUtil.getImageFromFile("ui/menu_screen.png");
-        this.button = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/button.png"), 130, false);
-        this.textField = ImageUtil.scaleToHeight(ImageUtil.getImageFromFile("ui/text_field.png"), 60, false);
+
+        try {
+            this.logo = ImageUtil.getImageFromFile("ui/logo.png");
+            this.background = ImageUtil.getImageFromFile("ui/menu_screen.png");
+            this.button = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/button.png"), 130, false);
+            this.textField = ImageUtil.scaleToHeight(ImageUtil.getImageFromFile("ui/text_field.png"), 60, false);
+        } catch (IOException e) {
+            App.LOGGER.addLog("Couldn't load MenuScreen textures.", e);
+        }
 
         // Initialize rectangles with dummy values, they will be updated during
         // rendering
@@ -131,14 +136,14 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         // Render error nessage
         synchronized (this.errorMessage) { // Acces the message sychronously, as it can be modified by the app
             g.setColor(this.errorMessage.equals("Connecting...") ? Color.GREEN : Color.RED);
-            int[] errorPos = FontUtil.getCenteredPos(size[0], size[1], g.getFontMetrics(), this.errorMessage);
+            int[] errorPos = FontUtil.calculateCenteredPosition(size[0], size[1], g.getFontMetrics(), this.errorMessage);
             g.drawString(this.errorMessage, errorPos[0], errorPos[1] + 90);
         }
 
         g.drawImage(this.textField, nameFieldBounds.x, nameFieldBounds.y, focusCycleRootAncestor);
         g.drawImage(this.textField, ipFieldBounds.x, ipFieldBounds.y, focusCycleRootAncestor);
 
-        int[] textFieldTextPos = FontUtil.getCenteredPos(this.textField.getWidth(null), this.textField.getHeight(null), g.getFontMetrics(), "Dummy");
+        int[] textFieldTextPos = FontUtil.calculateCenteredPosition(this.textField.getWidth(null), this.textField.getHeight(null), g.getFontMetrics(), "Dummy");
 
         g.setColor(isNameFieldFocused ? Color.BLUE : Color.WHITE);
         g.drawString("Name: " + nameUserInput, nameFieldBounds.x + 20, nameFieldBounds.y + textFieldTextPos[1]);
@@ -148,7 +153,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
         g.drawImage(this.button, startButtonBounds.x, startButtonBounds.y, focusCycleRootAncestor);
         g.setColor(Color.WHITE);
-        int[] startButtonTextPos = FontUtil.getCenteredPos(buttonWidth, buttonHeight, g.getFontMetrics(), "START");
+        int[] startButtonTextPos = FontUtil.calculateCenteredPosition(buttonWidth, buttonHeight, g.getFontMetrics(), "START");
         g.drawString("START", startButtonBounds.x + startButtonTextPos[0], startButtonBounds.y + startButtonTextPos[1]);
 
     }

@@ -43,9 +43,9 @@ import flaggiclient.App;
 import flaggiclient.common.Sprite;
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
-import flaggiclient.util.FileUtil;
-import flaggiclient.util.FontUtil;
 import flaggishared.common.GPanel.Renderable;
+import flaggishared.util.FileUtil;
+import flaggishared.util.FontUtil;
 
 /**
  * Player widget class.
@@ -146,26 +146,30 @@ public class Player implements Renderable {
      */
     private static void addAllAvatarAnimations() {
         playerAnimationsLibrary = new HashMap<>();
-        String[] skinTextures = FileUtil.listDirectoriesInJar("sprites/player");
+        String[] skinTextures = FileUtil.retrieveJarDirectoryList("sprites/player");
 
         // Add idle animations
         for (String skinName : skinTextures) {
             List<String> frameNames;
 
-            frameNames = getAnimationList(skinName, Arrays.asList("idle_1", "idle_2"));
-            playerAnimationsLibrary.put(skinName + "_idle", Sprite.loadFrames(frameNames));
+            try {
+                frameNames = getAnimationList(skinName, Arrays.asList("idle_1", "idle_2"));
+                playerAnimationsLibrary.put(skinName + "_idle", Sprite.loadFrames(frameNames));
 
-            frameNames = getAnimationList(skinName, Arrays.asList("walk_side", "walk_side_l", "walk_side", "walk_side_r"));
-            playerAnimationsLibrary.put(skinName + "_walk_side", Sprite.loadFrames(frameNames));
+                frameNames = getAnimationList(skinName, Arrays.asList("walk_side", "walk_side_l", "walk_side", "walk_side_r"));
+                playerAnimationsLibrary.put(skinName + "_walk_side", Sprite.loadFrames(frameNames));
 
-            frameNames = getAnimationList(skinName, Arrays.asList("walk_diagup", "walk_diagup_l", "walk_diagup", "walk_diagup_r"));
-            playerAnimationsLibrary.put(skinName + "_walk_diagup", Sprite.loadFrames(frameNames));
+                frameNames = getAnimationList(skinName, Arrays.asList("walk_diagup", "walk_diagup_l", "walk_diagup", "walk_diagup_r"));
+                playerAnimationsLibrary.put(skinName + "_walk_diagup", Sprite.loadFrames(frameNames));
 
-            frameNames = getAnimationList(skinName, Arrays.asList("walk_up", "walk_up_l", "walk_up", "walk_up_r"));
-            playerAnimationsLibrary.put(skinName + "_walk_up", Sprite.loadFrames(frameNames));
+                frameNames = getAnimationList(skinName, Arrays.asList("walk_up", "walk_up_l", "walk_up", "walk_up_r"));
+                playerAnimationsLibrary.put(skinName + "_walk_up", Sprite.loadFrames(frameNames));
 
-            frameNames = getAnimationList(skinName, Arrays.asList("walk_down", "walk_down_l", "walk_down", "walk_down_r"));
-            playerAnimationsLibrary.put(skinName + "_walk_down", Sprite.loadFrames(frameNames));
+                frameNames = getAnimationList(skinName, Arrays.asList("walk_down", "walk_down_l", "walk_down", "walk_down_r"));
+                playerAnimationsLibrary.put(skinName + "_walk_down", Sprite.loadFrames(frameNames));
+            } catch (Exception e) {
+                App.LOGGER.addLog("Error loading player animations for skin " + skinName + ".", e);
+            }
 
         }
     }
@@ -198,7 +202,7 @@ public class Player implements Renderable {
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 12));
         String nameTagText = this.name;
-        int[] namePos = FontUtil.getCenteredPos(55, 5, g.getFontMetrics(), nameTagText);
+        int[] namePos = FontUtil.calculateCenteredPosition(55, 5, g.getFontMetrics(), nameTagText);
         namePos[1] = -30;
         g.drawString(nameTagText, offset[0] + this.pos[0] + namePos[0], offset[1] + this.pos[1] + namePos[1]);
 

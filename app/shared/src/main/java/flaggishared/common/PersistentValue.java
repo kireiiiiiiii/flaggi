@@ -1,7 +1,7 @@
 /*
- * Author: Matěj Šťastný
+ * Author: Matěj Šťastný aka Kirei
  * Date created: 5/5/2024
- * Github link: https://github.com/kireiiiiiiii/Flaggi
+ * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
 package flaggishared.common;
@@ -217,4 +217,5 @@ public class PersistentValue<T> {
             writer.write(contents);
         }
     }
+
 }

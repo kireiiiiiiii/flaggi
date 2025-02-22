@@ -29,13 +29,14 @@ package flaggiclient.common;
 import java.awt.Container;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import flaggiclient.App;
-import flaggiclient.util.ImageUtil;
+import flaggishared.util.ImageUtil;
 
 /**
  * A Sprite class to handle rendering and animations of image textures.
@@ -84,7 +85,11 @@ public class Sprite {
      * @param name       - The name of the animation.
      */
     public void addAnimation(List<String> frameNames, String name) {
-        animations.put(name, loadFrames(frameNames));
+        try {
+            animations.put(name, loadFrames(frameNames));
+        } catch (IOException e) {
+            App.LOGGER.addLog("Failed to load animation: '" + name + "'! File does not exist.");
+        }
     }
 
     /**
@@ -299,8 +304,9 @@ public class Sprite {
      *
      * @param frameNames - {@code List<String>} of frame names.
      * @return {@code List<Image>} of loaded images.
+     * @throws IOException if any of the frame files do not exist.
      */
-    public static List<Image> loadFrames(List<String> frameNames) {
+    public static List<Image> loadFrames(List<String> frameNames) throws IOException {
         List<Image> frames = new ArrayList<>();
         for (String frameName : frameNames) {
             frameName = SPRITE_RESOURCE_DIR_PATH + frameName + ".png";

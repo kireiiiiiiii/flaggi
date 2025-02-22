@@ -45,11 +45,11 @@ import javax.swing.SwingUtilities;
 
 import flaggiclient.common.AppOptions;
 import flaggiclient.common.Client;
-import flaggiclient.common.Logger;
-import flaggiclient.common.Sprite;
 import flaggiclient.common.Client.ServerMessageHandeler;
 import flaggiclient.common.Client.ServerRequests;
 import flaggiclient.common.Client.ServerResponses;
+import flaggiclient.common.Logger;
+import flaggiclient.common.Sprite;
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.struct.ClientStruct;
 import flaggiclient.struct.GameDataStruct;
@@ -61,24 +61,23 @@ import flaggiclient.ui.Flag;
 import flaggiclient.ui.Floor;
 import flaggiclient.ui.HUD;
 import flaggiclient.ui.InviteScreen;
+import flaggiclient.ui.InviteScreen.LobbyHandler;
 import flaggiclient.ui.MenuScreen;
 import flaggiclient.ui.PauseMenu;
 import flaggiclient.ui.Player;
 import flaggiclient.ui.ToastManager;
 import flaggiclient.ui.Tree;
-import flaggiclient.ui.InviteScreen.LobbyHandler;
-import flaggiclient.util.ImageUtil;
-import flaggiclient.util.ScreenUtil;
 import flaggishared.common.GPanel;
-import flaggishared.common.MapData;
-import flaggishared.common.PersistentValue;
 import flaggishared.common.GPanel.Interactable;
 import flaggishared.common.GPanel.InteractableHandeler;
 import flaggishared.common.GPanel.Renderable;
 import flaggishared.common.GPanel.Scrollable;
 import flaggishared.common.GPanel.Typable;
+import flaggishared.common.MapData;
 import flaggishared.common.MapData.ObjectData;
-import flaggishared.common.MapData.ObjectType;
+import flaggishared.util.ImageUtil;
+import flaggishared.util.ScreenUtil;
+import flaggishared.common.PersistentValue;
 
 /**
  * Main class for the LAN Game application.
@@ -173,9 +172,13 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
 
         // ------ Initialize UI
         this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, PROJECT_NAME, new Color(229, 204, 255));
-        Image iconWin = ImageUtil.getImageFromFile("icons/icon_win.png");
-        Image iconMac = ImageUtil.getImageFromFile("icons/icon_mac.png");
-        this.gpanel.setIconOSDependend(iconWin, iconMac, iconWin, iconWin);
+        try {
+            Image iconWin = ImageUtil.getImageFromFile("icons/icon_win.png");
+            Image iconMac = ImageUtil.getImageFromFile("icons/icon_mac.png");
+            this.gpanel.setIconOSDependend(iconWin, iconMac, iconWin, iconWin);
+        } catch (IOException e) {
+            LOGGER.addLog("Error loading app icons. Icon files do not exist!", e);
+        }
         this.gpanel.setExitOperation(() -> {
             exitServer();
         });

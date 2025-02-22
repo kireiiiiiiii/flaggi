@@ -29,12 +29,14 @@ package flaggiclient.ui;
 import java.awt.Container;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.io.IOException;
 import java.util.ArrayList;
 
+import flaggiclient.App;
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
-import flaggiclient.util.ImageUtil;
 import flaggishared.common.GPanel.Renderable;
+import flaggishared.util.ImageUtil;
 
 /**
  * Player HUD widget class.
@@ -65,8 +67,12 @@ public class HUD implements Renderable {
         this.health = 0;
 
         // ---- Textures
-        this.healthTexture = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/spray-hp.png"), 100, false);
-        this.healthFillTexture = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/spray-hp-fill.png"), 100, false);
+        try {
+            this.healthTexture = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/spray-hp.png"), 100, false);
+            this.healthFillTexture = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/spray-hp-fill.png"), 100, false);
+        } catch (IOException e) {
+            App.LOGGER.addLog("HUD textures failed to load.", e);
+        }
     }
 
     /////////////////

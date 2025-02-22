@@ -1,30 +1,10 @@
 /*
- * Author: Matěj Šťastný
+ * Author: Matěj Šťastný aka Kirei
  * Date created: 12/2/2024
- * Github link: https://github.com/kireiiiiiiii/Flaggi
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
+ * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
-package flaggiclient.util;
+package flaggishared.util;
 
 import java.io.IOException;
 import java.net.JarURLConnection;
@@ -36,10 +16,16 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
- * A utillity method class designed to handle file related stuff.
- *
+ * TODO header, when fully implemented.
  */
 public class FileUtil {
+
+    // Private constructor to prevent instantiation
+    private FileUtil() {
+        throw new UnsupportedOperationException("FontUtil is a utility class and cannot be instantiated.");
+    }
+
+    // JAR resources -------------------------------------------------------------
 
     /**
      * Gets a list of all directories in the given path. The path must be a jar
@@ -48,7 +34,7 @@ public class FileUtil {
      * @param path - target path.
      * @return - list of {@code String} dir names.
      */
-    public static String[] listDirectoriesInJar(String path) {
+    public static String[] retrieveJarDirectoryList(String path) {
         if (!path.endsWith("/")) {
             path += "/";
         }
@@ -66,7 +52,7 @@ public class FileUtil {
                             JarEntry entry = entries.nextElement();
                             String entryName = entry.getName();
                             if (entryName.startsWith(path) && entryName.endsWith("/") && !entryName.equals(path)) {
-                                directories.add(formatDirName(path, entryName));
+                                directories.add(extractRelativeDirName(path, entryName));
                             }
 
                         }
@@ -80,17 +66,21 @@ public class FileUtil {
         return directories.toArray(new String[0]);
     }
 
+    // Private methods -----------------------------------------------------------
+
     /**
-     * Formatting method/
+     * Extracts the relative directory name from the given path. For example, if the
+     * original path is "path/to/dir/" and the path is "path/to/dir/subdir/", the
+     * method will return "subdir".
      *
-     * @see listDirectoriesInJar
-     * @param originalPath
-     * @param path
-     * @return - formatted {@code String}.
+     * @see FileUtil#retrieveJarDirectoryList(String)
+     * @param parentDirPath - parent directory path (example: "path/to/dir/").
+     * @param fullPath      - full path (example: "path/to/dir/subdir/").
+     * @return relative directory name (example: "subdir").
      */
-    private static String formatDirName(String originalPath, String path) {
-        int frontCut = originalPath.length();
-        return path.substring(frontCut, path.length() - 1);
+    private static String extractRelativeDirName(String parentDirPath, String fullPath) {
+        int frontCut = parentDirPath.length();
+        return fullPath.substring(frontCut, fullPath.length() - 1);
     }
 
 }

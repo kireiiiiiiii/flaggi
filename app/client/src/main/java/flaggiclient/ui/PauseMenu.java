@@ -36,9 +36,9 @@ import java.util.ArrayList;
 
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
-import flaggiclient.util.FontUtil;
 import flaggishared.common.GPanel.Interactable;
 import flaggishared.common.GPanel.Renderable;
+import flaggishared.util.FontUtil;
 
 /**
  * Pause menu screen UI with fade-in and fade-out animation. Contains 2 buttons:
@@ -164,7 +164,7 @@ public class PauseMenu implements Renderable, Interactable {
             g.setFont(new Font("Arial", Font.BOLD, 28));
             g.setColor(new Color(255, 255, 255, (int) (fadeProgress * 255)));
             String titleText = "Paused";
-            int[] titlePos = FontUtil.getCenteredPos(menuWidth, 50, g.getFontMetrics(), titleText);
+            int[] titlePos = FontUtil.calculateCenteredPosition(menuWidth, 50, g.getFontMetrics(), titleText);
             g.drawString(titleText, titlePos[0] + menuX, titlePos[1] + menuY + 40);
 
             // ------ Draw buttons
@@ -195,7 +195,7 @@ public class PauseMenu implements Renderable, Interactable {
 
         g.setFont(new Font("Arial", Font.BOLD, 20));
         g.setColor(new Color(textColor.getRed(), textColor.getGreen(), textColor.getBlue(), alpha));
-        int[] textPos = FontUtil.getCenteredPos(bounds.width, bounds.height, g.getFontMetrics(), text);
+        int[] textPos = FontUtil.calculateCenteredPosition(bounds.width, bounds.height, g.getFontMetrics(), text);
         g.drawString(text, bounds.x + textPos[0], bounds.y + textPos[1]);
     }
 
