@@ -69,7 +69,7 @@ import flaggiclient.ui.ToastManager;
 import flaggiclient.ui.Tree;
 import flaggishared.common.GPanel;
 import flaggishared.common.GPanel.Interactable;
-import flaggishared.common.GPanel.InteractableHandeler;
+import flaggishared.common.GPanel.InteractableHandler;
 import flaggishared.common.GPanel.Renderable;
 import flaggishared.common.GPanel.Scrollable;
 import flaggishared.common.GPanel.Typable;
@@ -82,7 +82,7 @@ import flaggishared.common.PersistentValue;
 /**
  * Main class for the LAN Game application.
  */
-public class App implements InteractableHandeler, LobbyHandler, ServerMessageHandeler {
+public class App implements InteractableHandler, LobbyHandler, ServerMessageHandeler {
 
     /////////////////
     // Constants
@@ -93,7 +93,6 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
     public static final String FILE_JAR_SEPARATOR = "/";
     public static final Logger LOGGER = Logger.getLogger(getApplicationDataFolder() + File.separator + "logs" + File.separator + "app.log"); // TODO Fix lobby
     public static final int TCP_PORT = 54321;
-    public static final int FPS = 60;
     public static final boolean SHOW_HITBOXES = false;
 
     /////////////////
@@ -171,7 +170,8 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         printHeader();
 
         // ------ Initialize UI
-        this.gpanel = new GPanel(this, FPS, this.windowSize[0], this.windowSize[1], false, PROJECT_NAME, new Color(229, 204, 255));
+        this.gpanel = new GPanel(this, this.windowSize[0], this.windowSize[1], false, PROJECT_NAME, new Color(229, 204, 255));
+        this.gpanel.setFpsCap(120);
         try {
             Image iconWin = ImageUtil.getImageFromFile("icons/icon_win.png");
             Image iconMac = ImageUtil.getImageFromFile("icons/icon_mac.png");
@@ -203,12 +203,12 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         this.health = -1;
 
         // ------ Get entered username
-        for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+        for (MenuScreen m : this.gpanel.getWidgetsOfClass(MenuScreen.class)) {
             this.username = m.getEnteredUsername();
         }
         String userNameValidation = isValidUsername(this.username);
         if (userNameValidation != null) {
-            for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+            for (MenuScreen m : this.gpanel.getWidgetsOfClass(MenuScreen.class)) {
                 m.setErrorMessage(userNameValidation);
             }
             return;
@@ -217,11 +217,11 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
 
         // ------ Get IP
         this.serverIP = "";
-        for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+        for (MenuScreen m : this.gpanel.getWidgetsOfClass(MenuScreen.class)) {
             serverIP = m.getEnteredIP();
         }
         if (serverIP.length() < 1) {
-            for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+            for (MenuScreen m : this.gpanel.getWidgetsOfClass(MenuScreen.class)) {
                 m.setErrorMessage("No server IP entered.");
             }
             return;
@@ -238,7 +238,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
 
         // ------ Check if a Flaggi server is reachable there
         if (!Client.isFlaggiServerRunning(serverAddress, TCP_PORT)) {
-            for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+            for (MenuScreen m : this.gpanel.getWidgetsOfClass(MenuScreen.class)) {
                 m.setErrorMessage("Not a valid IP. Try again.");
                 return;
             }
@@ -257,15 +257,15 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         this.clientID = this.localClient.getId();
         this.localPlayer = new Player(new int[] { ScreenUtil.getScreenDimensions()[0] / 2, ScreenUtil.getScreenDimensions()[1] / 2 }, username, skinName, this.clientID);
         this.gpanel.add(this.localPlayer);
-        this.gpanel.hideAllWidgets();
+        this.gpanel.toggleWidgetsVisibility(false);
         this.gpanel.add(new InviteScreen(this, () -> {
             this.localClient.sendTCPMessageToServer(ServerRequests.GET_IDLE_CLIENTS);
         }));
-        this.gpanel.showTaggedWidgets(WidgetTags.LOBBY);
+        this.gpanel.toggleTaggedWidgetsVisibility(WidgetTags.LOBBY, true);
 
         // ------ Start game loop
         this.movementEnabled = true;
-        this.gameLoop = new GameLoop(FPS);
+        this.gameLoop = new GameLoop(60);
         this.gameLoop.start();
         LOGGER.addLog("Game loop started");
     }
@@ -281,13 +281,13 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         this.currentMap = PersistentValue.fromJson(jsonMapData, MapData.class).scaleMap(Sprite.SPRITE_SCALING);
 
         // ---- Remove old widgets
-        for (Floor f : this.gpanel.getWidgetsByClass(Floor.class)) {
+        for (Floor f : this.gpanel.getWidgetsOfClass(Floor.class)) {
             this.gpanel.remove(f);
         }
-        for (Tree t : this.gpanel.getWidgetsByClass(Tree.class)) {
+        for (Tree t : this.gpanel.getWidgetsOfClass(Tree.class)) {
             this.gpanel.remove(t);
         }
-        for (Flag f : this.gpanel.getWidgetsByClass(Flag.class)) {
+        for (Flag f : this.gpanel.getWidgetsOfClass(Flag.class)) {
             this.gpanel.remove(f);
         }
 
@@ -303,16 +303,17 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         // ---- Set render
         this.movementEnabled = true;
         this.localPlayer.setHealth(-1);
-        this.gpanel.hideAllWidgets();
-        this.gpanel.showTaggedWidgets(WidgetTags.GAME_ELEMENTS);
+        this.gpanel.toggleWidgetsVisibility(false);
+        this.gpanel.toggleTaggedWidgetsVisibility(WidgetTags.GAME_ELEMENTS, true);
         updateCameraPosition();
     }
 
     public void goIdle() {
         this.movementEnabled = false;
-        this.gpanel.hideAllWidgets();
-        this.gpanel.showTaggedWidgets(WidgetTags.LOBBY); // TODO resume update task
-                                                         // TODO stop game loop?
+        this.gpanel.toggleWidgetsVisibility(false);
+        this.gpanel.toggleTaggedWidgetsVisibility(WidgetTags.LOBBY, true);
+        // TODO resume update task
+        // TODO stop game loop?
     }
 
     /**
@@ -344,7 +345,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
     @Override
     public void timeout() {
         goToMenu();
-        for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+        for (MenuScreen m : this.gpanel.getWidgetsOfClass(MenuScreen.class)) {
             m.setErrorMessage("Server shut down. Please try again.");
         }
     }
@@ -383,11 +384,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
     public void togglePauseMenu() {
         this.paused = !this.paused;
         this.movementEnabled = !this.paused;
-        if (this.paused) {
-            this.gpanel.showTaggedWidgets(WidgetTags.PAUSE_MENU);
-        } else {
-            this.gpanel.hideTaggedWidgets(WidgetTags.PAUSE_MENU);
-        }
+        this.gpanel.toggleTaggedWidgetsVisibility(WidgetTags.PAUSE_MENU, this.paused);
     }
 
     /**
@@ -397,7 +394,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
     public void goToMenu() {
 
         // ------ Clear the menu screen error message
-        for (MenuScreen m : this.gpanel.getWidgetsByClass(MenuScreen.class)) {
+        for (MenuScreen m : this.gpanel.getWidgetsOfClass(MenuScreen.class)) {
             m.clearErrorMessage();
         }
 
@@ -414,8 +411,8 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
         this.pos[1] = 0;
 
         // ------ Initialize UI
-        this.gpanel.hideAllWidgets();
-        this.gpanel.showTaggedWidgets(WidgetTags.MENU_ELEMENTS);
+        this.gpanel.toggleWidgetsVisibility(false);
+        this.gpanel.toggleTaggedWidgetsVisibility(WidgetTags.MENU_ELEMENTS, true);
         LOGGER.addLog("Menu screen active.");
     }
 
@@ -560,7 +557,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
             }
         }
 
-        for (InviteScreen l : this.gpanel.getWidgetsByClass(InviteScreen.class)) {
+        for (InviteScreen l : this.gpanel.getWidgetsOfClass(InviteScreen.class)) {
             l.setClients(clients);
         }
     }
@@ -573,7 +570,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
      */
     public void updatePlayerData() {
         String localAnimationFrame = null;
-        for (Player player : this.gpanel.getWidgetsByClass(Player.class)) {
+        for (Player player : this.gpanel.getWidgetsOfClass(Player.class)) {
             if (!player.isEnemy()) {
                 localAnimationFrame = player.getAnimationFrame();
             }
@@ -581,7 +578,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
 
         // Get the current players from the panel and their positions from the
         // server
-        ArrayList<Player> players = this.gpanel.getWidgetsByClass(Player.class);
+        ArrayList<Player> players = this.gpanel.getWidgetsOfClass(Player.class);
         GameDataStruct struct = localClient.updatePlayerPositions(new ClientStruct(pos[0], pos[1], this.clientID, this.health, this.username, localAnimationFrame, getPlayerObjectDataString(true)));
         if (struct == null) {
             return;
@@ -606,7 +603,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
             // Health
             this.health = localPlayerStruct.getHealth();
             this.localPlayer.setHealth(this.health);
-            for (HUD hud : this.gpanel.getWidgetsByClass(HUD.class)) {
+            for (HUD hud : this.gpanel.getWidgetsOfClass(HUD.class)) {
                 hud.setHealth((int) health);
             }
         }
@@ -737,7 +734,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
             }
         }
 
-        List<Bullet> bullets = this.gpanel.getWidgetsByClass(Bullet.class);
+        List<Bullet> bullets = this.gpanel.getWidgetsOfClass(Bullet.class);
 
         if (oldObjectData != null) { // If empty remove all
             String[] oldObjects = oldObjectData.split(",");
@@ -1008,7 +1005,7 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
      */
     private void updateCameraPosition() {
         int[] screen = ScreenUtil.getScreenDimensions();
-        this.gpanel.setCameraPosition(new int[] { -this.pos[0] + screen[0] / 2, -this.pos[1] + screen[1] / 2 });
+        this.gpanel.setViewportOffset(new int[] { -this.pos[0] + screen[0] / 2, -this.pos[1] + screen[1] / 2 });
     }
 
     /////////////////
@@ -1086,6 +1083,8 @@ public class App implements InteractableHandeler, LobbyHandler, ServerMessageHan
             }
             updatePlayerData();
             gpanel.add(new ConnectionWidget());
+
+            System.out.println(gpanel.getFps());
         }
 
         /**

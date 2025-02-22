@@ -41,16 +41,16 @@ import javax.swing.SwingUtilities;
 
 import flaggieditor.widgets.MapRender;
 import flaggishared.common.GPanel;
+import flaggishared.common.GPanel.InteractableHandler;
 import flaggishared.common.MapData;
-import flaggishared.common.PersistentValue;
-import flaggishared.common.GPanel.InteractableHandeler;
 import flaggishared.common.MapData.ObjectType;
+import flaggishared.common.PersistentValue;
 
 /**
  * Main application class.
  *
  */
-public class App implements InteractableHandeler {
+public class App implements InteractableHandler {
 
     /////////////////
     // Variables
@@ -80,7 +80,7 @@ public class App implements InteractableHandeler {
 
         // ----- Console
         this.map = setupMap(console);
-        this.gpanel = new GPanel(this, 60, windowSize[0], windowSize[1], false, "Flaggi Editor", Color.BLACK);
+        this.gpanel = new GPanel(this, windowSize[0], windowSize[1], false, "Flaggi Editor", Color.BLACK);
         this.gpanel.add(new MapRender(map.get()));
         console(console, this.map);
         console.close();
