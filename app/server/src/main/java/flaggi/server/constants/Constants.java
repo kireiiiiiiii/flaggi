@@ -21,14 +21,19 @@ public class Constants {
         throw new UnsupportedOperationException("Constants is a constants class and cannot be instantiated.");
     }
 
-    // Main constants -----------------------------------------------------------
+    // Paths --------------------------------------------------------------------
 
     public static final String APP_DATA_DIR_NAME = "kireiiiiiiii.flaggi.server";
-    private static final ConfigManager CONFIG_FILE = new ConfigManager(FileUtil.getApplicationDataFolder() + File.separator + Constants.APP_DATA_DIR_NAME + File.separator + "configs" + File.separator + "config.properties", "/configs/config.properties");;
+    public static final String LOG_FILE = String.join(File.separator, FileUtil.getApplicationDataFolder(), Constants.APP_DATA_DIR_NAME, "logs", "latest.txt");
+    public static final ConfigManager CONFIG = new ConfigManager(String.join(File.separator, FileUtil.getApplicationDataFolder(), Constants.APP_DATA_DIR_NAME, "configs", "config.properties"), "/configs/config.properties");
 
     // Network ------------------------------------------------------------------
 
-    public static final int TCP_PORT = CONFIG_FILE.getIntValue("tcp.port");
-    public static final int UDP_PORT = CONFIG_FILE.getIntValue("udp.port");
+    public static final int TCP_PORT = CONFIG.getIntValue("tcp.port");
+    public static final int UDP_PORT = CONFIG.getIntValue("udp.port");
+
+    // Update -------------------------------------------------------------------
+
+    public static final int UPDATE_INTERVAL = 16;
 
 }

@@ -22,17 +22,38 @@ public class Logger {
         throw new UnsupportedOperationException("Logger class cannot be instantiated.");
     }
 
-    private static final LogLevel[] IGNORE = { LogLevel.DEBUG, LogLevel.TCPREQUESTS };
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static LogLevel[] ignore = new LogLevel[0];
     private static File logFile = null;
 
-    // Main ----------------------------------------------------------------------
+    // Setup ---------------------------------------------------------------------
+
+    public static void setLogFile(String path) {
+        try {
+            logFile = new File(path);
+            if (!logFile.exists()) {
+                logFile.getParentFile().mkdirs();
+                logFile.createNewFile();
+            }
+            try (FileWriter fw = new FileWriter(logFile, false)) {
+                fw.write("");
+            }
+        } catch (IOException e) {
+            log(LogLevel.WARN, "IO Exception caught when setting log file.", e);
+        }
+    }
+
+    public static void setLogLevelsToIgnore(LogLevel... logLevels) {
+        ignore = logLevels;
+    }
+
+    // Logging -------------------------------------------------------------------
 
     /**
      * @see Logger.LogLevel
      */
     public static void log(LogLevel level, String message, Exception e) {
-        for (LogLevel l : IGNORE) {
+        for (LogLevel l : ignore) {
             if (level == l)
                 return;
         }
@@ -62,23 +83,6 @@ public class Logger {
         log(level, message, null);
     }
 
-    // Modifiers -----------------------------------------------------------------
-
-    public static void setLogFile(String path) {
-        try {
-            logFile = new File(path);
-            if (!logFile.exists()) {
-                logFile.getParentFile().mkdirs();
-                logFile.createNewFile();
-            }
-            try (FileWriter fw = new FileWriter(logFile, false)) {
-                fw.write("");
-            }
-        } catch (IOException e) {
-            log(LogLevel.WARN, "IO Exception caught when setting log file.", e);
-        }
-    }
-
     // Log types -----------------------------------------------------------------
 
     public enum LogLevel {
@@ -86,9 +90,8 @@ public class Logger {
         WARN(TermColors.YELLOW), //
         ERROR(TermColors.RED), //
         DEBUG(TermColors.BLUE), //
-        CONNECTION(TermColors.CYAN), //
-        PING(TermColors.BLACK), //
-        TCPREQUESTS(TermColors.PURPLE);
+        TRACE(TermColors.CYAN), //
+        FATAL(TermColors.PURPLE);
 
         private final String color;
 
@@ -104,7 +107,6 @@ public class Logger {
     // Private -------------------------------------------------------------------
 
     private static class TermColors {
-        public static final String BLACK = "\033[0;30m";
         public static final String RED = "\033[0;31m";
         public static final String GREEN = "\033[0;32m";
         public static final String YELLOW = "\033[0;33m";
