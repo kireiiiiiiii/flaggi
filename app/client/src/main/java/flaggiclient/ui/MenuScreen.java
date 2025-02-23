@@ -1,35 +1,21 @@
 /*
- * Author: Matěj Šťastný
+ * Author: Matěj Šťastný aka Kirei
  * Date created: 11/27/2024
- * Github link: https://github.com/kireiiiiiiii/Flaggi
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
+ * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
 package flaggiclient.ui;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Font;
+import java.awt.FontFormatException;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Rectangle;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.util.ArrayList;
 
 import flaggiclient.App;
 import flaggiclient.constants.WidgetTags;
@@ -41,39 +27,26 @@ import flaggishared.util.FontUtil;
 import flaggishared.util.ImageUtil;
 
 /**
- * The main menu screen for Flaggi.
- *
+ * The main menu screen widget.
  */
-public class MenuScreen implements Renderable, Interactable, Typable {
+public class MenuScreen extends Renderable implements Interactable, Typable {
 
-    /////////////////
-    // Variables
-    ////////////////
-
-    private boolean visible;
-
-    // Button bounding boxes
-    private Rectangle nameFieldBounds, ipFieldBounds, startButtonBounds;
-    private Image logo, background, textField, button;
-    private Font font;
     private String nameUserInput = "", ipUserInput = "", errorMessage = "";
     private boolean isNameFieldFocused = false, isIpFieldFocused = false;
+    private Rectangle nameFieldBounds, ipFieldBounds, startButtonBounds;
+    private Image logo, background, textField, button;
     private Runnable startButtonAction;
+    private Font font;
 
-    /////////////////
-    // Constructor
-    ////////////////
+    // Constructor --------------------------------------------------------------
 
     /**
-     * Default widget constructor.
-     *
      * @param startAction - {@code Runnable} to be executed when the start button is
      *                    clicked.
      */
     public MenuScreen(Runnable startAction, String name, String ip) {
+        super(ZIndex.MENU_SCREEN, WidgetTags.MENU_ELEMENTS);
 
-        // Set variables
-        this.visible = true;
         this.startButtonAction = startAction;
         this.nameUserInput = name == null ? "" : name;
         this.ipUserInput = ip == null ? "" : ip;
@@ -83,7 +56,6 @@ public class MenuScreen implements Renderable, Interactable, Typable {
             App.LOGGER.addLog("Error loading font.", e);
             this.font = new Font("Arial", Font.PLAIN, 25);
         }
-
         try {
             this.logo = ImageUtil.getImageFromFile("ui/logo.png");
             this.background = ImageUtil.getImageFromFile("ui/menu_screen.png");
@@ -93,16 +65,13 @@ public class MenuScreen implements Renderable, Interactable, Typable {
             App.LOGGER.addLog("Couldn't load MenuScreen textures.", e);
         }
 
-        // Initialize rectangles with dummy values, they will be updated during
-        // rendering
+        // Dummy values
         this.nameFieldBounds = new Rectangle(0, 0, this.textField.getWidth(null), this.textField.getHeight(null));
         this.ipFieldBounds = (Rectangle) this.nameFieldBounds.clone();
         this.startButtonBounds = new Rectangle(0, 0, this.button.getWidth(null), this.button.getHeight(null));
     }
 
-    /////////////////
-    // Rendering
-    /////////////////
+    // Rendering ----------------------------------------------------------------
 
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
@@ -158,41 +127,13 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
     }
 
-    @Override
-    public int getZIndex() {
-        return ZIndex.MENU_SCREEN;
-    }
-
-    @Override
-    public boolean isVisible() {
-        return visible;
-    }
-
-    @Override
-    public void hide() {
-        visible = false;
-    }
-
-    @Override
-    public void show() {
-        visible = true;
-    }
-
-    @Override
-    public ArrayList<String> getTags() {
-        ArrayList<String> tags = new ArrayList<>();
-        tags.add(WidgetTags.MENU_ELEMENTS);
-        return tags;
-    }
-
-    /////////////////
-    // Interactions
-    ////////////////
+    // Interaction --------------------------------------------------------------
 
     @Override
     public boolean interact(MouseEvent e) {
-        if (!visible)
+        if (!this.isVisible()) {
             return false;
+        }
 
         if (nameFieldBounds.contains(e.getPoint())) {
             isNameFieldFocused = true;
@@ -204,9 +145,7 @@ public class MenuScreen implements Renderable, Interactable, Typable {
             return true;
         } else if (startButtonBounds.contains(e.getPoint())) {
             if (startButtonAction != null) {
-                synchronized (this.errorMessage) {
-                    this.errorMessage = "Connecting...";
-                }
+                clearErrorMessage();
                 startButtonAction.run();
             }
             return true;
@@ -218,8 +157,9 @@ public class MenuScreen implements Renderable, Interactable, Typable {
 
     @Override
     public void type(KeyEvent e) {
-        if (!visible)
+        if (!this.isVisible()) {
             return;
+        }
 
         char c = e.getKeyChar();
         if (isNameFieldFocused) {
@@ -237,46 +177,27 @@ public class MenuScreen implements Renderable, Interactable, Typable {
         }
     }
 
-    /////////////////
-    // Accesors & modifiers
-    ////////////////
+    // Modifiers --------------------------------------------------------------
 
-    /**
-     * Displays an error message on the menu screen.
-     *
-     * @param errorMessage
-     */
     public void setErrorMessage(String errorMessage) {
         synchronized (this.errorMessage) {
             this.errorMessage = errorMessage;
         }
     }
 
-    /**
-     * Clears the error message field.
-     *
-     */
     public void clearErrorMessage() {
         synchronized (this.errorMessage) {
             this.errorMessage = "";
         }
     }
 
-    /**
-     * Returns the entered user name.
-     *
-     * @return
-     */
-    public String getEnteredUsername() {
+    // Accesors --------------------------------------------------------------
+
+    public String getUsernameFieldContent() {
         return nameUserInput == null ? "" : nameUserInput;
     }
 
-    /**
-     * Gets the entered IP address.
-     *
-     * @return
-     */
-    public String getEnteredIP() {
+    public String getIpFieldConctent() {
         return ipUserInput == null ? "" : ipUserInput;
     }
 

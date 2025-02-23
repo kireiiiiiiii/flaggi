@@ -1,27 +1,7 @@
 /*
- * Author: Matěj Šťastný
+ * Author: Matěj Šťastný aka Kirei
  * Date created: 11/6/2024
- * Github link: https://github.com/kireiiiiiiii/Flaggi
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
+ * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
 package flaggiclient.ui;
@@ -29,7 +9,6 @@ package flaggiclient.ui;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Graphics2D;
-import java.util.ArrayList;
 
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
@@ -37,52 +16,17 @@ import flaggishared.common.GPanel.Renderable;
 
 /**
  * Background widget.
- *
  */
-public class Background implements Renderable {
+public class Background extends Renderable {
 
-    /////////////////
-    // Variables
-    ////////////////
-
-    private boolean visible = true;
-
-    /////////////////
-    // Rendering
-    ////////////////
+    public Background() {
+        super(ZIndex.BACKGROUND, WidgetTags.MENU_ELEMENTS, WidgetTags.GAME_ELEMENTS);
+    }
 
     @Override
-    public void render(Graphics2D g, int[] size, int[] offset, Container focusCycleRootAncestor) {
+    public void render(Graphics2D g, int[] size, int[] viewportOffset, Container focusCycleRootAncestor) {
         g.setColor(new Color(153, 192, 255));
         g.fillRect(0, 0, size[0], size[1]);
-    }
-
-    @Override
-    public int getZIndex() {
-        return ZIndex.BACKGROUND;
-    }
-
-    @Override
-    public boolean isVisible() {
-        return this.visible;
-    }
-
-    @Override
-    public void hide() {
-        this.visible = false;
-    }
-
-    @Override
-    public void show() {
-        this.visible = true;
-    }
-
-    @Override
-    public ArrayList<String> getTags() {
-        ArrayList<String> tags = new ArrayList<String>();
-        tags.add(WidgetTags.MENU_ELEMENTS);
-        tags.add(WidgetTags.GAME_ELEMENTS);
-        return tags;
     }
 
 }

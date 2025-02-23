@@ -22,7 +22,9 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -359,14 +361,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      */
     public void toggleWidgetsVisibility(boolean visible) {
         synchronized (this.widgets) {
-            for (Renderable r : this.widgets) {
-                // r.setVisibility(visible); // TODO new widget class
-                if (visible) {
-                    r.show();
-                } else {
-                    r.hide();
-                }
-            }
+            this.widgets.forEach(r -> r.setVisibility(visible));
         }
     }
 
@@ -375,16 +370,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      */
     public void toggleTaggedWidgetsVisibility(String tag, boolean visible) {
         synchronized (this.widgets) {
-            for (Renderable r : this.widgets) {
-                if (r.getTags().contains(tag)) {
-                    // r.setVisibility(visible); // TODO new widget class
-                    if (visible) {
-                        r.show();
-                    } else {
-                        r.hide();
-                    }
-                }
-            }
+            this.widgets.stream().filter(r -> r.getTags().contains(tag)).forEach(r -> r.setVisibility(visible));
         }
     }
 
@@ -467,7 +453,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
         public void start() {
             running = true;
-            Thread renderThread = new Thread(this, "Render Thread");
+            Thread renderThread = new Thread(this, GPanel.class.getSimpleName() + ": " + RenderingEngine.class.getSimpleName() + ": Render Thread");
             renderThread.start();
         }
 
@@ -497,14 +483,12 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
                 }
 
                 if (targetFPS > 0) {
-                    long frameTime = 1_000_000_000 / targetFPS;
-                    long elapsedTime = System.nanoTime() - startTime;
-                    long sleepTime = frameTime - elapsedTime;
+                    long sleepTime = (1_000_000_000 / targetFPS) - (System.nanoTime() - startTime);
                     if (sleepTime > 0) {
                         try {
                             Thread.sleep(sleepTime / 1_000_000, (int) (sleepTime % 1_000_000));
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            Thread.currentThread().interrupt();
                         }
                     }
                 } else {
@@ -524,86 +508,47 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
     // Renderable abs class -----------------------------------------------------
 
-    // Old interface, implement new one below in next commit
-    public interface Renderable {
+    /**
+     * Abstract base class for UI elements.
+     */
+    public static abstract class Renderable {
+        private final AtomicBoolean visibility = new AtomicBoolean(true);
+        private final List<String> tags = new ArrayList<>();
+        private int zIndex;
 
-        public void render(Graphics2D g, int[] size, int[] viewportOffset, Container focusCycleRootAncestor);
+        public Renderable(int zIndex, String... initialTags) {
+            this.zIndex = zIndex;
+            if (initialTags != null) {
+                tags.addAll(Arrays.asList(initialTags));
+            }
+        }
 
-        public int getZIndex();
+        public abstract void render(Graphics2D g, int[] size, int[] viewportOffset, Container focusCycleRootAncestor);
 
-        public boolean isVisible();
+        public int getZIndex() {
+            return this.zIndex;
+        }
 
-        public void hide();
+        public void setZIndex(int zIndex) {
+            this.zIndex = zIndex;
+        }
 
-        public void show();
+        public boolean isVisible() {
+            return this.visibility.get();
+        }
 
-        public ArrayList<String> getTags();
+        public void setVisibility(boolean visibility) {
+            this.visibility.set(visibility);
+        }
 
+        public List<String> getTags() {
+            return this.tags;
+        }
+
+        public void addTag(String tag) {
+            this.tags.add(tag);
+        }
     }
-
-    // /**
-    // * Abstract base class for UI elements.
-    // */
-    // public abstract class Renderable {
-    // private final AtomicBoolean visibility = new AtomicBoolean(true);
-    // private final List<String> tags = new ArrayList<>();
-    // private final int zIndex;
-
-    // public Renderable(int zIndex, String... initialTags) {
-    // this.zIndex = zIndex;
-    // if (initialTags != null) {
-    // tags.addAll(Arrays.asList(initialTags));
-    // }
-    // }
-
-    // /**
-    // * Renders the object using a {@code Graphics2D} object reference.
-    // */
-    // public abstract void render(Graphics2D g, int[] size, int[] origin, Container
-    // focusCycleRootAncestor);
-
-    // /**
-    // * Returns the Z-Index of the object.
-    // */
-    // public int getZIndex() {
-    // return zIndex;
-    // }
-
-    // /**
-    // * Returns the visibility status.
-    // */
-    // public boolean isVisible() {
-    // return visibility.get();
-    // }
-
-    // /**
-    // * Hides the element (prevents rendering).
-    // */
-    // public void hide() {
-    // visibility.set(false);
-    // }
-
-    // /**
-    // * Shows the element (allows rendering).
-    // */
-    // public void show() {
-    // visibility.set(true);
-    // }
-
-    // /**
-    // * Returns the tags of the element.
-    // */
-    // public List<String> getTags() {
-    // return tags;
-    // }
-
-    // /**
-    // * Adds a new tag to the element.
-    // */
-    // public void addTag(String tag) {
-    // tags.add(tag);
-    // }
-    // }
 
     // Widget input interfaces --------------------------------------------------
 

@@ -1,3 +1,9 @@
+/*
+ * Author: Matěj Šťastný ala Kirei
+ * Date created: 1/0/2024
+ * Github link: https://github.com/kireiiiiiiii/flaggi
+ */
+
 package flaggiclient.ui;
 
 import java.awt.Color;
@@ -6,13 +12,15 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 
 import flaggiclient.constants.ZIndex;
 import flaggishared.common.GPanel.Interactable;
 import flaggishared.common.GPanel.Renderable;
 
-public class ConfirmationWindow implements Renderable, Interactable {
+/**
+ * A basic yes/no user confirmation window.
+ */
+public class ConfirmationWindow extends Renderable implements Interactable {
 
     // Dimensions and styling
     private static final int DIALOG_WIDTH = 400;
@@ -21,6 +29,7 @@ public class ConfirmationWindow implements Renderable, Interactable {
     private static final Color BORDER_COLOR = new Color(200, 200, 200);
     private static final Color BUTTON_COLOR = new Color(70, 140, 70);
     private static final Color TEXT_COLOR = Color.WHITE;
+    private int dialogX, dialogY;
 
     // Dialog content
     private String question;
@@ -28,13 +37,14 @@ public class ConfirmationWindow implements Renderable, Interactable {
     private Runnable onNo;
 
     // State
-    private boolean visible = false;
     private Rectangle yesButtonBounds;
     private Rectangle noButtonBounds;
 
-    private int dialogX, dialogY;
+    // Constructors -------------------------------------------------------------
 
     public ConfirmationWindow() {
+        super(ZIndex.TOAST);
+
         int buttonWidth = 100;
         int buttonHeight = 40;
         int buttonY = (DIALOG_HEIGHT / 2) + 40;
@@ -50,27 +60,16 @@ public class ConfirmationWindow implements Renderable, Interactable {
      * @param onYes    The callback for the Yes button
      * @param onNo     The callback for the No button
      */
-    public void show(String question, Runnable onYes, Runnable onNo) {
+    public void displayConfirmation(String question, Runnable onYes, Runnable onNo) {
         this.question = question;
         this.onYes = onYes;
         this.onNo = onNo;
-        this.visible = true;
     }
+
+    // Rendering ----------------------------------------------------------------
 
     @Override
-    public void show() {
-        this.visible = true;
-    }
-
-    /**
-     * Hides the confirmation dialog.
-     */
-    public void hide() {
-        this.visible = false;
-    }
-
-    @Override
-    public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
+    public void render(Graphics2D g, int[] size, int[] viewportOffset, Container focusCycleRootAncestor) {
         int screenWidth = size[0];
         int screenHeight = size[1];
 
@@ -115,43 +114,26 @@ public class ConfirmationWindow implements Renderable, Interactable {
         g.drawString(text, x + (width - textWidth) / 2, y + (height / 2) + 5);
     }
 
+    // Interaction --------------------------------------------------------------
+
     @Override
     public boolean interact(MouseEvent e) {
         int mouseX = e.getX() - this.dialogX;
         int mouseY = e.getY() - this.dialogY;
 
-        // Check Yes button
         if (yesButtonBounds.contains(mouseX, mouseY)) {
             if (onYes != null)
                 onYes.run();
-            hide();
             return true;
         }
 
-        // Check No button
         if (noButtonBounds.contains(mouseX, mouseY)) {
             if (onNo != null)
                 onNo.run();
-            hide();
             return true;
         }
 
         return false;
-    }
-
-    @Override
-    public int getZIndex() {
-        return ZIndex.TOAST;
-    }
-
-    @Override
-    public boolean isVisible() {
-        return visible;
-    }
-
-    @Override
-    public ArrayList<String> getTags() {
-        return new ArrayList<>();
     }
 
 }

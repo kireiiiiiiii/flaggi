@@ -1,35 +1,21 @@
 /*
- * Author: Matěj Šťastný
+ * Author: Matěj Šťastný aka Kirei
  * Date created: 1/9/2025
- * Github link: https://github.com/kireiiiiiiii/Flaggi
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
+ * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
 package flaggiclient.ui;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import flaggiclient.common.RepeatedTask;
@@ -40,56 +26,35 @@ import flaggishared.common.GPanel.Renderable;
 import flaggishared.common.GPanel.Scrollable;
 
 /**
- * Lobby
+ * Lobby screen where other players can be invited into the game.
  */
-public class InviteScreen implements Renderable, Scrollable, Interactable {
-
-    /////////////////
-    // Constants
-    ////////////////
+public class LobbyInviteScreen extends Renderable implements Scrollable, Interactable {
 
     private static final int SCROLL_SPEED = 15;
     private static final int UPDATE_INTERVAL = 3;
 
-    /////////////////
-    // Variables
-    ////////////////
-
-    private boolean visible = false;
     private List<ClientItem> clientItems;
     private LobbyHandler handler;
     private int scrollOffset = 0;
     private int maxScroll = 0;
-
-    /////////////////
-    // Dimensions
-    ////////////////
 
     private static final int ITEM_HEIGHT = 60;
     private static final int PADDING = 15;
     private static final int BUTTON_WIDTH = 100;
     private static final int BUTTON_HEIGHT = 35;
 
-    /////////////////
-    // Constructor
-    ////////////////
+    // Constructor --------------------------------------------------------------
 
     /**
-     * Default constructor for the lobby widget.
-     *
-     * @param handler - lobby handeler.
-     * @param update  - the update lobby function.
+     * @param update Updated list fetching.
      */
-    public InviteScreen(LobbyHandler handler, Runnable update) {
+    public LobbyInviteScreen(LobbyHandler handler, Runnable update) {
+        super(ZIndex.MENU_SCREEN, WidgetTags.LOBBY);
         RepeatedTask task = new RepeatedTask();
         task.scheduleTask(update, UPDATE_INTERVAL, TimeUnit.SECONDS);
         this.clientItems = new ArrayList<>();
         this.handler = handler;
     }
-
-    /////////////////
-    // Rendering
-    ////////////////
 
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
@@ -98,7 +63,7 @@ public class InviteScreen implements Renderable, Scrollable, Interactable {
         g.fillRect(0, 0, size[0], size[1]);
 
         // Header
-        g.setColor(new Color(50, 50, 50)); // Slightly lighter gray
+        g.setColor(new Color(50, 50, 50));
         g.fillRect(0, 0, size[0], 70);
         g.setColor(Color.WHITE);
         g.setFont(new Font("SansSerif", Font.BOLD, 24));
@@ -111,7 +76,6 @@ public class InviteScreen implements Renderable, Scrollable, Interactable {
         for (ClientItem item : clientItems) {
             renderClientItem(g, item, yOffset, size);
             yOffset += ITEM_HEIGHT + PADDING;
-
             if (yOffset > size[1])
                 break;
         }
@@ -139,36 +103,7 @@ public class InviteScreen implements Renderable, Scrollable, Interactable {
         item.buttonBounds.y = yOffset + 10;
     }
 
-    @Override
-    public int getZIndex() {
-        return ZIndex.MENU_SCREEN;
-    }
-
-    @Override
-    public boolean isVisible() {
-        return this.visible;
-    }
-
-    @Override
-    public void hide() {
-        this.visible = false;
-    }
-
-    @Override
-    public void show() {
-        this.visible = true;
-    }
-
-    @Override
-    public ArrayList<String> getTags() {
-        ArrayList<String> tags = new ArrayList<>();
-        tags.add(WidgetTags.LOBBY);
-        return tags;
-    }
-
-    /////////////////
-    // Interactions
-    ////////////////
+    // Interaction --------------------------------------------------------------
 
     @Override
     public boolean interact(MouseEvent e) {
@@ -184,10 +119,6 @@ public class InviteScreen implements Renderable, Scrollable, Interactable {
 
         return false;
     }
-
-    /////////////////
-    // Scrolling
-    ////////////////
 
     @Override
     public void scroll(MouseWheelEvent e) {
@@ -205,6 +136,8 @@ public class InviteScreen implements Renderable, Scrollable, Interactable {
         int totalHeight = clientItems.size() * (ITEM_HEIGHT + PADDING) + 80;
         maxScroll = Math.max(0, totalHeight - size[1]);
     }
+
+    // Modifiers ----------------------------------------------------------------
 
     public void setClients(Map<Integer, String> clients) {
         clientItems.clear();
@@ -226,17 +159,11 @@ public class InviteScreen implements Renderable, Scrollable, Interactable {
         }
     }
 
-    /////////////////
-    // Interface
-    ////////////////
+    // Nested -------------------------------------------------------------------
 
     public interface LobbyHandler {
         void invitePlayer(String playerName, int playerID);
     }
-
-    /////////////////
-    // Item class
-    ////////////////
 
     private static class ClientItem {
         public String name;

@@ -60,8 +60,8 @@ import flaggiclient.ui.ConnectionWidget;
 import flaggiclient.ui.Flag;
 import flaggiclient.ui.Floor;
 import flaggiclient.ui.HUD;
-import flaggiclient.ui.InviteScreen;
-import flaggiclient.ui.InviteScreen.LobbyHandler;
+import flaggiclient.ui.LobbyInviteScreen;
+import flaggiclient.ui.LobbyInviteScreen.LobbyHandler;
 import flaggiclient.ui.MenuScreen;
 import flaggiclient.ui.PauseMenu;
 import flaggiclient.ui.Player;
@@ -204,7 +204,7 @@ public class App implements InteractableHandler, LobbyHandler, ServerMessageHand
 
         // ------ Get entered username
         for (MenuScreen m : this.gpanel.getWidgetsOfClass(MenuScreen.class)) {
-            this.username = m.getEnteredUsername();
+            this.username = m.getUsernameFieldContent();
         }
         String userNameValidation = isValidUsername(this.username);
         if (userNameValidation != null) {
@@ -218,7 +218,7 @@ public class App implements InteractableHandler, LobbyHandler, ServerMessageHand
         // ------ Get IP
         this.serverIP = "";
         for (MenuScreen m : this.gpanel.getWidgetsOfClass(MenuScreen.class)) {
-            serverIP = m.getEnteredIP();
+            serverIP = m.getIpFieldConctent();
         }
         if (serverIP.length() < 1) {
             for (MenuScreen m : this.gpanel.getWidgetsOfClass(MenuScreen.class)) {
@@ -258,7 +258,7 @@ public class App implements InteractableHandler, LobbyHandler, ServerMessageHand
         this.localPlayer = new Player(new int[] { ScreenUtil.getScreenDimensions()[0] / 2, ScreenUtil.getScreenDimensions()[1] / 2 }, username, skinName, this.clientID);
         this.gpanel.add(this.localPlayer);
         this.gpanel.toggleWidgetsVisibility(false);
-        this.gpanel.add(new InviteScreen(this, () -> {
+        this.gpanel.add(new LobbyInviteScreen(this, () -> {
             this.localClient.sendTCPMessageToServer(ServerRequests.GET_IDLE_CLIENTS);
         }));
         this.gpanel.toggleTaggedWidgetsVisibility(WidgetTags.LOBBY, true);
@@ -298,7 +298,7 @@ public class App implements InteractableHandler, LobbyHandler, ServerMessageHand
         // ---- Set the local player's position
         this.pos[0] = first ? this.currentMap.getSpawnpoint().oneX : this.currentMap.getSpawnpoint().twoX;
         this.pos[1] = first ? this.currentMap.getSpawnpoint().oneY : this.currentMap.getSpawnpoint().twoY;
-        this.localPlayer.setPos(new int[] { ScreenUtil.getScreenDimensions()[0] / 2, ScreenUtil.getScreenDimensions()[1] / 2 });
+        this.localPlayer.setPosition(new int[] { ScreenUtil.getScreenDimensions()[0] / 2, ScreenUtil.getScreenDimensions()[1] / 2 });
 
         // ---- Set render
         this.movementEnabled = true;
@@ -385,6 +385,7 @@ public class App implements InteractableHandler, LobbyHandler, ServerMessageHand
         this.paused = !this.paused;
         this.movementEnabled = !this.paused;
         this.gpanel.toggleTaggedWidgetsVisibility(WidgetTags.PAUSE_MENU, this.paused);
+        this.gpanel.getWidgetsOfClass(PauseMenu.class).forEach(p -> p.toggleFade());
     }
 
     /**
@@ -423,7 +424,7 @@ public class App implements InteractableHandler, LobbyHandler, ServerMessageHand
      * @param playerID   - player ID
      */
     public void handleInvite(String playerName, int playerID) {
-        this.yesnoToasts.show("Accept invite from: " + playerName + "?", () -> {
+        this.yesnoToasts.displayConfirmation("Accept invite from: " + playerName + "?", () -> {
             this.localClient.sendTCPMessageToServer(ServerRequests.acceptInvite(playerID));
         }, () -> {
             this.localClient.sendTCPMessageToServer(ServerRequests.declineInvite(playerID));
@@ -471,10 +472,14 @@ public class App implements InteractableHandler, LobbyHandler, ServerMessageHand
         }
 
         // Switch correct walking animations
-        if ((moveUp && moveLeft) || (moveUp && moveRight)) { // TODO diagdown
+        if (moveUp && moveLeft) {
             this.localPlayer.switchAnimation("walk_diagup");
-        } else if ((moveDown && moveLeft) || (moveDown && moveRight)) {
-            this.localPlayer.switchAnimation("idle");
+        } else if (moveUp && moveRight) {
+            this.localPlayer.switchAnimation("walk_diagup");
+        } else if (moveDown && moveLeft) {
+            this.localPlayer.switchAnimation("walk_side");
+        } else if (moveDown && moveRight) {
+            this.localPlayer.switchAnimation("walk_side");
         } else if (moveUp) {
             this.localPlayer.switchAnimation("walk_up");
         } else if (moveDown) {
@@ -483,6 +488,8 @@ public class App implements InteractableHandler, LobbyHandler, ServerMessageHand
             this.localPlayer.switchAnimation("walk_side");
         } else if (moveRight) {
             this.localPlayer.switchAnimation("walk_side");
+        } else {
+            this.localPlayer.switchAnimation("idle");
         }
 
         // Calculate horizontal and vertical movement directions
@@ -538,7 +545,7 @@ public class App implements InteractableHandler, LobbyHandler, ServerMessageHand
         Runnable afterDecay = () -> {
             this.gpanel.remove(b);
         };
-        b.setAfterDecayRunnable(afterDecay);
+        b.setPostDecayAction(afterDecay);
         this.quedPlayerObjects.add(b);
     }
 
@@ -557,7 +564,7 @@ public class App implements InteractableHandler, LobbyHandler, ServerMessageHand
             }
         }
 
-        for (InviteScreen l : this.gpanel.getWidgetsOfClass(InviteScreen.class)) {
+        for (LobbyInviteScreen l : this.gpanel.getWidgetsOfClass(LobbyInviteScreen.class)) {
             l.setClients(clients);
         }
     }
@@ -640,7 +647,7 @@ public class App implements InteractableHandler, LobbyHandler, ServerMessageHand
             if (existingPlayers.containsKey(clientId)) {
                 // Update the position of the existing player
                 Player player = existingPlayers.get(clientId);
-                player.setPos(clientPos);
+                player.setPosition(clientPos);
                 player.setHealth(health);
                 player.setAnimationFrameData(animationFrame);
                 existingPlayers.remove(clientId); // Mark as processed
@@ -1083,8 +1090,6 @@ public class App implements InteractableHandler, LobbyHandler, ServerMessageHand
             }
             updatePlayerData();
             gpanel.add(new ConnectionWidget());
-
-            System.out.println(gpanel.getFps());
         }
 
         /**

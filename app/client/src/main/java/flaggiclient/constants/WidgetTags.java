@@ -28,7 +28,6 @@ package flaggiclient.constants;
 
 /**
  * Constant class with widget tag data.
- *
  */
 public class WidgetTags {
 

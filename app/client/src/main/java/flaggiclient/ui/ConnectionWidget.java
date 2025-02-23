@@ -1,27 +1,7 @@
 /*
- * Author: Matěj Šťastný
+ * Author: Matěj Šťastný aka Kirei
  * Date created: 11/8/2024
- * Github link: https://github.com/kireiiiiiiii/Flaggi
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
+ * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
 package flaggiclient.ui;
@@ -29,7 +9,6 @@ package flaggiclient.ui;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Graphics2D;
-import java.util.ArrayList;
 
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
@@ -39,56 +18,18 @@ import flaggishared.common.GPanel.Renderable;
  * Widget displayed on server connection.
  *
  */
-public class ConnectionWidget implements Renderable {
+public class ConnectionWidget extends Renderable {
 
-    /////////////////
-    // Constants
-    ////////////////
+    private static final int RADIUS = 5;
 
-    private final int RADIUS = 5;
-
-    /////////////////
-    // Variables
-    ////////////////
-
-    private boolean visible = true;
-
-    /////////////////
-    // Rendering
-    ////////////////
+    public ConnectionWidget() {
+        super(ZIndex.CONNECTION, WidgetTags.GAME_ELEMENTS, WidgetTags.MENU_ELEMENTS);
+    }
 
     @Override
-    public void render(Graphics2D g, int[] size, int[] offset, Container focusCycleRootAncestor) {
+    public void render(Graphics2D g, int[] size, int[] viewportOffset, Container focusCycleRootAncestor) {
         g.setColor(Color.GREEN);
-        g.fillOval(size[0] - RADIUS * 3, RADIUS, this.RADIUS * 2, this.RADIUS * 2);
-    }
-
-    @Override
-    public int getZIndex() {
-        return ZIndex.CONNECTION;
-    }
-
-    @Override
-    public boolean isVisible() {
-        return this.visible;
-    }
-
-    @Override
-    public void hide() {
-        this.visible = false;
-    }
-
-    @Override
-    public void show() {
-        this.visible = true;
-    }
-
-    @Override
-    public ArrayList<String> getTags() {
-        ArrayList<String> tags = new ArrayList<String>();
-        tags.add(WidgetTags.GAME_ELEMENTS);
-        tags.add(WidgetTags.MENU_ELEMENTS);
-        return tags;
+        g.fillOval(size[0] - RADIUS * 3, RADIUS, RADIUS * 2, RADIUS * 2);
     }
 
 }

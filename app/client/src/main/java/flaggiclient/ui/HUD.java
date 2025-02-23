@@ -1,27 +1,7 @@
 /*
- * Author: Matěj Šťastný
+ * Author: Matěj Šťastný aka Kirei
  * Date created: 12/7/2024
- * Github link: https://github.com/kireiiiiiiii/Flaggi
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
+ * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
 package flaggiclient.ui;
@@ -30,59 +10,39 @@ import java.awt.Container;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.io.IOException;
-import java.util.ArrayList;
 
-import flaggiclient.App;
 import flaggiclient.constants.WidgetTags;
 import flaggiclient.constants.ZIndex;
 import flaggishared.common.GPanel.Renderable;
 import flaggishared.util.ImageUtil;
 
 /**
- * Player HUD widget class.
- *
+ * Player HUD UI widget.
  */
-public class HUD implements Renderable {
+public class HUD extends Renderable {
 
-    /////////////////
-    // Varuables
-    ////////////////
-
-    private boolean visible;
     private float health;
-
     private Image healthTexture, healthFillTexture;
 
-    /////////////////
-    // Constructor
-    ////////////////
+    // Constructor --------------------------------------------------------------
 
-    /**
-     * Default constructor for the player HUD widget.
-     *
-     */
     public HUD() {
-        // ---- Default variable values
-        this.visible = false;
+        super(ZIndex.HUD, WidgetTags.GAME_ELEMENTS);
         this.health = 0;
-
-        // ---- Textures
         try {
             this.healthTexture = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/spray-hp.png"), 100, false);
             this.healthFillTexture = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/spray-hp-fill.png"), 100, false);
         } catch (IOException e) {
-            App.LOGGER.addLog("HUD textures failed to load.", e);
+            System.out.println("HUD textures failed to load.");
         }
     }
 
-    /////////////////
-    // Rendering
-    ////////////////
+    // Rendering ----------------------------------------------------------------
 
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
 
-        // ---- Calculate healthbar data
+        // Calculate healthbar data
         int heightDiff = 89;
         double filledPercent = health / 100.0;
         int usableHeight = this.healthTexture.getHeight(null) - heightDiff;
@@ -91,7 +51,7 @@ public class HUD implements Renderable {
         int y = size[1] - 90 - this.healthTexture.getHeight(null);
         int fillY = y + heightDiff + emptyHeight;
 
-        // ---- Render the healthbar
+        // Render the healthbar
         if (this.health > 0) {
             g.drawImage(ImageUtil.cropImage(this.healthFillTexture, 0, heightDiff + emptyHeight, this.healthTexture.getWidth(null), usableHeight - emptyHeight), x, fillY, focusCycleRootAncestor);
         }
@@ -99,42 +59,8 @@ public class HUD implements Renderable {
 
     }
 
-    @Override
-    public int getZIndex() {
-        return ZIndex.HUD;
-    }
+    // Private ------------------------------------------------------------------
 
-    @Override
-    public boolean isVisible() {
-        return this.visible;
-    }
-
-    @Override
-    public void hide() {
-        this.visible = false;
-    }
-
-    @Override
-    public void show() {
-        this.visible = true;
-    }
-
-    @Override
-    public ArrayList<String> getTags() {
-        ArrayList<String> tags = new ArrayList<String>();
-        tags.add(WidgetTags.GAME_ELEMENTS);
-        return tags;
-    }
-
-    /////////////////
-    // Helper methods
-    ////////////////
-
-    /**
-     * Sets the health data for the widget to render.
-     *
-     * @param health - new health value.
-     */
     public void setHealth(float health) {
         this.health = health;
     }

@@ -31,16 +31,15 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Graphics2D;
-import java.util.ArrayList;
 
-import flaggishared.common.MapData;
 import flaggishared.common.GPanel.Renderable;
+import flaggishared.common.MapData;
 
 /**
  * UI widget for rendering the main map.
  *
  */
-public class MapRender implements Renderable {
+public class MapRender extends Renderable {
 
     /////////////////
     // Variables
@@ -48,7 +47,6 @@ public class MapRender implements Renderable {
 
     private final int grid = 10;
     private MapData map;
-    private boolean visible;
 
     /////////////////
     // Constructor
@@ -60,8 +58,8 @@ public class MapRender implements Renderable {
      * @param map - data object of the map that is being rendered.
      */
     public MapRender(MapData map) {
+        super(0);
         this.map = map;
-        this.visible = true;
     }
 
     /////////////////
@@ -166,32 +164,6 @@ public class MapRender implements Renderable {
         g.setColor(Color.BLACK);
         g.drawRect(mapPosX, mapPosY, mapWidth, mapHeight);
 
-    }
-
-    @Override
-    public int getZIndex() {
-        return 0;
-    }
-
-    @Override
-    public boolean isVisible() {
-        return this.visible;
-    }
-
-    @Override
-    public void hide() {
-        this.visible = false;
-    }
-
-    @Override
-    public void show() {
-        this.visible = true;
-    }
-
-    @Override
-    public ArrayList<String> getTags() {
-        ArrayList<String> tags = new ArrayList<String>();
-        return tags;
     }
 
 }

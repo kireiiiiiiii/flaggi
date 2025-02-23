@@ -29,7 +29,6 @@ package flaggieditor.widgets;
 
 import java.awt.Container;
 import java.awt.Graphics2D;
-import java.util.ArrayList;
 
 import flaggishared.common.GPanel.Renderable;
 import flaggishared.common.MapData.ObjectData;
@@ -38,14 +37,13 @@ import flaggishared.common.MapData.ObjectData;
  * Map object to be rendered on the map.
  *
  */
-public class GameObject implements Renderable {
+public class GameObject extends Renderable {
 
     /////////////////
     // Variables
     ////////////////
 
     private ObjectData data;
-    private boolean visible = true;
 
     /////////////////
     // Contructor
@@ -57,6 +55,7 @@ public class GameObject implements Renderable {
      * @param data - data of the game object.
      */
     public GameObject(ObjectData data) {
+        super(2);
         this.data = data;
     }
 
@@ -67,32 +66,6 @@ public class GameObject implements Renderable {
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
         // TODO rendering logic
-    }
-
-    @Override
-    public int getZIndex() {
-        return 2;
-    }
-
-    @Override
-    public boolean isVisible() {
-        return this.visible;
-    }
-
-    @Override
-    public void hide() {
-        this.visible = false;
-    }
-
-    @Override
-    public void show() {
-        this.visible = true;
-    }
-
-    @Override
-    public ArrayList<String> getTags() {
-        ArrayList<String> tags = new ArrayList<String>();
-        return tags;
     }
 
 }

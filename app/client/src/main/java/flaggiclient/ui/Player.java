@@ -1,27 +1,7 @@
 /*
- * Author: Matěj Šťastný
+ * Author: Matěj Šťastný aka Kirei
  * Date created: 11/4/2024
- * Github link: https://github.com/kireiiiiiiii/Flaggi
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
+ * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
 package flaggiclient.ui;
@@ -49,54 +29,26 @@ import flaggishared.util.FontUtil;
 
 /**
  * Player widget class.
- *
  */
-public class Player implements Renderable {
-
-    /////////////////
-    // Constants
-    ////////////////
+public class Player extends Renderable {
 
     public static final int TEXTURE_HEIGHT = 20 * Sprite.SPRITE_SCALING;
     public static final int TEXTURE_WIDTH = 13 * Sprite.SPRITE_SCALING;
-    public static final String DEFAULT_SKIN = "default_blue";
     public static final String DEFAULT_ENEMY_SKIN = "default_red";
-
-    /////////////////
-    // Animation libraries
-    ////////////////
-
+    public static final String DEFAULT_SKIN = "default_blue";
     private static Map<String, List<Image>> playerAnimationsLibrary;
 
-    /////////////////
-    // Variables
-    ////////////////
-
-    private int[] pos = new int[2];
-    private boolean visible = true, inverted = false, hasFlag = false;
-    private int id, health;
     private String name, animationFrame, localPlayerSkinName;
+    private boolean inverted = false, hasFlag = false;
+    private int[] position = new int[2];
     private Sprite avatar, flag;
+    private int id, health;
 
-    /////////////////
-    // Constructor
-    ////////////////
+    // Constructors -------------------------------------------------------------
 
-    /**
-     * Default constructor.
-     *
-     * @param pos      - position of the player.
-     * @param name     - name of the player.
-     * @param skinName - the name of the skin the player is using.
-     * @param isEnemy  - is the player an enemy?
-     * @param id       - id of the player. Used to update the position of the
-     *                 players.
-     */
-    public Player(int[] pos, String name, String skinName, int id) {
-        // ---- Use the default constructor, but with a null value
-        this(pos, name, id, null);
+    public Player(int[] position, String name, String skinName, int id) {
+        this(position, name, id, null);
 
-        // ---- Set animation
         this.localPlayerSkinName = skinName;
         this.avatar.setAnimation(localPlayerSkinName + "_idle");
         this.avatar.setFps(2);
@@ -108,86 +60,42 @@ public class Player implements Renderable {
     }
 
     /**
-     * Constructor for players with a specific animationFrame
-     *
-     * @param pos     - position of the player.
-     * @param name    - name of the player.
-     * @param isEnemy - is the player an enemy?
-     * @param id      - id of the player. Used to update the position of the
-     *                players.
+     * Enemy players
      */
     public Player(int[] pos, String name, int id, String animationFrame) {
+        super(ZIndex.PLAYER, WidgetTags.GAME_ELEMENTS);
+        if (animationFrame == null) {
+            this.setZIndex(ZIndex.OTHER_PLAYERS);
+            this.addTag(WidgetTags.ENEMY_PLAYER);
+        }
 
-        // ---- Set variables
         this.avatar = new Sprite();
         this.flag = new Sprite();
         this.flag.addAnimation(Arrays.asList("flag-blue"), "flag_blue");
         this.flag.addAnimation(Arrays.asList("flag-red"), "flag_red");
         this.flag.setAnimation("flag_red");
         this.animationFrame = animationFrame;
-        this.pos = pos;
+        this.position = pos;
         this.name = name;
         this.id = id;
 
-        // ---- Initialize skins
         if (playerAnimationsLibrary == null) {
             addAllAvatarAnimations();
         }
         this.avatar.setAnimations(playerAnimationsLibrary);
     }
 
-    /////////////////
-    // Static methods
-    ////////////////
-
-    /**
-     * Add all the downloaded sprite animations.
-     *
-     */
-    private static void addAllAvatarAnimations() {
-        playerAnimationsLibrary = new HashMap<>();
-        String[] skinTextures = FileUtil.retrieveJarDirectoryList("sprites/player");
-
-        // Add idle animations
-        for (String skinName : skinTextures) {
-            List<String> frameNames;
-
-            try {
-                frameNames = getAnimationList(skinName, Arrays.asList("idle_1", "idle_2"));
-                playerAnimationsLibrary.put(skinName + "_idle", Sprite.loadFrames(frameNames));
-
-                frameNames = getAnimationList(skinName, Arrays.asList("walk_side", "walk_side_l", "walk_side", "walk_side_r"));
-                playerAnimationsLibrary.put(skinName + "_walk_side", Sprite.loadFrames(frameNames));
-
-                frameNames = getAnimationList(skinName, Arrays.asList("walk_diagup", "walk_diagup_l", "walk_diagup", "walk_diagup_r"));
-                playerAnimationsLibrary.put(skinName + "_walk_diagup", Sprite.loadFrames(frameNames));
-
-                frameNames = getAnimationList(skinName, Arrays.asList("walk_up", "walk_up_l", "walk_up", "walk_up_r"));
-                playerAnimationsLibrary.put(skinName + "_walk_up", Sprite.loadFrames(frameNames));
-
-                frameNames = getAnimationList(skinName, Arrays.asList("walk_down", "walk_down_l", "walk_down", "walk_down_r"));
-                playerAnimationsLibrary.put(skinName + "_walk_down", Sprite.loadFrames(frameNames));
-            } catch (Exception e) {
-                App.LOGGER.addLog("Error loading player animations for skin " + skinName + ".", e);
-            }
-
-        }
-    }
-
-    /////////////////
-    // Render methods
-    ////////////////
+    // Rendering ----------------------------------------------------------------
 
     @Override
     public void render(Graphics2D g, int[] size, int[] offset, Container focusCycleRootAncestor) {
 
         if (this.hasFlag) {
-            this.flag.render(g, this.pos[0], this.pos[1], focusCycleRootAncestor, this.inverted);
+            this.flag.render(g, this.position[0], this.position[1], focusCycleRootAncestor, this.inverted);
         }
 
-        // Render the player sprite
         if (!isEnemy()) {
-            this.avatar.render(g, this.pos[0], this.pos[1], focusCycleRootAncestor, this.inverted);
+            this.avatar.render(g, this.position[0], this.position[1], focusCycleRootAncestor, this.inverted);
             offset = new int[] { 0, 0 };
 
         } else {
@@ -195,7 +103,7 @@ public class Player implements Renderable {
             String animationName = parsedFrameData[0];
             int animationFrame = Integer.parseInt(parsedFrameData[1]);
             boolean inverted = Boolean.parseBoolean(parsedFrameData[2]);
-            this.avatar.render(g, this.pos[0] + offset[0], this.pos[1] + offset[1], focusCycleRootAncestor, animationName, animationFrame, inverted);
+            this.avatar.render(g, this.position[0] + offset[0], this.position[1] + offset[1], focusCycleRootAncestor, animationName, animationFrame, inverted);
         }
 
         // Render the nametag
@@ -204,13 +112,13 @@ public class Player implements Renderable {
         String nameTagText = this.name;
         int[] namePos = FontUtil.calculateCenteredPosition(55, 5, g.getFontMetrics(), nameTagText);
         namePos[1] = -30;
-        g.drawString(nameTagText, offset[0] + this.pos[0] + namePos[0], offset[1] + this.pos[1] + namePos[1]);
+        g.drawString(nameTagText, offset[0] + this.position[0] + namePos[0], offset[1] + this.position[1] + namePos[1]);
 
         // Render the health bar
         int barWidth = 50;
         int barHeight = 5;
-        int x = offset[0] + this.pos[0] - barWidth / 2 + 27;
-        int y = offset[1] + this.pos[1] - 20;
+        int x = offset[0] + this.position[0] - barWidth / 2 + 27;
+        int y = offset[1] + this.position[1] - 20;
 
         // Background of the health bar (gray)
         g.setColor(Color.GRAY);
@@ -236,86 +144,16 @@ public class Player implements Renderable {
             g.setColor(Color.RED);
             Rectangle r;
             if (!isEnemy()) {
-                r = new Rectangle(this.pos[0] + 7, this.pos[1] + 7, 53, 93);
+                r = new Rectangle(this.position[0] + 7, this.position[1] + 7, 53, 93);
             } else {
-                r = new Rectangle(this.pos[0] + 7 + offset[0], this.pos[1] + 7 + offset[1], 53, 93);
+                r = new Rectangle(this.position[0] + 7 + offset[0], this.position[1] + 7 + offset[1], 53, 93);
             }
             g.draw(r);
         }
 
     }
 
-    @Override
-    public int getZIndex() {
-        return this.isEnemy() ? ZIndex.OTHER_PLAYERS : ZIndex.PLAYER;
-    }
-
-    @Override
-    public boolean isVisible() {
-        return this.visible;
-    }
-
-    @Override
-    public void hide() {
-        this.visible = false;
-    }
-
-    @Override
-    public void show() {
-        this.visible = true;
-    }
-
-    @Override
-    public ArrayList<String> getTags() {
-        ArrayList<String> tags = new ArrayList<String>();
-        tags.add(WidgetTags.GAME_ELEMENTS);
-        if (this.animationFrame != null) {
-            tags.add(WidgetTags.ENEMY_PLAYER);
-        }
-        return tags;
-    }
-
-    /////////////////
-    // Modifiers & Accesors
-    ////////////////
-
-    /**
-     * Set a new player position.
-     *
-     * @param pos - value.
-     */
-    public void setPos(int[] pos) {
-        this.pos = pos;
-    }
-
-    /**
-     * Returns {@code true} if the player is an enemy. Otherwise, returns
-     * {@code false}.
-     *
-     * @return - {@code boolean}.
-     */
-    public boolean isEnemy() {
-        return this.animationFrame != null;
-    }
-
-    /**
-     * Returns the {@code ID} of this player, given by the server.
-     *
-     * @return - {@code int} of the ID.
-     */
-    public int getId() {
-        return this.id;
-    }
-
-    /**
-     * Makes the current animation frame to send to the server.
-     *
-     * @return - {@code String} in the form of
-     *         "current-animation-name:current-frame".
-     */
-    public String getAnimationFrame() {
-        return this.avatar.getAnimationFrame() + ":" + this.inverted;
-    }
+    // Modifiers ----------------------------------------------------------------
 
     /**
      * Sets the animation frame value. This is used to render an exact animation
@@ -328,20 +166,43 @@ public class Player implements Renderable {
         this.animationFrame = animationFrame;
     }
 
-    /**
-     * Sets the invert value.
-     *
-     * @param invert - {@code boolean}.
-     */
+    public void setPosition(int[] position) {
+        this.position = position;
+    }
+
     public void setFacingRight(boolean invert) {
         this.inverted = invert;
     }
 
-    public void hasFlag(boolean hasFlag) {
+    public void setHasFlag(boolean hasFlag) {
         this.hasFlag = hasFlag;
     }
 
-    public void setHasFlag(boolean hasFlag) {
+    public void setHealth(int health) {
+        this.health = health;
+    }
+
+    // Accesors -----------------------------------------------------------------
+
+    /**
+     * Makes the current animation frame to send to the server.
+     *
+     * @return - {@code String} in the form of
+     *         "current-animation-name:current-frame".
+     */
+    public String getAnimationFrame() {
+        return this.avatar.getAnimationFrame() + ":" + this.inverted;
+    }
+
+    public boolean isEnemy() {
+        return this.animationFrame != null;
+    }
+
+    public int getId() {
+        return this.id;
+    }
+
+    public void hasFlag(boolean hasFlag) {
         this.hasFlag = hasFlag;
     }
 
@@ -356,24 +217,46 @@ public class Player implements Renderable {
             return;
         }
         this.avatar.setAnimation(animationName);
-        switch (name) {
-        case "idle":
+        if (name.equals("idle")) {
             this.avatar.setFps(2);
-            break;
-        case "walk_side":
+        } else {
             this.avatar.setFps(4);
-        default:
-            break;
         }
     }
 
-    public void setHealth(int health) {
-        this.health = health;
-    }
+    // Private ------------------------------------------------------------------
 
-    /////////////////
-    // Helper methods
-    ////////////////
+    /**
+     * Player skins initialization.
+     */
+    private static void addAllAvatarAnimations() {
+        playerAnimationsLibrary = new HashMap<>();
+        String[] skinTextures = FileUtil.retrieveJarDirectoryList("sprites/player");
+
+        for (String skinName : skinTextures) {
+            List<String> frameNames;
+
+            try {
+                frameNames = getAnimationList(skinName, Arrays.asList("idle_1", "idle_2"));
+                playerAnimationsLibrary.put(skinName + "_idle", Sprite.loadFrames(frameNames));
+
+                frameNames = getAnimationList(skinName, Arrays.asList("walk_side", "walk_side_l", "walk_side", "walk_side_r"));
+                playerAnimationsLibrary.put(skinName + "_walk_side", Sprite.loadFrames(frameNames));
+
+                frameNames = getAnimationList(skinName, Arrays.asList("walk_diagup", "walk_diagup_l", "walk_diagup", "walk_diagup_r"));
+                playerAnimationsLibrary.put(skinName + "_walk_diagup", Sprite.loadFrames(frameNames));
+
+                frameNames = getAnimationList(skinName, Arrays.asList("walk_up", "walk_up_l", "walk_up", "walk_up_r"));
+                playerAnimationsLibrary.put(skinName + "_walk_up", Sprite.loadFrames(frameNames));
+
+                frameNames = getAnimationList(skinName, Arrays.asList("walk_down", "walk_down_l", "walk_down", "walk_down_r"));
+                playerAnimationsLibrary.put(skinName + "_walk_down", Sprite.loadFrames(frameNames));
+            } catch (Exception e) {
+                App.LOGGER.addLog("Error loading player animations for skin " + skinName + ".", e);
+            }
+
+        }
+    }
 
     /**
      * Parses the animation frame format {@code String} into an animation name
