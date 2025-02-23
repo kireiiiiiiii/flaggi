@@ -1,25 +1,24 @@
 {
   "folders": [
     {
-      "path": ".",
       "name": "Flaggi",
-      "folderExcludePatterns": ["app"]
+      "path": "."
     },
     {
-      "path": "app/client",
-      "name": "Client"
+      "name": "Client",
+      "path": "app/client"
     },
     {
-      "path": "app/server",
-      "name": "Server"
+      "name": "Server",
+      "path": "app/server"
     },
     {
-      "path": "app/editor",
-      "name": "Map Editor"
+      "name": "Map Editor",
+      "path": "app/editor"
     },
     {
-      "path": "app/shared",
-      "name": "Shared"
+      "name": "Shared",
+      "path": "app/shared"
     }
   ],
   "settings": {

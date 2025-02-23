@@ -20,7 +20,7 @@ dependencies {
 // Application config ------------------------------------------------------------------------
 
 application {
-    mainClass.set("flaggiserver.Server")
+    mainClass.set("flaggi.server.Server")
 }
 
 // Tasks -------------------------------------------------------------------------------------

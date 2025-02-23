@@ -61,7 +61,6 @@ import flaggiserver.common.Bullet;
 import flaggiserver.common.ClientStruct;
 import flaggiserver.common.Logger;
 import flaggiserver.common.Logger.LogLevel;
-import flaggishared.common.GPanel;
 import flaggishared.common.MapData;
 import flaggishared.common.PersistentValue;
 import flaggishared.common.MapData.ObjectData;
@@ -870,14 +869,14 @@ public class Server {
 
                 for (ObjectData object : mapData.getGameObjects()) {
                     if (object.getObjectType() == ObjectType.BLUE_FLAG || object.getObjectType() == ObjectType.RED_FLAG) {
-                        Rectangle flagHitbox = new Rectangle(object.getX(), object.getY(), 112, 128);
+                        Rectangle flagHitbox = new Rectangle(object.getX() * 5, object.getY() * 5, 112, 128);
 
-                        for (ClientStruct client : new ArrayList<>(clients)) {
+                        for (ClientStruct client : clients) {
                             if (client.getRoomID() == mapId) {
                                 Rectangle playerHitbox = getPlayerHitbox(client);
 
                                 if (flagHitbox.intersects(playerHitbox)) {
-                                    Logger.log(LogLevel.INFO, "Flag collision detected.");
+                                    Logger.log(LogLevel.INFO, "flag col");
                                     handleFlagCollision(object, client);
                                 }
                             }
