@@ -15,9 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-/**
- * TODO header
- */
 public class UdpListener implements Runnable {
 
     private final int port;

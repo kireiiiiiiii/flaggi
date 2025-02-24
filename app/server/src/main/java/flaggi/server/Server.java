@@ -12,16 +12,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import flaggi.server.common.TcpListener;
 import flaggi.server.common.UdpListener;
 import flaggi.server.common.UpdateLoop;
 import flaggi.server.common.UpdateLoop.Updatable;
 import flaggi.server.constants.Constants;
 import flaggishared.common.Logger;
 import flaggishared.common.Logger.LogLevel;
+import flaggishared.flaggi.Message;
 
 public class Server implements Updatable {
 
     private final ExecutorService threads;
+    private final TcpListener tcpListener;
     private final UdpListener udpListener;
     private final UpdateLoop updateLoop;
 
@@ -35,16 +38,19 @@ public class Server implements Updatable {
     public Server() {
         initializeLogger();
 
+        this.tcpListener = new TcpListener(Constants.TCP_PORT);
         this.udpListener = new UdpListener(Constants.UDP_PORT);
         this.updateLoop = new UpdateLoop(Constants.UPDATE_INTERVAL, this);
-        this.threads = Executors.newFixedThreadPool(2);
+        this.threads = Executors.newFixedThreadPool(3);
         initializeThreads();
     }
 
     // Update -------------------------------------------------------------------
 
+    @Override
     public void update() {
-        processPackets(this.udpListener.getPacketQueue());
+        processTcpMessages(this.tcpListener.getMessageQueue());
+        processUdpPackets(this.udpListener.getPacketQueue());
     }
 
     // Initialization -----------------------------------------------------------
@@ -56,6 +62,7 @@ public class Server implements Updatable {
     }
 
     private void initializeThreads() {
+        this.threads.execute(this.tcpListener);
         this.threads.execute(this.udpListener);
         this.threads.execute(this.updateLoop);
     }
@@ -63,7 +70,7 @@ public class Server implements Updatable {
     // Private ------------------------------------------------------------------
 
     private void shutdown() {
-        Logger.log(LogLevel.INFO, "Shutting down application...");
+        Logger.log(LogLevel.INFO, "Shutting down server...");
         threads.shutdown();
         try {
             if (!threads.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -73,15 +80,24 @@ public class Server implements Updatable {
             threads.shutdownNow();
             Thread.currentThread().interrupt();
         }
-        Logger.log(LogLevel.INFO, "Application shut down.");
+        Logger.log(LogLevel.INFO, "Server shut down.");
     }
 
-    private void processPackets(BlockingQueue<DatagramPacket> packetQueue) {
+    // Newtwork -----------------------------------------------------------------
+
+    private void processUdpPackets(BlockingQueue<DatagramPacket> packetQueue) {
         DatagramPacket packet;
         while ((packet = packetQueue.poll()) != null) {
             System.out.println("Packet received from: " + packet.getAddress());
             String packetContents = new String(packet.getData(), 0, packet.getLength());
             System.out.println("Packet contents: " + packetContents);
+        }
+    }
+
+    private void processTcpMessages(BlockingQueue<Message> messageQueue) {
+        Message message;
+        while ((message = messageQueue.poll()) != null) {
+            System.out.println("TCP Message received: " + message.getContent());
         }
     }
 
