@@ -32,8 +32,8 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Graphics2D;
 
-import flaggishared.common.GPanel.Renderable;
-import flaggishared.common.MapData;
+import flaggi.shared.common.GPanel.Renderable;
+import flaggi.shared.common.MapData;
 
 /**
  * UI widget for rendering the main map.

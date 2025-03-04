@@ -30,8 +30,8 @@ package flaggieditor.widgets;
 import java.awt.Container;
 import java.awt.Graphics2D;
 
-import flaggishared.common.GPanel.Renderable;
-import flaggishared.common.MapData.ObjectData;
+import flaggi.shared.common.GPanel.Renderable;
+import flaggi.shared.common.MapData.ObjectData;
 
 /**
  * Map object to be rendered on the map.

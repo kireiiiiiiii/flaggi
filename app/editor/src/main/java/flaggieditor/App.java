@@ -27,7 +27,6 @@
 
 package flaggieditor;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
@@ -39,12 +38,12 @@ import java.util.Scanner;
 
 import javax.swing.SwingUtilities;
 
+import flaggi.shared.common.GPanel;
+import flaggi.shared.common.GPanel.InteractableHandler;
+import flaggi.shared.common.MapData;
+import flaggi.shared.common.MapData.ObjectType;
+import flaggi.shared.common.PersistentValue;
 import flaggieditor.widgets.MapRender;
-import flaggishared.common.GPanel;
-import flaggishared.common.GPanel.InteractableHandler;
-import flaggishared.common.MapData;
-import flaggishared.common.MapData.ObjectType;
-import flaggishared.common.PersistentValue;
 
 /**
  * Main application class.
@@ -80,7 +79,7 @@ public class App implements InteractableHandler {
 
         // ----- Console
         this.map = setupMap(console);
-        this.gpanel = new GPanel(this, windowSize[0], windowSize[1], false, "Flaggi Editor", Color.BLACK);
+        this.gpanel = new GPanel(windowSize[0], windowSize[1], false, "Flaggi Editor", this);
         this.gpanel.add(new MapRender(map.get()));
         console(console, this.map);
         console.close();
