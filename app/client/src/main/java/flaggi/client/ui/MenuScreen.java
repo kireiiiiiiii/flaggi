@@ -4,7 +4,7 @@
  * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
-package flaggiclient.ui;
+package flaggi.client.ui;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -17,14 +17,15 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 
-import flaggiclient.App;
-import flaggiclient.constants.WidgetTags;
-import flaggiclient.constants.ZIndex;
-import flaggishared.common.GPanel.Interactable;
-import flaggishared.common.GPanel.Renderable;
-import flaggishared.common.GPanel.Typable;
-import flaggishared.util.FontUtil;
-import flaggishared.util.ImageUtil;
+import flaggi.client.constants.UiTags;
+import flaggi.client.constants.ZIndex;
+import flaggi.shared.common.Logger;
+import flaggi.shared.common.GPanel.Interactable;
+import flaggi.shared.common.GPanel.Renderable;
+import flaggi.shared.common.GPanel.Typable;
+import flaggi.shared.common.Logger.LogLevel;
+import flaggi.shared.util.FontUtil;
+import flaggi.shared.util.ImageUtil;
 
 /**
  * The main menu screen widget.
@@ -45,7 +46,7 @@ public class MenuScreen extends Renderable implements Interactable, Typable {
      *                    clicked.
      */
     public MenuScreen(Runnable startAction, String name, String ip) {
-        super(ZIndex.MENU_SCREEN, WidgetTags.MENU_ELEMENTS);
+        super(ZIndex.MENU_SCREEN, UiTags.MENU_ELEMENTS);
 
         this.startButtonAction = startAction;
         this.nameUserInput = name == null ? "" : name;
@@ -53,7 +54,7 @@ public class MenuScreen extends Renderable implements Interactable, Typable {
         try {
             this.font = FontUtil.createFontFromResource("fonts/PixelifySans-VariableFont_wght.ttf").deriveFont(Font.PLAIN, 25);
         } catch (IOException | FontFormatException e) {
-            App.LOGGER.addLog("Error loading font.", e);
+            Logger.log(LogLevel.WARN, "MenuScreen: Font cannot be loaded.", e);
             this.font = new Font("Arial", Font.PLAIN, 25);
         }
         try {
@@ -62,7 +63,7 @@ public class MenuScreen extends Renderable implements Interactable, Typable {
             this.button = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/button.png"), 130, false);
             this.textField = ImageUtil.scaleToHeight(ImageUtil.getImageFromFile("ui/text_field.png"), 60, false);
         } catch (IOException e) {
-            App.LOGGER.addLog("Couldn't load MenuScreen textures.", e);
+            Logger.log(LogLevel.WARN, "Couldn't load MenuScreen textures.", e);
         }
 
         // Dummy values

@@ -4,17 +4,17 @@
  * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
-package flaggiclient.ui;
+package flaggi.client.ui;
 
 import java.awt.Container;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.io.IOException;
 
-import flaggiclient.constants.WidgetTags;
-import flaggiclient.constants.ZIndex;
-import flaggishared.common.GPanel.Renderable;
-import flaggishared.util.ImageUtil;
+import flaggi.client.constants.UiTags;
+import flaggi.client.constants.ZIndex;
+import flaggi.shared.common.GPanel.Renderable;
+import flaggi.shared.util.ImageUtil;
 
 /**
  * Player HUD UI widget.
@@ -27,7 +27,7 @@ public class HUD extends Renderable {
     // Constructor --------------------------------------------------------------
 
     public HUD() {
-        super(ZIndex.HUD, WidgetTags.GAME_ELEMENTS);
+        super(ZIndex.HUD, UiTags.GAME_ELEMENTS);
         this.health = 0;
         try {
             this.healthTexture = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/spray-hp.png"), 100, false);

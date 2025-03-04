@@ -4,7 +4,7 @@
  * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
-package flaggiclient.ui;
+package flaggi.client.ui;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -13,8 +13,8 @@ import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import flaggiclient.constants.ZIndex;
-import flaggishared.common.GPanel.Renderable;
+import flaggi.client.constants.ZIndex;
+import flaggi.shared.common.GPanel.Renderable;
 
 /**
  * A manager class for displaying toast messages on the screen. Toasts are small

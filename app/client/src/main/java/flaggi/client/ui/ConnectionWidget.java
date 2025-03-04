@@ -4,15 +4,15 @@
  * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
-package flaggiclient.ui;
+package flaggi.client.ui;
 
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Graphics2D;
 
-import flaggiclient.constants.WidgetTags;
-import flaggiclient.constants.ZIndex;
-import flaggishared.common.GPanel.Renderable;
+import flaggi.client.constants.ZIndex;
+import flaggi.shared.common.GPanel.Renderable;
+import flaggi.client.constants.UiTags;
 
 /**
  * Widget displayed on server connection.
@@ -23,7 +23,7 @@ public class ConnectionWidget extends Renderable {
     private static final int RADIUS = 5;
 
     public ConnectionWidget() {
-        super(ZIndex.CONNECTION, WidgetTags.GAME_ELEMENTS, WidgetTags.MENU_ELEMENTS);
+        super(ZIndex.CONNECTION, UiTags.GAME_ELEMENTS, UiTags.MENU_ELEMENTS);
     }
 
     @Override

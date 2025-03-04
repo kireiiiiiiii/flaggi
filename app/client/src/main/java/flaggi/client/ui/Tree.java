@@ -4,16 +4,16 @@
  * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
-package flaggiclient.ui;
+package flaggi.client.ui;
 
 import java.awt.Container;
 import java.awt.Graphics2D;
 import java.util.Arrays;
 
-import flaggiclient.common.Sprite;
-import flaggiclient.constants.WidgetTags;
-import flaggiclient.constants.ZIndex;
-import flaggishared.common.GPanel.Renderable;
+import flaggi.client.common.Sprite;
+import flaggi.client.constants.UiTags;
+import flaggi.client.constants.ZIndex;
+import flaggi.shared.common.GPanel.Renderable;
 
 /**
  * Tree game object widget.
@@ -24,10 +24,10 @@ public class Tree extends Renderable {
     private Sprite sprite;
 
     public Tree(int[] position) {
-        super(ZIndex.ENVIRONMENT_BOTTOM, WidgetTags.GAME_ELEMENTS, WidgetTags.ENVIRONMENT);
+        super(ZIndex.ENVIRONMENT_BOTTOM, UiTags.GAME_ELEMENTS, UiTags.ENVIRONMENT);
         this.position = position;
         this.sprite = new Sprite();
-        this.sprite.addAnimation(Arrays.asList("tree"), "tree");
+        this.sprite.addAnimation("tree", Arrays.asList("tree"));
         this.sprite.setAnimation("tree");
     }
 

@@ -4,7 +4,7 @@
  * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
-package flaggiclient.ui;
+package flaggi.client.ui;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -16,14 +16,12 @@ import java.awt.event.MouseWheelEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-import flaggiclient.common.RepeatedTask;
-import flaggiclient.constants.WidgetTags;
-import flaggiclient.constants.ZIndex;
-import flaggishared.common.GPanel.Interactable;
-import flaggishared.common.GPanel.Renderable;
-import flaggishared.common.GPanel.Scrollable;
+import flaggi.client.constants.UiTags;
+import flaggi.client.constants.ZIndex;
+import flaggi.shared.common.GPanel.Interactable;
+import flaggi.shared.common.GPanel.Renderable;
+import flaggi.shared.common.GPanel.Scrollable;
 
 /**
  * Lobby screen where other players can be invited into the game.
@@ -31,7 +29,6 @@ import flaggishared.common.GPanel.Scrollable;
 public class LobbyInviteScreen extends Renderable implements Scrollable, Interactable {
 
     private static final int SCROLL_SPEED = 15;
-    private static final int UPDATE_INTERVAL = 3;
 
     private List<ClientItem> clientItems;
     private LobbyHandler handler;
@@ -45,16 +42,13 @@ public class LobbyInviteScreen extends Renderable implements Scrollable, Interac
 
     // Constructor --------------------------------------------------------------
 
-    /**
-     * @param update Updated list fetching.
-     */
-    public LobbyInviteScreen(LobbyHandler handler, Runnable update) {
-        super(ZIndex.MENU_SCREEN, WidgetTags.LOBBY);
-        RepeatedTask task = new RepeatedTask();
-        task.scheduleTask(update, UPDATE_INTERVAL, TimeUnit.SECONDS);
+    public LobbyInviteScreen(LobbyHandler handler) {
+        super(ZIndex.MENU_SCREEN, UiTags.LOBBY);
         this.clientItems = new ArrayList<>();
         this.handler = handler;
     }
+
+    // Rendering ----------------------------------------------------------------
 
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
@@ -132,11 +126,6 @@ public class LobbyInviteScreen extends Renderable implements Scrollable, Interac
         }
     }
 
-    private void updateMaxScroll(int[] size) {
-        int totalHeight = clientItems.size() * (ITEM_HEIGHT + PADDING) + 80;
-        maxScroll = Math.max(0, totalHeight - size[1]);
-    }
-
     // Modifiers ----------------------------------------------------------------
 
     public void setClients(Map<Integer, String> clients) {
@@ -157,6 +146,13 @@ public class LobbyInviteScreen extends Renderable implements Scrollable, Interac
         if (scrollOffset < -maxScroll) {
             scrollOffset = -maxScroll;
         }
+    }
+
+    // Private ------------------------------------------------------------------
+
+    private void updateMaxScroll(int[] size) {
+        int totalHeight = clientItems.size() * (ITEM_HEIGHT + PADDING) + 80;
+        maxScroll = Math.max(0, totalHeight - size[1]);
     }
 
     // Nested -------------------------------------------------------------------

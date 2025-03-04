@@ -4,15 +4,15 @@
  * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
-package flaggiclient.ui;
+package flaggi.client.ui;
 
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Graphics2D;
 
-import flaggiclient.constants.WidgetTags;
-import flaggiclient.constants.ZIndex;
-import flaggishared.common.GPanel.Renderable;
+import flaggi.client.constants.ZIndex;
+import flaggi.shared.common.GPanel.Renderable;
+import flaggi.client.constants.UiTags;
 
 /**
  * Background widget.
@@ -20,7 +20,7 @@ import flaggishared.common.GPanel.Renderable;
 public class Background extends Renderable {
 
     public Background() {
-        super(ZIndex.BACKGROUND, WidgetTags.MENU_ELEMENTS, WidgetTags.GAME_ELEMENTS);
+        super(ZIndex.BACKGROUND, UiTags.MENU_ELEMENTS, UiTags.GAME_ELEMENTS);
     }
 
     @Override

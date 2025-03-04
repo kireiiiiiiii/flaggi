@@ -4,7 +4,7 @@
  * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
-package flaggiclient.ui;
+package flaggi.client.ui;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -14,11 +14,11 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 
-import flaggiclient.constants.WidgetTags;
-import flaggiclient.constants.ZIndex;
-import flaggishared.common.GPanel.Interactable;
-import flaggishared.common.GPanel.Renderable;
-import flaggishared.util.FontUtil;
+import flaggi.client.constants.UiTags;
+import flaggi.client.constants.ZIndex;
+import flaggi.shared.common.GPanel.Interactable;
+import flaggi.shared.common.GPanel.Renderable;
+import flaggi.shared.util.FontUtil;
 
 /**
  * Pause menu screen UI with fade-in and fade-out animation. Contains 2 buttons:
@@ -36,7 +36,7 @@ public class PauseMenu extends Renderable implements Interactable {
     // Constructor --------------------------------------------------------------
 
     public PauseMenu(Runnable resumeAction, Runnable quitAction) {
-        super(ZIndex.PAUSE_SCREEN, WidgetTags.PAUSE_MENU);
+        super(ZIndex.PAUSE_SCREEN, UiTags.PAUSE_MENU);
 
         this.resume = resumeAction;
         this.quit = quitAction;

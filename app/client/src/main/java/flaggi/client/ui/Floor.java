@@ -4,7 +4,7 @@
  * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
-package flaggiclient.ui;
+package flaggi.client.ui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -13,10 +13,10 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-import flaggiclient.constants.WidgetTags;
-import flaggiclient.constants.ZIndex;
-import flaggishared.common.GPanel.Renderable;
-import flaggishared.util.ImageUtil;
+import flaggi.client.constants.UiTags;
+import flaggi.client.constants.ZIndex;
+import flaggi.shared.common.GPanel.Renderable;
+import flaggi.shared.util.ImageUtil;
 
 /**
  * Tileable floor texture
@@ -26,7 +26,7 @@ public class Floor extends Renderable {
     private BufferedImage texture;
 
     public Floor(int[] size) {
-        super(ZIndex.FLOOR, WidgetTags.GAME_ELEMENTS);
+        super(ZIndex.FLOOR, UiTags.GAME_ELEMENTS);
         try {
             this.texture = ImageUtil.createRepeatedImage("sprites/floor-tile.png", size[0], size[1]);
         } catch (IOException e) {

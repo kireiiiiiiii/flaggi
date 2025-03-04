@@ -4,7 +4,7 @@
  * Github link: https://github.com/kireiiiiiiii/flaggi
  */
 
-package flaggiclient.ui;
+package flaggi.client.ui;
 
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
@@ -17,11 +17,11 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import flaggiclient.App;
-import flaggiclient.common.Sprite;
-import flaggiclient.constants.WidgetTags;
-import flaggiclient.constants.ZIndex;
-import flaggishared.common.GPanel.Renderable;
+import flaggi.client.constants.ZIndex;
+import flaggi.shared.common.GPanel.Renderable;
+import flaggi.client.common.Sprite;
+import flaggi.client.constants.Constants;
+import flaggi.client.constants.UiTags;
 
 /**
  * Bullet projectile UI widget.
@@ -51,7 +51,7 @@ public class Bullet extends Renderable implements Runnable {
      * @param decayTime       - Time (in ms) after which the bullet disappears.
      */
     public Bullet(int[] initialPosition, int[] targetPosition, int velocity, int decayTime, int clientId) {
-        super(ZIndex.ENVIRONMENT_TOP, WidgetTags.GAME_ELEMENTS, WidgetTags.PROJECTILES);
+        super(ZIndex.ENVIRONMENT_TOP, UiTags.GAME_ELEMENTS, UiTags.PROJECTILES);
 
         this.position = new double[] { initialPosition[0], initialPosition[1] };
         this.velocity = velocity;
@@ -98,11 +98,11 @@ public class Bullet extends Renderable implements Runnable {
         AffineTransform oldTransform = g.getTransform();
         g.translate(position[0] + viewportOffset[0], position[1] + viewportOffset[1]);
         g.rotate(angle);
-        this.sprite.render(g, 0, -6, focusCycleRootAncestor);
+        this.sprite.render(g, 0, -6, focusCycleRootAncestor, false);
         g.setTransform(oldTransform);
 
         // Debug: Show hitbox if enabled
-        if (App.SHOW_HITBOXES) {
+        if (Constants.HITBOXES_ENABLED) {
             g.setColor(Color.RED);
             g.setStroke(new BasicStroke(1));
             Rectangle r = new Rectangle((int) position[0] + viewportOffset[0], (int) position[1] + viewportOffset[1], 5, 5);
@@ -142,7 +142,7 @@ public class Bullet extends Renderable implements Runnable {
 
     private static Sprite createSprite() {
         Sprite sprite = new Sprite();
-        sprite.addAnimation(Arrays.asList("bullet"), "bullet");
+        sprite.addAnimation("bullet", Arrays.asList("bullet"));
         sprite.setAnimation("bullet");
         return sprite;
     }

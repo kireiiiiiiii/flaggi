@@ -6,21 +6,16 @@ plugins {
 }
 
 dependencies {
-    // Shared Flaggi library
-    implementation(project(":shared"))
-
-    // JUnit for testing
-    testImplementation(libs.junit.jupiter)
+    implementation(project(":shared"))                              // Shared Flaggi library
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")     // JUnit for testing
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    // JSON dependencies
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.15.0")
+    implementation("com.google.protobuf:protobuf-java:3.25.1")      // TCP messages
 }
 
 // Application config ------------------------------------------------------------------------
 
 application {
-    mainClass.set("flaggiclient.App")
+    mainClass.set("flaggi.client.App")
 }
 
 // Tasks -------------------------------------------------------------------------------------
