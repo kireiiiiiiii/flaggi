@@ -1,7 +1,7 @@
 /*
  * Author: Matěj Šťastný aka Kirei
  * Date created: 7/23/2024
- * Github link: https://github.com/kireiiiiiiii/flaggi
+ * Github link: https://github.com/kireiiiiiiii
  */
 
 package flaggi.shared.common;
@@ -92,12 +92,10 @@ import javax.swing.SwingUtilities;
  */
 public class GPanel extends JPanel implements MouseListener, MouseMotionListener, KeyListener, MouseWheelListener {
 
-    // Variables -----------------------------------------------------------------
-
-    private final JFrame appFrame;
     private final InteractableHandler handler;
     private final RenderingEngine renderingEngine;
     private final ArrayList<Renderable> widgets;
+    private JFrame appFrame;
     private boolean isRendering;
     private int[] viewportOffset;
     private double[] renderScale;
@@ -105,50 +103,44 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     // Constructor ---------------------------------------------------------------
 
     /**
-     * Standard constructor.
+     * Constructs a GPanel with the specified parameters.
      *
-     * @param handeler               - {@code InteractableHandeler} object, that
-     *                               will handle panel interaction.
-     * @param windowWidth            - window width.
-     * @param windowHeight           - window height.
-     * @param resizable              - if the panel is resizable by the user.
-     * @param fullscreen             - if the panel is fullscreen. Cannot be
-     *                               changed.
-     * @param appTitle               - title of the window (name of the app).
-     * @param loadingBackgroundColor - color of the {@code JFrame} displayed before
-     *                               the {@code JPanel} is initialized.
+     * @param windowWidth  - window width.
+     * @param windowHeight - window height.
+     * @param resizable    - if the panel is resizable by the user.
+     * @param fullscreen   - if the panel is fullscreen. Cannot be changed.
+     * @param appTitle     - title of the window (name of the app).
+     * @param handeler     - {@code InteractableHandeler} object, that will handle
+     *                     panel interaction.
      */
-    public GPanel(InteractableHandler handler, int windowWidth, int windowHeight, boolean resizable, String appTitle, Color loadingBackgroundColor) {
+    public GPanel(int windowWidth, int windowHeight, boolean resizable, String appTitle, InteractableHandler handler) {
         this.renderingEngine = new RenderingEngine();
         this.widgets = new ArrayList<>();
         this.viewportOffset = new int[2];
         this.renderScale = new double[] { 1.0, 1.0 };
         this.isRendering = false;
         this.handler = handler;
-
-        this.appFrame = getDefaultJFrame(windowWidth, windowHeight, resizable, appTitle, loadingBackgroundColor);
         this.setPreferredSize(new Dimension(windowWidth, windowHeight));
-        this.appFrame.add(this);
-        this.appFrame.pack();
+        this.appFrame = getDefaultJFrame(this, resizable, appTitle, Color.WHITE);
 
         setupListeners();
         startRendering();
     }
 
     /**
-     * Constructor without loading color. Useful for {@code GPanel}s without
-     * difficult initial calculations.
+     * Constructs a GPanel with the specified parameters.
      *
-     * @param handeler     - {@code InteractableHandeler} object, that will handle
-     *                     panel interaction.
-     * @param windowWidth  - window width.
-     * @param windowHeight - window height.
-     * @param resizable    - if the panel is resizable by the user.
-     * @param fullscreen   - if the panel is fullscreen. Cannot be changed.
-     * @param appTitle     - title of the window (name of the app).
+     * @param handler      - {@code InteractableHandler} object that will handle
+     *                     panel user interaction.
+     * @param windowWidth  - The width of the window.
+     * @param windowHeight - The height of the window.
+     * @param resizable    - If the panel is resizable by the user.
+     * @param appTitle     - The title of the window (name of the app).
+     * @param renderScale  - The scale for rendering.
      */
-    public GPanel(InteractableHandler handeler, int windowWidth, int windowHeight, boolean resizable, String appTitle) {
-        this(handeler, windowWidth, windowHeight, resizable, appTitle, Color.WHITE);
+    public GPanel(int windowWidth, int windowHeight, boolean resizable, String appTitle, double[] renderScale, InteractableHandler handler) {
+        this((int) (windowWidth * renderScale[0]), (int) (windowHeight * renderScale[1]), resizable, appTitle, handler);
+        setRenderScale(renderScale[0], renderScale[1]);
     }
 
     // Rendering -----------------------------------------------------------------
@@ -169,20 +161,15 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     protected void paintComponent(Graphics graphics) {
         super.paintComponent(graphics);
         Graphics2D g = (Graphics2D) graphics;
-        AffineTransform transform = g.getTransform();
-        int[] size = { (int) Math.round(getWidth() * this.renderScale[0]), (int) Math.round(getHeight() * this.renderScale[1]) };
-        g.scale(this.renderScale[0], this.renderScale[1]);
+        AffineTransform originalTransform = g.getTransform();
+        g.scale(renderScale[0], renderScale[1]);
+        int[] size = { (int) (getWidth() / renderScale[0]), (int) (getHeight() / renderScale[1]) };
 
-        System.out.println(size[0] + " : " + size[1]);
-
-        g.setColor(Color.BLUE);
-        g.fillRect(10, 10, size[0] - 20, size[1] - 20);
-
-        synchronized (this.widgets) {
-            this.widgets.stream().filter(Renderable::isVisible).forEach(renderable -> renderable.render(g, size, this.viewportOffset, this.appFrame.getFocusCycleRootAncestor()));
+        synchronized (widgets) {
+            widgets.stream().filter(Renderable::isVisible).forEach(r -> r.render(g, size, viewportOffset, appFrame.getFocusCycleRootAncestor()));
         }
 
-        g.setTransform(transform);
+        g.setTransform(originalTransform);
     }
 
     // Accesors -----------------------------------------------------------------
@@ -239,16 +226,6 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         this.renderScale[1] = y;
     }
 
-    public void setWindowSize(int width, int height) {
-        double scaleX = (double) width / this.getWidth();
-        double scaleY = (double) height / this.getHeight();
-
-        this.setPreferredSize(new Dimension(width, height));
-        setRenderScale(scaleX, scaleY);
-        revalidate(); // Ensure the component is revalidated
-        repaint(); // Repaint to apply the new size and scale
-    }
-
     /**
      * Clears the widgets list, and sets it to the one given as parameter.
      *
@@ -261,11 +238,13 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         }
     }
 
-    public void add(Renderable renderable) {
+    public void add(Renderable... renderable) {
         synchronized (this.widgets) {
-            int value = renderable.getZIndex();
-            int index = binarySearchInsertZIndex(value);
-            this.widgets.add(index, renderable);
+            for (Renderable r : renderable) {
+                int value = r.getZIndex();
+                int index = binarySearchInsertZIndex(value);
+                this.widgets.add(index, r);
+            }
         }
     }
 
@@ -394,14 +373,14 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     /**
      * @see GPanel#GPanel(InteractableHandler, int, int, boolean, String, Color)
      */
-    private static JFrame getDefaultJFrame(int windowWidth, int windowHeight, boolean resizable, String appTitle, Color backgroundColor) {
-        JFrame frame = new JFrame();
-        // frame.setSize(windowWidth, windowHeight);
+    private static JFrame getDefaultJFrame(JPanel panel, boolean resizable, String appTitle, Color backgroundColor) {
+        JFrame frame = new JFrame(appTitle);
         frame.setResizable(resizable);
-        frame.setTitle(appTitle);
         frame.setBackground(backgroundColor);
-        frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.add(panel);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         return frame;
     }
@@ -563,6 +542,12 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
 
         public void addTag(String tag) {
             this.tags.add(tag);
+        }
+
+        public void removeTag(String tag) {
+            if (tags.contains(tag)) {
+                this.tags.remove(tag);
+            }
         }
     }
 

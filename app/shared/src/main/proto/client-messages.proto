@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package flaggi;
+
+option java_package = "flaggi.proto";
+option java_outer_classname = "ClientMessages";
+
+// Wrapper -------------------------------------------------------------------
+
+message ClientMessageWrapper {
+    oneof message_type {
+        ClientInitialMessage clientInitialMessage = 1;
+        ClientRequest clientRequest = 2;
+        ClientUpdate clientUpdate = 3;
+    }
+}
+
+// Enums ---------------------------------------------------------------------
+
+enum ClientRequestType {
+    CLIENT_REQUEST_GET_IDLE_CLIENT_LIST = 0;
+}
+
+// TCP Messages --------------------------------------------------------------
+
+message ClientInitialMessage {
+    string username = 1;
+}
+
+message ClientRequest {
+    string uuid = 1;
+    ClientRequestType requestType = 2;
+}
+
+// UDP Messages --------------------------------------------------------------
+
+message ClientUpdate {
+    oneof update_type {
+        ClientPlayerUpdate clientPlayerUpdate = 1;
+        ClientNewGameObject clientNewGameObject = 2;
+    }
+}
+
+message ClientPlayerUpdate {
+    string uuid = 1;
+    int64 x = 2;
+    int64 y = 3;
+    string animationName = 4;
+    int64 animationFrame = 5;
+}
+
+message ClientNewGameObject {
+    string objectType = 1;
+    int64 x = 2;
+    int64 y = 3;
+}

@@ -1,10 +1,10 @@
 /*
  * Author: Matěj Šťastný aka Kirei
  * Date created: 12/2/2024
- * Github link: https://github.com/kireiiiiiiii/flaggi
+ * Github link: https://github.com/kireiiiiiiii
  */
 
-package flaggishared.util;
+package flaggi.shared.util;
 
 import java.io.File;
 import java.io.IOException;

@@ -4,7 +4,7 @@
  * GitHub link: https://github.com/kireiiiiiiii/flaggi
  */
 
-package flaggishared.apiclients;
+package flaggi.shared.apiclients;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

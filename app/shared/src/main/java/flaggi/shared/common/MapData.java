@@ -25,7 +25,7 @@
  *
  */
 
-package flaggishared.common;
+package flaggi.shared.common;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,10 +34,10 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * Data class to hold all the data of the world map.

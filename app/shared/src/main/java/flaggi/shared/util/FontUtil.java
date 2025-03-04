@@ -1,10 +1,10 @@
 /*
  * Author: Matěj Šťastný aka Kirei
  * Date created: 10/29/2024
- * Github link: https://github.com/kireiiiiiiii/flaggi
+ * Github link: https://github.com/kireiiiiiiii
  */
 
-package flaggishared.util;
+package flaggi.shared.util;
 
 import java.awt.Font;
 import java.awt.FontFormatException;

@@ -1,10 +1,10 @@
 /*
  * Author: Matěj Šťastný aka Kirei
  * Date created: 5/5/2024
- * Github link: https://github.com/kireiiiiiiii/flaggi
+ * Github link: https://github.com/kireiiiiiiii
  */
 
-package flaggishared.common;
+package flaggi.shared.common;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

@@ -1,10 +1,10 @@
 /*
  * Author: Matěj Šťastný
  * Date created: 11/8/2024
- * Github link: https://github.com/kireiiiiiiii/flaggi
+ * Github link: https://github.com/kireiiiiiiii
  */
 
-package flaggishared.util;
+package flaggi.shared.util;
 
 import java.awt.Dimension;
 import java.awt.GraphicsDevice;

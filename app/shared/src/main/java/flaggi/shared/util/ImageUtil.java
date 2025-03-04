@@ -1,10 +1,10 @@
 /*
  * Author: Matěj Šťastný aka Kirei
  * Date created: 5/16/2024
- * Github link: https://github.com/kireiiiiiiii/flaggi
+ * Github link: https://github.com/kireiiiiiiii
  */
 
-package flaggishared.util;
+package flaggi.shared.util;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
