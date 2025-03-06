@@ -95,7 +95,6 @@ public class MenuScreen extends Renderable implements Interactable, Typable {
         int y = (size[1] - this.background.getHeight(null)) / 2;
         g.setColor(Color.decode("#C3EEFA"));
         g.fillRect(x, y, this.background.getWidth(null), this.background.getHeight(null));
-        System.out.println("XY " + this.background.getWidth(null) + " " + this.background.getHeight(null));
         g.drawImage(this.background, x, y, fcra);
     }
 

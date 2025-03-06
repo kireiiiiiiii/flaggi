@@ -169,16 +169,13 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         super.paintComponent(graphics);
         Graphics2D g = (Graphics2D) graphics;
         AffineTransform originalTransform = g.getTransform();
-        System.out.println("CT " + this.contentSize[0] + " " + this.contentSize[1]);
-        System.out.println("WN " + getWidth() + " " + getHeight());
         int[] contentSize = scaleGraphicPane(g, this.contentSize[0], this.contentSize[1], false);
-        System.out.println("--YN " + contentSize[0] + " " + contentSize[1]);
 
         synchronized (widgets) {
             widgets.stream().filter(Renderable::isVisible).forEach(r -> r.render(g, contentSize, viewportOffset, appFrame.getFocusCycleRootAncestor()));
         }
 
-        g.setColor(Color.RED);
+        g.setColor(Color.RED); // TODO DEBUG
         g.setStroke(new BasicStroke(10));
         g.drawRect(0, 0, contentSize[0], contentSize[1]);
 
@@ -447,20 +444,32 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         return low;
     }
 
-    private int[] scaleGraphicPane(Graphics2D g, int contentWidth, int contentHeight, boolean fillOrFit) {
-        double scaleX = (double) this.getWidth() / contentWidth; // How much do do i have to scale content width to get window
+    /**
+     * Scales a graphic pane to fit inside a the JFrame application window.
+     *
+     * @param g             - target {@code Graphics2D} object.
+     * @param contentWidth  - width of the content.
+     * @param contentHeight - height of the content.
+     * @param fitFrame      - if the content should be fitted to the frame,
+     *                      potentionally leaving empty space around the content, or
+     *                      scaled to fit the frame.
+     * @return the size of the content after scaling. Will remain the same if fit
+     *         frame is false.
+     */
+    private int[] scaleGraphicPane(Graphics2D g, int contentWidth, int contentHeight, boolean fitFrame) {
+        double scaleX = (double) this.getWidth() / contentWidth;
         double scaleY = (double) this.getHeight() / contentHeight;
         int[] contentSize = new int[] { contentWidth, contentHeight };
 
-        if (fillOrFit) { // Fit inside the window
-            if (scaleX < scaleY) { // If width has bigger difference HAS TO BE ADJUSTED
+        if (fitFrame) {
+            if (scaleX < scaleY) {
                 contentSize[1] *= scaleX;
                 g.scale(scaleX, scaleX);
             } else {
                 contentSize[0] *= scaleY;
                 g.scale(scaleY, scaleY);
             }
-        } else { // Fill the window
+        } else {
             if (scaleX > scaleY) {
                 contentSize[1] = (int) (this.getHeight() / scaleX);
                 g.scale(scaleX, scaleX);
