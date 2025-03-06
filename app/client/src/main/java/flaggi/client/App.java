@@ -39,7 +39,7 @@ public class App implements InteractableHandler, MenuHandeler {
 
     private GPanel getDefaultGpanel() {
         int[] screenSize = ScreenUtil.getScreenDimensions();
-        GPanel gp = new GPanel((int) (screenSize[0] * 0.9), (int) (screenSize[1] * 0.9), Constants.BASE_WINDOW_SIZE[0], Constants.BASE_WINDOW_SIZE[1], false, Constants.WINDOW_NAME, (InteractableHandler) this);
+        GPanel gp = new GPanel((int) (screenSize[0] * 0.9), (int) (screenSize[1] * 0.9), Constants.BASE_WINDOW_SIZE[0], Constants.BASE_WINDOW_SIZE[1], false, Constants.WINDOW_NAME, this);
         if (Constants.FRAMERATE >= 0) {
             gp.setFpsCap(Constants.FRAMERATE);
         }
@@ -49,7 +49,6 @@ public class App implements InteractableHandler, MenuHandeler {
     private void addDefaultWidgets() {
         this.gpanel.add(new MenuScreen("nameinit", "ipinit", this));
     }
-
     // UI Handeling -------------------------------------------------------------
 
     @Override
