@@ -19,10 +19,10 @@ import java.io.IOException;
 
 import flaggi.client.constants.UiTags;
 import flaggi.client.constants.ZIndex;
-import flaggi.shared.common.Logger;
 import flaggi.shared.common.GPanel.Interactable;
 import flaggi.shared.common.GPanel.Renderable;
 import flaggi.shared.common.GPanel.Typable;
+import flaggi.shared.common.Logger;
 import flaggi.shared.common.Logger.LogLevel;
 import flaggi.shared.util.FontUtil;
 import flaggi.shared.util.ImageUtil;
@@ -32,56 +32,50 @@ import flaggi.shared.util.ImageUtil;
  */
 public class MenuScreen extends Renderable implements Interactable, Typable {
 
-    private String nameUserInput = "", ipUserInput = "", errorMessage = "";
-    private boolean isNameFieldFocused = false, isIpFieldFocused = false;
+    private String usernameInput, ipInput, errorMessage;
+    private boolean isNameFieldFocused, isIpFieldFocused;
     private Rectangle nameFieldBounds, ipFieldBounds, startButtonBounds;
     private Image logo, background, textField, button;
-    private Runnable startButtonAction;
+    private MenuHandeler handeler;
     private Font font;
 
     // Constructor --------------------------------------------------------------
 
     /**
-     * @param startAction - {@code Runnable} to be executed when the start button is
-     *                    clicked.
+     * @param initName - initial value of the username field, this value can be
+     *                 deleted by the user
+     * @param initIp   - initial value of the ip field, this value can be deleted by
+     *                 the user
      */
-    public MenuScreen(Runnable startAction, String name, String ip) {
+    public MenuScreen(String initName, String initIp, MenuHandeler handeler) {
         super(ZIndex.MENU_SCREEN, UiTags.MENU_ELEMENTS);
 
-        this.startButtonAction = startAction;
-        this.nameUserInput = name == null ? "" : name;
-        this.ipUserInput = ip == null ? "" : ip;
-        try {
-            this.font = FontUtil.createFontFromResource("fonts/PixelifySans-VariableFont_wght.ttf").deriveFont(Font.PLAIN, 25);
-        } catch (IOException | FontFormatException e) {
-            Logger.log(LogLevel.WARN, "MenuScreen: Font cannot be loaded.", e);
-            this.font = new Font("Arial", Font.PLAIN, 25);
-        }
-        try {
-            this.logo = ImageUtil.getImageFromFile("ui/logo.png");
-            this.background = ImageUtil.getImageFromFile("ui/menu_screen.png");
-            this.button = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/button.png"), 130, false);
-            this.textField = ImageUtil.scaleToHeight(ImageUtil.getImageFromFile("ui/text_field.png"), 60, false);
-        } catch (IOException e) {
-            Logger.log(LogLevel.WARN, "Couldn't load MenuScreen textures.", e);
-        }
+        this.usernameInput = initName != null ? initName : "";
+        this.ipInput = initIp != null ? initIp : "";
+        this.handeler = handeler;
 
-        // Dummy values
-        this.nameFieldBounds = new Rectangle(0, 0, this.textField.getWidth(null), this.textField.getHeight(null));
-        this.ipFieldBounds = (Rectangle) this.nameFieldBounds.clone();
-        this.startButtonBounds = new Rectangle(0, 0, this.button.getWidth(null), this.button.getHeight(null));
+        loadFont();
+        loadImages();
+        initializeBounds();
+        clearErrorMessage();
     }
 
     // Rendering ----------------------------------------------------------------
 
     @Override
     public void render(Graphics2D g, int[] size, int[] origin, Container focusCycleRootAncestor) {
+        calculateElementPositions(size);
+        renderBackground(g, size, focusCycleRootAncestor);
+        // renderLogo(g, size, focusCycleRootAncestor);
+        // renderErrorMessage(g, size);
+        // renderTextFields(g, focusCycleRootAncestor);
+        // renderStartButton(g, focusCycleRootAncestor);
+    }
 
-        // Calculate the center of the window
+    private void calculateElementPositions(int[] size) {
         int windowWidth = size[0];
         int windowHeight = size[1];
 
-        // Dynamically position elements in the center
         int fieldWidth = nameFieldBounds.width;
         int fieldHeight = nameFieldBounds.height;
         int buttonWidth = startButtonBounds.width;
@@ -90,42 +84,54 @@ public class MenuScreen extends Renderable implements Interactable, Typable {
         int centerX = windowWidth / 2;
         int centerY = windowHeight / 2;
 
-        // Update bounding boxes for interactable elements
         this.nameFieldBounds.setBounds(centerX - fieldWidth / 2, centerY - 80, fieldWidth, fieldHeight);
         this.ipFieldBounds.setBounds(centerX - fieldWidth / 2, centerY, fieldWidth, fieldHeight);
         this.startButtonBounds.setBounds(centerX - buttonWidth / 2, centerY + 130, buttonWidth, buttonHeight);
+    }
 
-        // Render elements
-        this.background = ImageUtil.scaleToFit(this.background, size[0], size[1], false);
-        g.drawImage(this.background, (size[0] - this.background.getWidth(null)) / 2, (size[1] - this.background.getHeight(null)) / 2, focusCycleRootAncestor);
-        g.drawImage(ImageUtil.scaleToWidth(this.logo, 800, false), centerX - 400, centerY - 450, focusCycleRootAncestor);
+    private void renderBackground(Graphics2D g, int[] size, Container fcra) {
+        this.background = ImageUtil.scaleToFill(this.background, size[0], size[1], false);
+        int x = (size[0] - this.background.getWidth(null)) / 2;
+        int y = (size[1] - this.background.getHeight(null)) / 2;
+        g.setColor(Color.decode("#C3EEFA"));
+        g.fillRect(x, y, this.background.getWidth(null), this.background.getHeight(null));
+        System.out.println("XY " + this.background.getWidth(null) + " " + this.background.getHeight(null));
+        g.drawImage(this.background, x, y, fcra);
+    }
 
-        // Set font
+    private void renderLogo(Graphics2D g, int[] size, Container fcra) {
+        int centerX = size[0] / 2;
+        int centerY = size[1] / 2;
+        g.drawImage(ImageUtil.scaleToWidth(this.logo, 800, false), centerX - 400, centerY - 450, fcra);
+    }
+
+    private void renderErrorMessage(Graphics2D g, int[] size) {
         g.setFont(this.font);
-
-        // Render error nessage
-        synchronized (this.errorMessage) { // Acces the message sychronously, as it can be modified by the app
+        synchronized (this.errorMessage) {
             g.setColor(this.errorMessage.equals("Connecting...") ? Color.GREEN : Color.RED);
             int[] errorPos = FontUtil.calculateCenteredPosition(size[0], size[1], g.getFontMetrics(), this.errorMessage);
             g.drawString(this.errorMessage, errorPos[0], errorPos[1] + 90);
         }
+    }
 
+    private void renderTextFields(Graphics2D g, Container focusCycleRootAncestor) {
         g.drawImage(this.textField, nameFieldBounds.x, nameFieldBounds.y, focusCycleRootAncestor);
         g.drawImage(this.textField, ipFieldBounds.x, ipFieldBounds.y, focusCycleRootAncestor);
 
         int[] textFieldTextPos = FontUtil.calculateCenteredPosition(this.textField.getWidth(null), this.textField.getHeight(null), g.getFontMetrics(), "Dummy");
 
         g.setColor(isNameFieldFocused ? Color.BLUE : Color.WHITE);
-        g.drawString("Name: " + nameUserInput, nameFieldBounds.x + 20, nameFieldBounds.y + textFieldTextPos[1]);
+        g.drawString("Name: " + usernameInput, nameFieldBounds.x + 20, nameFieldBounds.y + textFieldTextPos[1]);
 
         g.setColor(isIpFieldFocused ? Color.BLUE : Color.WHITE);
-        g.drawString("IP: " + ipUserInput, ipFieldBounds.x + 20, ipFieldBounds.y + textFieldTextPos[1]);
+        g.drawString("IP: " + ipInput, ipFieldBounds.x + 20, ipFieldBounds.y + textFieldTextPos[1]);
+    }
 
+    private void renderStartButton(Graphics2D g, Container focusCycleRootAncestor) {
         g.drawImage(this.button, startButtonBounds.x, startButtonBounds.y, focusCycleRootAncestor);
         g.setColor(Color.WHITE);
-        int[] startButtonTextPos = FontUtil.calculateCenteredPosition(buttonWidth, buttonHeight, g.getFontMetrics(), "START");
+        int[] startButtonTextPos = FontUtil.calculateCenteredPosition(startButtonBounds.width, startButtonBounds.height, g.getFontMetrics(), "START");
         g.drawString("START", startButtonBounds.x + startButtonTextPos[0], startButtonBounds.y + startButtonTextPos[1]);
-
     }
 
     // Interaction --------------------------------------------------------------
@@ -136,24 +142,23 @@ public class MenuScreen extends Renderable implements Interactable, Typable {
             return false;
         }
 
+        boolean interacted = false;
+
         if (nameFieldBounds.contains(e.getPoint())) {
-            isNameFieldFocused = true;
-            isIpFieldFocused = false;
-            return true;
+            setFocus(true, false);
+            interacted = true;
         } else if (ipFieldBounds.contains(e.getPoint())) {
-            isIpFieldFocused = true;
-            isNameFieldFocused = false;
-            return true;
+            setFocus(false, true);
+            interacted = true;
         } else if (startButtonBounds.contains(e.getPoint())) {
-            if (startButtonAction != null) {
-                clearErrorMessage();
-                startButtonAction.run();
-            }
-            return true;
+            clearErrorMessage();
+            setErrorMessage(handeler.joinServer(this.usernameInput, this.ipInput));
+            interacted = true;
+        } else {
+            setFocus(false, false);
         }
-        isNameFieldFocused = false;
-        isIpFieldFocused = false;
-        return false;
+
+        return interacted;
     }
 
     @Override
@@ -162,19 +167,10 @@ public class MenuScreen extends Renderable implements Interactable, Typable {
             return;
         }
 
-        char c = e.getKeyChar();
         if (isNameFieldFocused) {
-            if (Character.isLetterOrDigit(c) || Character.isWhitespace(c)) {
-                nameUserInput += c;
-            } else if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE && nameUserInput.length() > 0) {
-                nameUserInput = nameUserInput.substring(0, nameUserInput.length() - 1);
-            }
+            handleTyping(e, true);
         } else if (isIpFieldFocused) {
-            if (Character.isDigit(c) || c == '.') {
-                ipUserInput += c;
-            } else if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE && ipUserInput.length() > 0) {
-                ipUserInput = ipUserInput.substring(0, ipUserInput.length() - 1);
-            }
+            handleTyping(e, false);
         }
     }
 
@@ -187,6 +183,10 @@ public class MenuScreen extends Renderable implements Interactable, Typable {
     }
 
     public void clearErrorMessage() {
+        if (this.errorMessage == null) {
+            this.errorMessage = "";
+            return;
+        }
         synchronized (this.errorMessage) {
             this.errorMessage = "";
         }
@@ -195,11 +195,69 @@ public class MenuScreen extends Renderable implements Interactable, Typable {
     // Accesors --------------------------------------------------------------
 
     public String getUsernameFieldContent() {
-        return nameUserInput == null ? "" : nameUserInput;
+        return usernameInput == null ? "" : usernameInput;
     }
 
     public String getIpFieldConctent() {
-        return ipUserInput == null ? "" : ipUserInput;
+        return ipInput == null ? "" : ipInput;
+    }
+
+    // Private ---------------------------------------------------------------
+
+    private void handleTyping(KeyEvent e, boolean isNameField) {
+        char c = e.getKeyChar();
+        String input = isNameField ? usernameInput : ipInput;
+
+        if (isNameField && (Character.isLetterOrDigit(c) || Character.isWhitespace(c))) {
+            input += c;
+        } else if (!isNameField && (Character.isDigit(c) || c == '.')) {
+            input += c;
+        } else if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE && input.length() > 0) {
+            input = input.substring(0, input.length() - 1);
+        }
+
+        if (isNameField) {
+            usernameInput = input;
+        } else {
+            ipInput = input;
+        }
+    }
+
+    private void setFocus(boolean nameFieldFocused, boolean ipFieldFocused) {
+        this.isNameFieldFocused = nameFieldFocused;
+        this.isIpFieldFocused = ipFieldFocused;
+    }
+
+    private void loadFont() {
+        try {
+            this.font = FontUtil.createFontFromResource("fonts/PixelifySans-VariableFont_wght.ttf").deriveFont(Font.PLAIN, 25);
+        } catch (IOException | FontFormatException e) {
+            Logger.log(LogLevel.WARN, "MenuScreen: Font cannot be loaded.", e);
+            this.font = new Font("Arial", Font.PLAIN, 25);
+        }
+    }
+
+    private void loadImages() {
+        try {
+            this.logo = ImageUtil.getImageFromFile("ui/logo.png");
+            this.background = ImageUtil.getImageFromFile("ui/menu_screen.png");
+            this.button = ImageUtil.scaleToWidth(ImageUtil.getImageFromFile("ui/button.png"), 130, false);
+            this.textField = ImageUtil.scaleToHeight(ImageUtil.getImageFromFile("ui/text_field.png"), 60, false);
+        } catch (IOException e) {
+            Logger.log(LogLevel.WARN, "Couldn't load MenuScreen textures.", e);
+        }
+    }
+
+    private void initializeBounds() {
+        this.nameFieldBounds = new Rectangle(0, 0, this.textField.getWidth(null), this.textField.getHeight(null));
+        this.ipFieldBounds = new Rectangle(nameFieldBounds);
+        this.startButtonBounds = new Rectangle(0, 0, this.button.getWidth(null), this.button.getHeight(null));
+    }
+
+    // Nested ----------------------------------------------------------------
+
+    public interface MenuHandeler {
+        String joinServer(String name, String ip);
     }
 
 }

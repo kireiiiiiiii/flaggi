@@ -16,7 +16,7 @@ public class Constants {
     // Window -------------------------------------------------------------------
 
     public static String WINDOW_NAME = "Flaggi";
-    public static int[] BASE_WINDOW_SIZE = { 800, 600 };
+    public static int[] BASE_WINDOW_SIZE = { 1200, 600 }; // 1400 800 | 1200 600
     public static int FRAMERATE = 120;
 
     // Debug --------------------------------------------------------------------

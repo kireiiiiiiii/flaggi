@@ -137,6 +137,18 @@ public class ImageUtil {
         }
     }
 
+    public static Image scaleToFill(Image image, int width, int height, boolean useSmoothScaling) {
+        int originalWidth = image.getWidth(null);
+        int originalHeight = image.getHeight(null);
+        double aspectRatio = (double) originalWidth / originalHeight;
+
+        if (width / aspectRatio <= height) {
+            return scaleToHeight(image, height, useSmoothScaling);
+        } else {
+            return scaleToWidth(image, width, useSmoothScaling);
+        }
+    }
+
     /**
      * Flips an image vertically.
      *

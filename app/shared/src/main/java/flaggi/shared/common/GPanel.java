@@ -6,6 +6,7 @@
 
 package flaggi.shared.common;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -97,7 +98,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     private final ArrayList<Renderable> widgets;
     private JFrame appFrame;
     private boolean isRendering;
-    private int[] viewportOffset;
+    private int[] viewportOffset, contentSize;
     private double[] renderScale;
 
     // Constructor ---------------------------------------------------------------
@@ -114,16 +115,8 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      *                     panel interaction.
      */
     public GPanel(int windowWidth, int windowHeight, boolean resizable, String appTitle, InteractableHandler handler) {
-        this.renderingEngine = new RenderingEngine();
-        this.widgets = new ArrayList<>();
-        this.viewportOffset = new int[2];
-        this.renderScale = new double[] { 1.0, 1.0 };
-        this.isRendering = false;
-        this.handler = handler;
-        this.setPreferredSize(new Dimension(windowWidth, windowHeight));
-        this.appFrame = getDefaultJFrame(this, resizable, appTitle, Color.WHITE);
-
-        setupListeners();
+        this(new Dimension(windowWidth, windowHeight), resizable, appTitle, handler);
+        this.contentSize = new int[] { windowWidth, windowHeight };
         startRendering();
     }
 
@@ -138,9 +131,23 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
      * @param appTitle     - The title of the window (name of the app).
      * @param renderScale  - The scale for rendering.
      */
-    public GPanel(int windowWidth, int windowHeight, boolean resizable, String appTitle, double[] renderScale, InteractableHandler handler) {
-        this((int) (windowWidth * renderScale[0]), (int) (windowHeight * renderScale[1]), resizable, appTitle, handler);
-        setRenderScale(renderScale[0], renderScale[1]);
+    public GPanel(int windowWidth, int windowHeight, int contentWidth, int contentHeight, boolean resizable, String appTitle, InteractableHandler handler) {
+        this(new Dimension(windowWidth, windowHeight), resizable, appTitle, handler);
+        this.contentSize = new int[] { contentWidth, contentHeight };
+        startRendering();
+    }
+
+    private GPanel(Dimension size, boolean resizable, String appTitle, InteractableHandler handler) {
+        this.renderingEngine = new RenderingEngine();
+        this.widgets = new ArrayList<>();
+        this.viewportOffset = new int[2];
+        this.renderScale = new double[] { 1.0, 1.0 };
+        this.isRendering = false;
+        this.handler = handler;
+        this.setPreferredSize(size);
+        this.appFrame = getDefaultJFrame(this, resizable, appTitle, Color.WHITE);
+
+        setupListeners();
     }
 
     // Rendering -----------------------------------------------------------------
@@ -162,17 +169,23 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         super.paintComponent(graphics);
         Graphics2D g = (Graphics2D) graphics;
         AffineTransform originalTransform = g.getTransform();
-        g.scale(renderScale[0], renderScale[1]);
-        int[] size = { (int) (getWidth() / renderScale[0]), (int) (getHeight() / renderScale[1]) };
+        System.out.println("CT " + this.contentSize[0] + " " + this.contentSize[1]);
+        System.out.println("WN " + getWidth() + " " + getHeight());
+        int[] contentSize = scaleGraphicPane(g, this.contentSize[0], this.contentSize[1], false);
+        System.out.println("--YN " + contentSize[0] + " " + contentSize[1]);
 
         synchronized (widgets) {
-            widgets.stream().filter(Renderable::isVisible).forEach(r -> r.render(g, size, viewportOffset, appFrame.getFocusCycleRootAncestor()));
+            widgets.stream().filter(Renderable::isVisible).forEach(r -> r.render(g, contentSize, viewportOffset, appFrame.getFocusCycleRootAncestor()));
         }
+
+        g.setColor(Color.RED);
+        g.setStroke(new BasicStroke(10));
+        g.drawRect(0, 0, contentSize[0], contentSize[1]);
 
         g.setTransform(originalTransform);
     }
 
-    // Accesors -----------------------------------------------------------------
+    // Accesors -----------------------------------------------------------------cv
 
     public JFrame getAppFrame() {
         return this.appFrame;
@@ -382,6 +395,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+        System.out.println(frame.getWidth() + " | " + frame.getHeight());
         return frame;
     }
 
@@ -393,7 +407,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         addMouseMotionListener(this);
         addKeyListener(this);
         addMouseWheelListener(this);
-        requestFocusInWindow();
+        this.requestFocusInWindow();
     }
 
     /**
@@ -431,6 +445,31 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
             }
         }
         return low;
+    }
+
+    private int[] scaleGraphicPane(Graphics2D g, int contentWidth, int contentHeight, boolean fillOrFit) {
+        double scaleX = (double) this.getWidth() / contentWidth; // How much do do i have to scale content width to get window
+        double scaleY = (double) this.getHeight() / contentHeight;
+        int[] contentSize = new int[] { contentWidth, contentHeight };
+
+        if (fillOrFit) { // Fit inside the window
+            if (scaleX < scaleY) { // If width has bigger difference HAS TO BE ADJUSTED
+                contentSize[1] *= scaleX;
+                g.scale(scaleX, scaleX);
+            } else {
+                contentSize[0] *= scaleY;
+                g.scale(scaleY, scaleY);
+            }
+        } else { // Fill the window
+            if (scaleX > scaleY) {
+                contentSize[1] = (int) (this.getHeight() / scaleX);
+                g.scale(scaleX, scaleX);
+            } else {
+                contentSize[0] = (int) (this.getWidth() / scaleY);
+                g.scale(scaleY, scaleY);
+            }
+        }
+        return contentSize;
     }
 
     // Render engine ------------------------------------------------------------
@@ -588,7 +627,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     // User input forwaring -----------------------------------------------------
 
     /**
-     * Interface for handling user input. Extends Java AWT listeners:
+     * Interface for handling user input. Extends java.awt.event listeners:
      * <ul>
      * <li>{@code MouseListener}</li>
      * <li>{@code MouseMotionListener}</li>

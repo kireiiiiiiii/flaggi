@@ -9,19 +9,17 @@ package flaggi.client;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.SwingUtilities;
 
 import flaggi.client.constants.Constants;
 import flaggi.client.ui.MenuScreen;
-import flaggi.client.ui.ScreenTest;
+import flaggi.client.ui.MenuScreen.MenuHandeler;
 import flaggi.shared.common.GPanel;
 import flaggi.shared.common.GPanel.InteractableHandler;
 import flaggi.shared.util.ScreenUtil;
 
-public class App implements InteractableHandler {
+public class App implements InteractableHandler, MenuHandeler {
 
     private final GPanel gpanel;
 
@@ -32,23 +30,32 @@ public class App implements InteractableHandler {
     }
 
     public App() {
-        int[] screenSize = ScreenUtil.getScreenDimensions();
-        this.gpanel = getDefaultGpanel(screenSize[0], screenSize[1]);
-        this.gpanel.setFpsCap(Constants.FRAMERATE);
+        this.gpanel = getDefaultGpanel();
         addDefaultWidgets();
+        this.gpanel.toggleWidgetsVisibility(true); // TODO DEBUG
     }
 
     // Private ------------------------------------------------------------------
 
-    private GPanel getDefaultGpanel(int width, int height) {
-        double scaleX = (double) width / Constants.BASE_WINDOW_SIZE[0];
-        double scaleY = (double) height / Constants.BASE_WINDOW_SIZE[1];
-        double scale = Math.min(scaleX, scaleY) * 0.9;
-        return new GPanel(Constants.BASE_WINDOW_SIZE[0], Constants.BASE_WINDOW_SIZE[1], false, Constants.WINDOW_NAME, new double[] { scale, scale }, this);
+    private GPanel getDefaultGpanel() {
+        int[] screenSize = ScreenUtil.getScreenDimensions();
+        GPanel gp = new GPanel((int) (screenSize[0] * 0.9), (int) (screenSize[1] * 0.9), Constants.BASE_WINDOW_SIZE[0], Constants.BASE_WINDOW_SIZE[1], false, Constants.WINDOW_NAME, (InteractableHandler) this);
+        if (Constants.FRAMERATE >= 0) {
+            gp.setFpsCap(Constants.FRAMERATE);
+        }
+        return gp;
     }
 
     private void addDefaultWidgets() {
-        this.gpanel.add(new MenuScreen(null, null, null));
+        this.gpanel.add(new MenuScreen("nameinit", "ipinit", this));
+    }
+
+    // UI Handeling -------------------------------------------------------------
+
+    @Override
+    public String joinServer(String name, String ip) {
+        System.out.println("JoinButton:" + name + ":" + ip);
+        return "passed";
     }
 
     // Interaction --------------------------------------------------------------
@@ -96,4 +103,5 @@ public class App implements InteractableHandler {
     @Override
     public void keyReleased(KeyEvent e) {
     }
+
 }
