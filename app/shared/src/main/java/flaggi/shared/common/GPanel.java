@@ -386,6 +386,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
     private static JFrame getDefaultJFrame(JPanel panel, boolean resizable, String appTitle, Color backgroundColor) {
         JFrame frame = new JFrame(appTitle);
         frame.setResizable(resizable);
+        // frame.setUndecorated(true); Transparent window
         frame.setBackground(backgroundColor);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.add(panel);
@@ -404,7 +405,7 @@ public class GPanel extends JPanel implements MouseListener, MouseMotionListener
         addMouseMotionListener(this);
         addKeyListener(this);
         addMouseWheelListener(this);
-        this.requestFocusInWindow();
+        requestFocusInWindow();
     }
 
     /**
